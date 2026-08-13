@@ -152,7 +152,7 @@
 
 <div class="hero">
   <div class="container hero-inner">
-    <div>
+    <div class="enter">
       <span class="hero-badge"><span class="dot"></span> <span id="modeText">Loading…</span></span>
       <h1>Bubble tea, built <em>exactly</em> the way you want it.</h1>
       <p class="lede">
@@ -325,8 +325,8 @@
   }
 
   KoraAPI.ready().then(() => {
-    document.getElementById('stMenu').textContent = KoraAPI.catalog.menu.length;
-    document.getElementById('stTop').textContent = KoraAPI.catalog.toppings.length;
+    KoraUI.countTo(document.getElementById('stMenu'), KoraAPI.catalog.menu.length, { dur: 900 });
+    KoraUI.countTo(document.getElementById('stTop'), KoraAPI.catalog.toppings.length, { dur: 900 });
     const live = KoraAPI.mode === 'supabase';
     document.getElementById('modeText').textContent = live
       ? 'Live · connected to Supabase'

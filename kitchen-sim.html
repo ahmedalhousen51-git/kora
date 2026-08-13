@@ -494,6 +494,7 @@
         } else {
           stream(true, cfg.color, sp.x, sp.y);
         }
+        cup3d.classList.add('rippling');
         refresh(station);
       }, 16);
     }
@@ -502,6 +503,7 @@
       P.on = false;
       clearInterval(P.raf);
       stream(false);
+      cup3d.classList.remove('rippling');
       api.el.style.transform = '';
       $('chef').classList.remove('busy');
       chefFace({ mouth: 'smile' });
@@ -590,7 +592,7 @@
           V.sealed = true; paintCup();
           api.el.style.display = 'none';
           cup3d.classList.remove('spin'); void cup3d.offsetWidth; cup3d.classList.add('spin');
-          celebrate(); say('اتقفلت! تحفة 🎉', 4200, 'happy');
+          celebrate(); KoraUI.confetti(60); say('اتقفلت! تحفة 🎉', 4200, 'happy');
           refresh(station);
         } else api.goHome();
       }
@@ -687,6 +689,8 @@
     paintCup();
     if (s.type === 'range') {
       const v = Math.round(V[s.id]), z = zoneOf(s);
+      // written straight out — this ticks 60x a second while pouring, so an
+      // easing animation would just fight itself
       const ro = $('ro'); if (ro) ro.innerHTML = v + '<small>' + s.unit + '</small>';
       const bar = $('bar'); if (bar) bar.style.width = ((v - s.min) / (s.max - s.min) * 100) + '%';
       const t = $('tgt');
@@ -764,6 +768,7 @@
     html += `</div>`;
     if (!OPTIONAL && s.type !== 'final') html += `<p class="lock-note">Brand-new drink — the bar makes it exactly as you set it here.</p>`;
     $('panel').innerHTML = html;
+    $('panel').classList.remove('enter'); void $('panel').offsetWidth; $('panel').classList.add('enter');
 
     /* hand over the right tool */
     if (s.id === 'cup') makeChoices(s);

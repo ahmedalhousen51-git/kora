@@ -174,7 +174,7 @@
       <h2>Your details</h2>
       <p id="infoHint"></p>
     </div>
-    <div class="card card-pad" style="max-width:520px">
+    <div class="card card-pad enter" style="max-width:520px">
       <div class="opt-block">
         <label class="label" for="fName">Name <span style="color:var(--danger)">*</span></label>
         <input id="fName" class="input" placeholder="What should we call out?" autocomplete="name">
@@ -559,7 +559,9 @@
     openM('mCustom');
   }
 
-  function priceNow() { $('cPrice').textContent = money(KoraAPI.priceItem(cur)); }
+  function priceNow() {
+    KoraUI.countTo($('cPrice'), KoraAPI.priceItem(cur), { suffix: ' ' + C.currency, dur: 300 });
+  }
   window.bumpQty = d => {
     cur.qty = Math.max(1, Math.min(9, cur.qty + d));
     $('cQty').textContent = cur.qty;
@@ -570,7 +572,7 @@
     const art = (C.menu.find(m => m.id === cur.menu_id) || {}).art || '#7B1E3E';
     S.cart.push(Object.assign({ id: 'i' + Date.now() }, cur));
     closeM('mCustom');
-    paintCart(); persist();
+    paintCart(true); persist();
     KoraUI.flyToCart(curCardEl, art);
     KoraUI.toast('Added to your order', 'ok');
   };
@@ -658,13 +660,17 @@
   };
 
   /* ---------------------------------------------------------- cart ----- */
-  function paintCart() {
+  function paintCart(bump) {
     const bar = $('cartbar');
     if (!S.cart.length) { bar.classList.remove('on'); return; }
     bar.classList.add('on');
     const n = S.cart.reduce((s, i) => s + (i.qty || 1), 0);
     $('cartCount').textContent = n + (n === 1 ? ' item' : ' items');
     $('cartTotal').textContent = money(KoraAPI.priceCart(S.cart));
+    if (bump) {
+      bar.classList.remove('bump'); void bar.offsetWidth; bar.classList.add('bump');
+      KoraUI.pop($('cartCount'));
+    }
   }
 
   function optsLine(i) {
@@ -735,7 +741,9 @@
       S.cart = []; paintCart(); persist();
       localStorage.removeItem('kora_guest_state');
       KoraUI.mascot.submitted();
+      KoraUI.confetti(80);
       trackOrder(res.token, res.order_number);
+      KoraUI.pop($('tOrderNo'));
     } catch (err) {
       KoraUI.toast(err.message || 'Could not send the order', 'err');
       btn.disabled = false; btn.textContent = 'Send order to the bar';

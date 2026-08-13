@@ -26,13 +26,14 @@
   --gray-400: #A68E99;
   --gray-300: #CDBAC3;
   --gray-200: #E7DAE0;
-  --gray-100: #F2E9EC;
-  --gray-50:  #F9F4F6;
+  --gray-100: #EADEE4;
+  --gray-50:  #F3EAEF;
 
-  /* Cards and panels are a light warm gray rather than white, so the whole
-     page reads as gray-in-burgundy instead of white boxes on a tint. */
-  --bg: #E7DDE2;
-  --surface: #F6F0F3;
+  /* Nothing on the page is white. The page sits on a mid warm gray and the
+     cards are a lighter gray on top of it — gray-in-burgundy throughout. */
+  --bg: #D9CCD3;
+  --surface: #ECE2E7;
+  --surface-2: #E3D6DD;
   --text: #211820;
   --text-soft: #5E4551;
   --text-faint: #A68E99;
@@ -162,7 +163,7 @@ a { color: inherit; }
   font-family: var(--ff-body);
   font-size: .94rem;
   color: var(--text);
-  background: var(--surface);
+  background: var(--surface-2);
   border: 1px solid var(--gray-300);
   border-radius: var(--r-md);
   padding: 12px 14px;
@@ -338,3 +339,72 @@ a { color: inherit; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+
+/* ==========================================================================
+   Extra motion
+   ========================================================================== */
+
+/* --- page entrance: children rise in one after another --- */
+.enter > * { opacity: 0; animation: enter-up .6s cubic-bezier(.2,.85,.3,1) forwards; }
+.enter > *:nth-child(1) { animation-delay: .05s; }
+.enter > *:nth-child(2) { animation-delay: .14s; }
+.enter > *:nth-child(3) { animation-delay: .23s; }
+.enter > *:nth-child(4) { animation-delay: .32s; }
+.enter > *:nth-child(5) { animation-delay: .41s; }
+.enter > *:nth-child(6) { animation-delay: .5s; }
+@keyframes enter-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+/* --- buttons get a ripple on press --- */
+.btn { position: relative; overflow: hidden; }
+.btn .ripple {
+  position: absolute; border-radius: 50%; transform: scale(0);
+  background: rgba(255,255,255,.45); pointer-events: none;
+  animation: ripple .55s ease-out forwards;
+}
+@keyframes ripple { to { transform: scale(2.6); opacity: 0; } }
+
+/* --- anything that should pop when it changes --- */
+.pop { animation: pop .38s cubic-bezier(.2,.9,.3,1.6); }
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.14); } 100% { transform: scale(1); } }
+
+/* --- the cart bar hops when something lands in it --- */
+.cartbar.bump { animation: bump .45s cubic-bezier(.2,.9,.3,1.5); }
+@keyframes bump {
+  0%,100% { transform: translateY(0); }
+  35%     { transform: translateY(-9px); }
+  70%     { transform: translateY(2px); }
+}
+
+/* --- shimmer sweeping across a progress bar --- */
+.gauge .bar::after, .progress i.now::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+.gauge .bar, .progress i.now { position: relative; overflow: hidden; }
+@keyframes shimmer { to { transform: translateX(100%); } }
+
+/* --- confetti when an order goes through --- */
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 9990; overflow: hidden; }
+.confetti i {
+  position: absolute; top: -14px; width: 9px; height: 14px; border-radius: 2px;
+  animation: fall-confetti linear forwards;
+}
+@keyframes fall-confetti {
+  0%   { transform: translateY(0) rotate(0) scale(1); opacity: 1; }
+  100% { transform: translateY(105vh) rotate(760deg) scale(.7); opacity: 0; }
+}
+
+/* --- a soft breathing glow for anything waiting on someone else --- */
+.breathe { animation: breathe 2.6s ease-in-out infinite; }
+@keyframes breathe { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+
+/* --- rows lift a touch as you run down a list --- */
+.row-hover { transition: transform .16s ease, box-shadow .16s ease; }
+.row-hover:hover { transform: translateX(3px); box-shadow: var(--sh-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .enter > *, .pop, .cartbar.bump, .breathe { animation: none !important; opacity: 1 !important; }
+  .gauge .bar::after, .progress i.now::after, .confetti { display: none; }
+}

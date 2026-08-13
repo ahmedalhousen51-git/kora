@@ -470,8 +470,73 @@
     setTimeout(() => ghost.remove(), 700);
   }
 
+
+  /* --- press ripple on every button --- */
+  function initRipples(root) {
+    (root || document).addEventListener('pointerdown', e => {
+      const btn = e.target.closest('.btn, .kitchen-cta, .chip, .cup-choice');
+      if (!btn || btn.disabled) return;
+      const r = btn.getBoundingClientRect();
+      const size = Math.max(r.width, r.height);
+      const sp = document.createElement('span');
+      sp.className = 'ripple';
+      sp.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - r.left - size / 2}px;top:${e.clientY - r.top - size / 2}px;`;
+      if (getComputedStyle(btn).position === 'static') btn.style.position = 'relative';
+      btn.appendChild(sp);
+      setTimeout(() => sp.remove(), 600);
+    }, { passive: true });
+  }
+
+  /* --- make a number climb to its new value instead of jumping --- */
+  function countTo(el, to, opts) {
+    if (!el) return;
+    const o = opts || {};
+    const from = Number(el.dataset.v || 0);
+    const dur = o.dur || 420;
+    const suffix = o.suffix || '';
+    const t0 = performance.now();
+    cancelAnimationFrame(el.__raf || 0);
+    const step = now => {
+      const k = Math.min(1, (now - t0) / dur);
+      const eased = 1 - Math.pow(1 - k, 3);
+      const v = Math.round(from + (to - from) * eased);
+      el.textContent = v + suffix;
+      if (k < 1) el.__raf = requestAnimationFrame(step);
+      else el.dataset.v = to;
+    };
+    el.__raf = requestAnimationFrame(step);
+  }
+
+  /* --- a burst of confetti, used when an order goes through --- */
+  function confetti(n) {
+    if (global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const box = document.createElement('div');
+    box.className = 'confetti';
+    const colors = ['#7B1E3E', '#AE3160', '#D98BA9', '#FFD75E', '#C4762A', '#5C8A4A'];
+    for (let i = 0; i < (n || 70); i++) {
+      const c = document.createElement('i');
+      c.style.left = Math.random() * 100 + '%';
+      c.style.background = colors[Math.floor(Math.random() * colors.length)];
+      c.style.animationDuration = (1.6 + Math.random() * 1.6) + 's';
+      c.style.animationDelay = (Math.random() * .5) + 's';
+      c.style.transform = `scale(${.6 + Math.random() * .8})`;
+      box.appendChild(c);
+    }
+    document.body.appendChild(box);
+    setTimeout(() => box.remove(), 4200);
+  }
+
+  /* --- flash an element to draw the eye to a change --- */
+  function pop(el) {
+    if (!el) return;
+    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  }
+
+  initRipples();
+
   global.KoraUI = {
     logoSVG, brandMark, toast, cupArt, mascot,
-    initReveal, stagger, flyToCart
+    initReveal, stagger, flyToCart,
+    countTo, confetti, pop
   };
 })(window);

@@ -161,3 +161,14 @@
 @media (prefers-reduced-motion: reduce) {
   .scene3d-inner, .float3d, .cup3d.spin, .cup3d.shake3d, .tilt3d { animation: none !important; transform: none !important; }
 }
+
+/* the drink sloshes while something is being poured into it */
+.cup3d.rippling .cup-liquid::before,
+.cup3d.rippling .cup-layer::before {
+  animation: slosh .5s ease-in-out infinite;
+}
+@keyframes slosh {
+  0%,100% { transform: translateX(0) scaleY(1); }
+  35%     { transform: translateX(-3px) scaleY(1.22); }
+  70%     { transform: translateX(3px) scaleY(.85); }
+}
