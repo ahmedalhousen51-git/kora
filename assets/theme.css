@@ -15,25 +15,26 @@
   --wine-100: #F6E7EE;
   --wine-50:  #FCF4F7;
 
-  /* Neutral grays */
-  --gray-950: #121214;
-  --gray-900: #1B1B1F;
-  --gray-800: #26262B;
-  --gray-700: #3A3A41;
-  --gray-600: #55555E;
-  --gray-500: #77777F;
-  --gray-400: #9E9EA6;
-  --gray-300: #C7C7CD;
-  --gray-200: #E3E3E7;
-  --gray-100: #EFEFF2;
-  --gray-50:  #F7F7F9;
+  /* Grays, warmed with a burgundy undertone so the whole page sits in the
+     same family as the brand colour instead of reading cold and neutral. */
+  --gray-950: #161013;
+  --gray-900: #211820;
+  --gray-800: #2E2129;
+  --gray-700: #443039;
+  --gray-600: #5E4551;
+  --gray-500: #806270;
+  --gray-400: #A68E99;
+  --gray-300: #CDBAC3;
+  --gray-200: #E7DAE0;
+  --gray-100: #F2E9EC;
+  --gray-50:  #F9F4F6;
 
-  --bg: #F4F4F6;
-  --surface: #FFFFFF;
-  --text: #1B1B1F;
-  --text-soft: #55555E;
-  --text-faint: #9E9EA6;
-  --border: #E3E3E7;
+  --bg: #F4ECEF;
+  --surface: #FFFDFE;
+  --text: #211820;
+  --text-soft: #5E4551;
+  --text-faint: #A68E99;
+  --border: #E7DAE0;
 
   --success: #1F7A4D;
   --warn: #B4761B;

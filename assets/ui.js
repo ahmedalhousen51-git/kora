@@ -117,6 +117,12 @@
     ready: [
       'جاهز! تعالى خده وهو سخن.. يعني بارد 😄',
       'خلص! الكوباية مستنياك'
+    ],
+    poke: [
+      'أيوه؟ في خدمة؟ 😄',
+      'بلاش زقّ بقى، أنا شغال',
+      'اسحبني براحتك، أنا مش هزعل',
+      'إيه يا عم، وحشتك؟'
     ]
   };
   const pick = a => a[Math.floor(Math.random() * a.length)];
@@ -137,25 +143,46 @@
       const st = document.createElement('style');
       st.id = 'kora-mascot-css';
       st.textContent = `
-        #koraMascot { position:fixed; left:16px; bottom:0; z-index:420;
-          display:flex; align-items:flex-end; gap:8px; pointer-events:none; }
-        #koraMascot .kora-mascot-svg { width:96px; height:auto; flex-shrink:0;
+        /* The wrapper is exactly the size of the character — the bubble floats
+           above it absolutely, so it never inflates the box we use to work out
+           where he is allowed to stand. */
+        #koraMascot { position:fixed; left:16px; top:60vh; z-index:420;
+          width:96px; pointer-events:none;
+          transition: left 2.4s cubic-bezier(.45,.05,.3,1), top 2.4s cubic-bezier(.45,.05,.3,1); }
+        #koraMascot.dragging { transition:none; }
+        #koraMascot .kora-mascot-svg { display:block; width:100%; height:auto;
           filter: drop-shadow(0 8px 18px rgba(38,22,28,.24));
-          animation: kora-bob 3.4s ease-in-out infinite; transform-origin:60px 130px; }
+          animation: kora-bob 3.4s ease-in-out infinite; transform-origin:60px 130px;
+          pointer-events:auto; cursor:grab; touch-action:none; }
+        #koraMascot.dragging .kora-mascot-svg { cursor:grabbing; animation:none; }
+        /* on a narrow screen he leans in from the edge so he covers as
+           little of the page as possible */
+        #koraMascot.peek-left  .kora-mascot-svg { margin-left:-44px; }
+        #koraMascot.peek-right .kora-mascot-svg { margin-right:-44px; }
+        #koraMascot.dragging.peek-left .kora-mascot-svg,
+        #koraMascot.dragging.peek-right .kora-mascot-svg { margin:0; }
+        /* a bouncier bob while he is walking to a new spot */
+        #koraMascot.walking .kora-mascot-svg { animation: kora-walk .5s ease-in-out infinite; }
+        @keyframes kora-walk { 0%,100%{transform:translateY(0) rotate(-2deg)}
+          50%{transform:translateY(-8px) rotate(2deg)} }
         @keyframes kora-bob { 0%,100%{transform:translateY(0) rotate(0)}
           50%{transform:translateY(-5px) rotate(-1.4deg)} }
         /* the raised arm gives a little wave now and then */
         #koraMascot .c-arm { transform-origin:86px 116px; animation: kora-wave 6s ease-in-out infinite; }
         @keyframes kora-wave { 0%,86%,100%{transform:rotate(0)} 90%{transform:rotate(-16deg)} 95%{transform:rotate(6deg)} }
-        #koraMascot .m-bubble { position:relative; max-width:216px;
+        #koraMascot .m-bubble { position:absolute; bottom:calc(100% + 10px); right:0;
+          width:max-content; max-width:216px;
           background:var(--gray-900); color:#fff;
           padding:10px 14px; border-radius:14px 14px 4px 14px;
           font-size:.85rem; line-height:1.55; font-weight:500; direction:rtl; text-align:right;
-          box-shadow:var(--sh-3); margin-bottom:14px; order:-1;
+          box-shadow:var(--sh-3);
           opacity:0; transform:translateY(8px) scale(.9); transition:all .22s cubic-bezier(.2,.9,.3,1.3); }
         #koraMascot .m-bubble.on { opacity:1; transform:translateY(0) scale(1); }
-        #koraMascot .m-bubble::after { content:''; position:absolute; right:14px; bottom:-6px;
+        #koraMascot .m-bubble::after { content:''; position:absolute; right:22px; bottom:-6px;
           width:12px; height:12px; background:var(--gray-900); transform:rotate(45deg); border-radius:2px; }
+        /* when he is over on the left, the bubble opens to the right instead */
+        #koraMascot.flip .m-bubble { right:auto; left:0; border-radius:14px 14px 14px 4px; }
+        #koraMascot.flip .m-bubble::after { right:auto; left:22px; }
         /* blinking */
         .kora-mascot-svg .c-eyes { animation: kora-blink 5.2s infinite; transform-origin:60px 51px; }
         @keyframes kora-blink { 0%,93%,100%{transform:scaleY(1)} 96%{transform:scaleY(.1)} }
@@ -169,9 +196,8 @@
           100%{transform:translateY(0) rotate(0)} }
         .kora-mascot-svg.react-sip .c-arm { animation: kora-sip 1.2s ease-in-out; transform-origin:86px 116px; }
         @keyframes kora-sip { 0%,100%{transform:rotate(0)} 45%{transform:rotate(-30deg)} }
-        @media (max-width:560px){ #koraMascot{ left:10px; }
-          #koraMascot .kora-mascot-svg{ width:68px; }
-          #koraMascot .m-bubble{ max-width:158px; font-size:.78rem; margin-bottom:8px; } }
+        @media (max-width:560px){ #koraMascot{ width:70px; }
+          #koraMascot .m-bubble{ max-width:158px; font-size:.78rem; } }
         @media (prefers-reduced-motion: reduce) {
           #koraMascot .kora-mascot-svg, .kora-mascot-svg .m-eye { animation:none !important; }
         }
@@ -183,7 +209,191 @@
     el.id = 'koraMascot';
     el.innerHTML = `<div class="m-bubble" id="koraBubble"></div>${mascotArt('corner')}`;
     document.body.appendChild(el);
+    initRoaming(el);
     return el;
+  }
+
+  /* =======================================================================
+     Roaming: he strolls to a free patch of screen on his own, keeps out of
+     the way of anything the customer needs to read or tap, and can be picked
+     up and dropped wherever they like.
+     ======================================================================= */
+  const KEEP_CLEAR = '.cartbar.on, .topbar, .overlay.show .modal, .modal-foot, [data-keep-clear]';
+  const PAD = 14;
+
+  function blockedRects() {
+    const out = [];
+    document.querySelectorAll(KEEP_CLEAR).forEach(e => {
+      const r = e.getBoundingClientRect();
+      // skip anything hidden — a display:none node reports an all-zero rect
+      if (r.width < 2 || r.height < 2) return;
+      if (r.bottom < 0 || r.top > window.innerHeight) return;
+      out.push({ left: r.left - PAD, top: r.top - PAD, right: r.right + PAD, bottom: r.bottom + PAD });
+    });
+    return out;
+  }
+  const hits = (a, b) => !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+
+  function isFree(x, y, w, h, blocked) {
+    const r = { left: x, top: y, right: x + w, bottom: y + h };
+    return !blocked.some(b => hits(r, b));
+  }
+
+  function initRoaming(el) {
+    const S = { dragging: false, timer: null, moved: false };
+
+    const size = () => {
+      const r = el.getBoundingClientRect();     // wrapper == character box now
+      return { w: r.width || 96, h: r.height || 120 };
+    };
+
+    function put(x, y) {
+      const { w, h } = size();
+      x = Math.max(PAD, Math.min(window.innerWidth - w - PAD, x));
+      y = Math.max(PAD, Math.min(window.innerHeight - h - PAD, y));
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.style.bottom = 'auto';
+      // keep the speech bubble on screen: flip it when he is near the left edge
+      el.classList.toggle('flip', x < 250);
+      try { localStorage.setItem('kora_mascot_pos', JSON.stringify({ x, y })); } catch (e) {}
+    }
+
+    // He walks the empty margins either side of the content column so he
+    // never ends up sitting on top of something you are trying to read.
+    function laneFor(w) {
+      // the tallest .container is the page body, not the one inside the top bar
+      let col = null, best = 0;
+      document.querySelectorAll('.container, .container-sm, main').forEach(c => {
+        const h = c.getBoundingClientRect().height;
+        if (h > best) { best = h; col = c; }
+      });
+      if (!col) return null;
+      const r = col.getBoundingClientRect();
+      const lanes = [];
+      if (r.left - PAD * 2 >= w) lanes.push([PAD, r.left - w - PAD]);
+      if (window.innerWidth - r.right - PAD * 2 >= w) lanes.push([r.right + PAD, window.innerWidth - w - PAD]);
+      return lanes.length ? lanes : null;
+    }
+
+    function stroll() {
+      if (S.dragging) return schedule();
+      const { w, h } = size();
+      const blocked = blockedRects();
+      const maxY = window.innerHeight - h - PAD;
+      const lanes = laneFor(w);
+      let target = null;
+
+      if (lanes) {                          // roomy screen: use the side margins
+        for (let i = 0; i < 24 && !target; i++) {
+          const lane = lanes[Math.floor(Math.random() * lanes.length)];
+          const x = lane[0] + Math.random() * Math.max(1, lane[1] - lane[0]);
+          const y = PAD + Math.random() * Math.max(1, maxY - PAD);
+          if (isFree(x, y, w, h, blocked)) target = { x, y };
+        }
+      }
+      // No free margin (narrow screen): peek in from the edge instead of
+      // planting himself on top of whatever the customer is reading.
+      let peek = null;
+      if (!target) {
+        const cands = [];
+        const rightX = window.innerWidth - w - PAD;
+        for (let y = maxY; y > PAD; y -= 40) {
+          if (isFree(PAD, y, w, h, blocked)) { cands.push({ x: PAD, y, side: 'left' }); break; }
+        }
+        for (let y = maxY; y > PAD; y -= 40) {
+          if (isFree(rightX, y, w, h, blocked)) { cands.push({ x: rightX, y, side: 'right' }); break; }
+        }
+        const c = cands.length ? cands[Math.floor(Math.random() * cands.length)]
+                               : { x: PAD, y: Math.max(PAD, maxY * 0.5), side: 'left' };
+        target = { x: c.x, y: c.y };
+        peek = c.side;
+      }
+
+      el.classList.remove('peek-left', 'peek-right');
+      if (peek) el.classList.add('peek-' + peek);
+      el.classList.add('walking');
+      put(target.x, target.y);
+      setTimeout(() => el.classList.remove('walking'), 2400);
+      schedule();
+    }
+
+    function schedule() {
+      clearTimeout(S.timer);
+      S.timer = setTimeout(stroll, 9000 + Math.random() * 9000);
+    }
+
+    /* --- pick him up and put him down --- */
+    const svg = el.querySelector('.kora-mascot-svg');
+    let offX = 0, offY = 0;
+    svg.addEventListener('pointerdown', e => {
+      S.dragging = true; S.moved = false;
+      el.classList.add('dragging');
+      el.classList.remove('peek-left', 'peek-right');   // full body while held
+      const r = el.getBoundingClientRect();
+      offX = e.clientX - r.left; offY = e.clientY - r.top;
+      svg.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    svg.addEventListener('pointermove', e => {
+      if (!S.dragging) return;
+      S.moved = true;
+      put(e.clientX - offX, e.clientY - offY);
+    });
+    const drop = e => {
+      if (!S.dragging) return;
+      S.dragging = false;
+      el.classList.remove('dragging');
+      try { svg.releasePointerCapture(e.pointerId); } catch (err) {}
+      if (!S.moved) mascot.say(pick(LINES.poke), 3000, 'happy');   // a tap, not a drag
+      schedule();
+    };
+    svg.addEventListener('pointerup', drop);
+    svg.addEventListener('pointercancel', drop);
+
+    /* --- start where we left off, then keep him out of the way --- */
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem('kora_mascot_pos') || 'null'); } catch (e) {}
+    requestAnimationFrame(() => {
+      const { w, h } = size();
+      if (saved) put(saved.x, saved.y);
+      else put(PAD, window.innerHeight - h - 110);
+      // if he landed on something important, or on the content column, move
+      const x0 = parseFloat(el.style.left), y0 = parseFloat(el.style.top);
+      const lanes = laneFor(w);
+      const inLane = !lanes || lanes.some(l => x0 >= l[0] - 1 && x0 <= l[1] + 1);
+      if (!inLane || !isFree(x0, y0, w, h, blockedRects())) stroll();
+      else schedule();
+    });
+
+    window.addEventListener('resize', () => {
+      put(parseFloat(el.style.left) || PAD, parseFloat(el.style.top) || PAD);
+    });
+
+    // Safety net: whatever else happens — a late layout, a bar sliding in, a
+    // transition we mis-timed — never leave him sitting on top of the UI.
+    setInterval(() => {
+      if (S.dragging || el.classList.contains('walking')) return;
+      const { w, h } = size();
+      const x = parseFloat(el.style.left), y = parseFloat(el.style.top);
+      if (isNaN(x) || isNaN(y)) return;
+      if (!isFree(x, y, w, h, blockedRects())) stroll();
+    }, 2000);
+
+    // If the layout shifts under him (cart bar appears, modal opens), move.
+    if ('MutationObserver' in window) {
+      let nudge;
+      new MutationObserver(() => {
+        clearTimeout(nudge);
+        nudge = setTimeout(() => {
+          if (S.dragging) return;
+          const { w, h } = size();
+          const x = parseFloat(el.style.left), y = parseFloat(el.style.top);
+          if (!isFree(x, y, w, h, blockedRects())) stroll();
+        }, 260);
+      }).observe(document.body, { attributes: true, childList: true, subtree: true,
+                                  attributeFilter: ['class', 'style'] });
+    }
   }
 
   // Redraw the whole face per reaction — the simplest way to get a real

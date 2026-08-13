@@ -8,240 +8,174 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/theme.css">
 <style>
-  body { background: #F4F4F6; overflow-x: hidden; }
+  body { background: var(--bg); overflow-x: hidden; }
 
-  /* ---------------- top bar ---------------- */
   .k-top { background: linear-gradient(120deg, var(--gray-950), var(--wine-900)); color: #fff; padding: 12px 0; }
   .k-top .container { display: flex; align-items: center; justify-content: space-between; }
   .k-mode { font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--wine-300); }
 
-  /* ---------------- progress ---------------- */
-  .progress { display: flex; gap: 4px; max-width: 540px; margin: 12px auto 0; padding: 0 20px; }
+  .progress { display: flex; gap: 4px; max-width: 560px; margin: 12px auto 0; padding: 0 20px; }
   .progress i { flex: 1; height: 5px; border-radius: 3px; background: var(--gray-200); transition: background .3s; }
   .progress i.done { background: var(--wine-500); }
   .progress i.now  { background: var(--wine-700); box-shadow: 0 0 0 3px rgba(123,30,62,.16); }
 
   /* ================= THE KITCHEN ================= */
   .kitchen {
-    position: relative; max-width: 560px; margin: 14px auto 0;
+    position: relative; max-width: 580px; margin: 14px auto 0;
     border-radius: var(--r-xl) var(--r-xl) 0 0; overflow: hidden;
-    box-shadow: var(--sh-3);
+    box-shadow: var(--sh-3); touch-action: none; user-select: none;
   }
-
-  /* wall + tiles */
   .wall {
-    position: relative; height: 268px;
+    position: relative; height: 300px;
     background:
       repeating-linear-gradient(0deg,  rgba(0,0,0,.045) 0 1px, transparent 1px 34px),
       repeating-linear-gradient(90deg, rgba(0,0,0,.045) 0 1px, transparent 1px 34px),
-      linear-gradient(180deg, #E4F1EC, #D2E7E0);
+      linear-gradient(180deg, #F0E4E9, #DFCED6);
   }
-  /* shelf with jars */
   .shelf { position: absolute; top: 8px; left: 0; right: 0; height: 52px; }
-  .shelf .board { position: absolute; bottom: 0; left: 22px; right: 22px; height: 8px; border-radius: 4px; background: #C08A52; box-shadow: 0 3px 0 rgba(0,0,0,.09); }
+  .shelf .board { position: absolute; bottom: 0; left: 22px; right: 22px; height: 8px; border-radius: 4px; background: #A8703C; box-shadow: 0 3px 0 rgba(0,0,0,.09); }
   .shelf .jar { position: absolute; bottom: 8px; width: 20px; border-radius: 4px 4px 3px 3px; }
   .shelf .jar::before { content: ''; position: absolute; top: -5px; left: -2px; right: -2px; height: 6px; border-radius: 3px; background: #9AA3AE; }
 
-  /* machine rail — the active machine slides above the cup */
-  .rail { position: absolute; left: 50%; top: 44px; width: 120px; height: 130px; }
-  .rail .machine {
-    position: absolute; top: 0; width: 120px; height: 130px;
-    transition: transform .5s cubic-bezier(.3,.9,.35,1), opacity .4s ease, filter .4s ease;
-    opacity: .3; filter: saturate(.45); transform-origin: 60px 120px;
-  }
+  /* machines are scenery now — the tool in your hand does the work */
+  .rail { position: absolute; left: 50%; top: 52px; width: 120px; height: 130px; }
+  .rail .machine { position: absolute; top: 0; width: 120px; height: 130px;
+    transition: transform .5s cubic-bezier(.3,.9,.35,1), opacity .4s ease;
+    opacity: .3; transform-origin: 60px 120px; }
   .rail .machine svg { width: 100%; height: 100%; display: block; }
-  .rail .machine.on { opacity: 1; filter: none; }
-  .rail .machine.on.pouring { animation: machine-shake .5s ease-in-out infinite; }
-  @keyframes machine-shake { 0%,100% { transform: translate(var(--x), 0); } 50% { transform: translate(var(--x), 2px); } }
+  .rail .machine.on { opacity: .92; }
 
-  .machine-tag {
-    position: absolute; bottom: 10px; right: 12px;
-    background: rgba(18,18,20,.72); color: #fff; padding: 4px 12px; border-radius: 999px;
-    font-size: .7rem; font-weight: 600; white-space: nowrap;
-    transition: opacity .3s ease;
-  }
+  .spot { position: absolute; left: 50%; top: -30px; width: 340px; height: 320px; margin-left: -170px;
+    background: radial-gradient(circle, rgba(255,236,190,.5), rgba(255,236,190,0) 62%); pointer-events: none; z-index: 1; }
 
-  /* the pouring stream */
-  .stream {
-    position: absolute; left: 50%; margin-left: -7px; top: 168px;
-    width: 14px; height: 62px; border-radius: 0 0 7px 7px;
-    transform-origin: top center; transform: scaleY(0); opacity: 0;
-    transition: transform .16s ease, opacity .16s ease; z-index: 4;
-  }
-  .stream.on { transform: scaleY(1); opacity: 1; }
-  .stream::after {
-    content: ''; position: absolute; bottom: -5px; left: -3px;
-    width: 20px; height: 15px; border-radius: 50%; background: inherit;
-    animation: splat .38s ease-in-out infinite;
-  }
-  @keyframes splat { 0%,100% { transform: scale(1); } 50% { transform: scale(1.3,.75); } }
-
-  /* falling solids (ice cubes / pearls) */
-  .lump { position: absolute; left: 50%; top: 166px; z-index: 4; pointer-events: none; }
-  .lump span { position: absolute; border-radius: 4px; animation: fall .55s cubic-bezier(.5,0,.9,.3) forwards; }
-  @keyframes fall { from { transform: translateY(0) rotate(0); opacity: 1; } to { transform: translateY(70px) rotate(180deg); opacity: 0; } }
-
-  /* counter, with a lit top surface for depth */
-  .counter { position: relative; z-index: 2; height: 92px; background: linear-gradient(180deg, #B87F45, #9A652F); }
-  .counter .top {
-    position: absolute; top: 0; left: 0; right: 0; height: 30px;
-    background: linear-gradient(180deg, #F0CB96, #D9A96B);
-    box-shadow: inset 0 -6px 10px rgba(0,0,0,.14);
-  }
+  .counter { position: relative; z-index: 3; height: 96px; background: linear-gradient(180deg, #B87F45, #9A652F); }
+  .counter .top { position: absolute; top: 0; left: 0; right: 0; height: 30px;
+    background: linear-gradient(180deg, #F0CB96, #D9A96B); box-shadow: inset 0 -6px 10px rgba(0,0,0,.14); }
   .counter .lip { position: absolute; top: 30px; left: 0; right: 0; height: 7px; background: #8B5A28; }
   .counter .grain { position: absolute; top: 37px; left: 0; right: 0; bottom: 0;
     background: repeating-linear-gradient(90deg, rgba(0,0,0,.07) 0 2px, transparent 2px 46px); }
 
-  /* warm light pouring down on the working area */
-  .spot {
-    position: absolute; left: 50%; top: -40px; width: 300px; height: 300px; margin-left: -150px;
-    background: radial-gradient(circle, rgba(255,236,190,.55), rgba(255,236,190,0) 62%);
-    pointer-events: none; z-index: 1;
-  }
-
-  /* the barista working behind the counter */
-  .chef { position: absolute; left: 16px; bottom: 42px; width: 118px; z-index: 1; pointer-events: none; }
+  .chef { position: absolute; left: 14px; bottom: 46px; width: 112px; z-index: 2; pointer-events: none; }
   .chef svg { width: 100%; height: auto; display: block; }
-  .chef .c-arm { transform-origin: 90px 122px; }
   .chef.busy { animation: chef-work .7s ease-in-out infinite; }
-  @keyframes chef-work { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-  @media (max-width: 560px) { .chef { width: 94px; left: 4px; bottom: 40px; } }
+  @keyframes chef-work { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
 
-  /* the barista does the talking in here, so hide the floating helper */
-  #koraMascot { display: none !important; }
   .chef-bubble {
-    position: absolute; left: 12px; bottom: 176px; max-width: 210px; z-index: 8;
-    background: var(--gray-900); color: #fff; padding: 9px 13px;
-    border-radius: 14px 14px 14px 4px; font-size: .82rem; line-height: 1.5;
+    position: absolute; left: 12px; bottom: 196px; max-width: 214px; z-index: 12;
+    background: var(--gray-900); color: #fff; padding: 10px 14px;
+    border-radius: 14px 14px 14px 4px; font-size: .84rem; line-height: 1.55;
     font-weight: 500; direction: rtl; text-align: right; box-shadow: var(--sh-3);
     opacity: 0; transform: translateY(8px) scale(.92);
     transition: all .22s cubic-bezier(.2,.9,.3,1.3); pointer-events: none;
   }
   .chef-bubble.on { opacity: 1; transform: translateY(0) scale(1); }
-  .chef-bubble::after { content: ''; position: absolute; left: 16px; bottom: -6px;
+  .chef-bubble::after { content: ''; position: absolute; left: 18px; bottom: -6px;
     width: 12px; height: 12px; background: var(--gray-900); transform: rotate(45deg); border-radius: 2px; }
-  @media (max-width: 560px) { .chef-bubble { max-width: 160px; font-size: .76rem; bottom: 162px; } }
 
-  /* steam curling off the brewer */
-  .steam { position: absolute; left: 50%; top: 26px; margin-left: -26px; width: 52px; height: 60px;
-           pointer-events: none; opacity: 0; transition: opacity .4s ease; z-index: 2; }
-  .steam.on { opacity: 1; }
-  .steam i { position: absolute; bottom: 0; width: 13px; height: 13px; border-radius: 50%;
-             background: rgba(255,255,255,.75); animation: steam-up 2.6s ease-in infinite; }
-  @keyframes steam-up {
-    0%   { transform: translateY(0) scale(.5); opacity: 0; }
-    25%  { opacity: .8; }
-    100% { transform: translateY(-56px) scale(1.7); opacity: 0; }
+  /* ---- the cup you are filling ---- */
+  .cup-stage { position: absolute; left: 50%; margin-left: -68px; bottom: 26px;
+    width: 136px; height: 172px; z-index: 4; }
+  .cup-stage svg { width: 100%; height: 100%; overflow: visible; }
+  .cup-stage.grabbable { cursor: grab; }
+  .cup-stage.grabbing { cursor: grabbing; }
+  .wc-lid { opacity: 0; transition: opacity .3s ease, transform .3s ease; transform: translateY(-16px); }
+  .cup-stage.sealed .wc-lid { opacity: 1; transform: translateY(0); }
+  .wc-syrup, .wc-tea, .wc-milk { transition: y .25s linear; }
+  .cup-stage.wobble { animation: wob .4s ease-in-out; }
+  @keyframes wob { 0%,100%{transform:rotate(0)} 30%{transform:rotate(-3deg)} 70%{transform:rotate(3deg)} }
+
+  /* ---- the tool you pick up ---- */
+  .tool {
+    position: absolute; z-index: 7; cursor: grab; touch-action: none;
+    filter: drop-shadow(0 10px 16px rgba(38,22,28,.3));
+    transition: transform .3s cubic-bezier(.3,.9,.4,1.3), left .3s ease, top .3s ease;
   }
+  .tool svg { width: 100%; height: auto; display: block; pointer-events: none; }
+  .tool.held { cursor: grabbing; transition: transform .12s ease; z-index: 9; }
+  .tool-hint {
+    position: absolute; left: 50%; transform: translateX(-50%); bottom: -24px;
+    background: var(--wine-700); color: #fff; padding: 3px 11px; border-radius: 999px;
+    font-size: .68rem; font-weight: 700; white-space: nowrap; direction: rtl;
+    animation: hint-bob 1.4s ease-in-out infinite;
+  }
+  @keyframes hint-bob { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(-4px)} }
+  .tool.held .tool-hint { display: none; }
 
-  /* sparkle burst when a pour lands in the sweet spot */
-  .burst { position: absolute; left: 50%; top: 214px; z-index: 9; pointer-events: none; }
+  .zone {
+    position: absolute; z-index: 5; border: 3px dashed rgba(123,30,62,.42);
+    border-radius: 20px; opacity: 0; transition: opacity .25s ease, background .2s ease;
+    pointer-events: none;
+  }
+  .zone.show { opacity: 1; }
+  .zone.hot { background: rgba(123,30,62,.13); border-color: var(--wine-700); }
+
+  .stream { position: absolute; width: 13px; border-radius: 0 0 7px 7px; z-index: 6;
+            opacity: 0; transition: opacity .1s ease; pointer-events: none; }
+  .stream.on { opacity: 1; }
+  .stream::after { content: ''; position: absolute; bottom: -5px; left: -3px; width: 19px; height: 14px;
+    border-radius: 50%; background: inherit; animation: splat .36s ease-in-out infinite; }
+  @keyframes splat { 0%,100%{transform:scale(1)} 50%{transform:scale(1.3,.75)} }
+
+  .lump { position: absolute; z-index: 6; pointer-events: none; }
+  .lump span { position: absolute; animation: fall .5s cubic-bezier(.5,0,.9,.3) forwards; }
+  @keyframes fall { from{transform:translateY(0) rotate(0);opacity:1} to{transform:translateY(80px) rotate(200deg);opacity:0} }
+
+  .burst { position: absolute; left: 50%; bottom: 150px; z-index: 10; pointer-events: none; }
   .burst span { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: #FFD75E;
                 animation: spark .7s ease-out forwards; }
-  @keyframes spark { from { transform: translate(0,0) scale(1); opacity: 1; }
-                     to   { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; } }
-  .perfect {
-    position: absolute; left: 50%; top: 186px; transform: translateX(-50%) scale(.6);
+  @keyframes spark { from{transform:translate(0,0) scale(1);opacity:1} to{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0} }
+  .perfect { position: absolute; left: 50%; bottom: 178px; transform: translateX(-50%) scale(.6);
     font-family: var(--ff-display); font-weight: 800; font-size: 1.5rem; color: #FFD75E;
-    text-shadow: 0 2px 0 #B8860B, 0 6px 14px rgba(0,0,0,.35);
-    opacity: 0; pointer-events: none; z-index: 9; white-space: nowrap;
-  }
+    text-shadow: 0 2px 0 #B8860B, 0 6px 14px rgba(0,0,0,.35); opacity: 0; z-index: 11;
+    pointer-events: none; white-space: nowrap; }
   .perfect.go { animation: perfect-pop 1.1s cubic-bezier(.2,.9,.3,1.4) forwards; }
   @keyframes perfect-pop {
-    0%   { opacity: 0; transform: translateX(-50%) scale(.5) translateY(10px); }
-    25%  { opacity: 1; transform: translateX(-50%) scale(1.15) translateY(-6px); }
-    60%  { opacity: 1; transform: translateX(-50%) scale(1) translateY(-14px); }
-    100% { opacity: 0; transform: translateX(-50%) scale(.95) translateY(-30px); }
+    0%{opacity:0;transform:translateX(-50%) scale(.5) translateY(10px)}
+    25%{opacity:1;transform:translateX(-50%) scale(1.15) translateY(-6px)}
+    60%{opacity:1;transform:translateX(-50%) scale(1) translateY(-14px)}
+    100%{opacity:0;transform:translateX(-50%) scale(.95) translateY(-30px)}
   }
 
-  /* the cup being made — straddles wall + counter */
-  .cup-stage {
-    position: absolute; left: 50%; margin-left: -65px; bottom: 24px;
-    width: 130px; height: 165px; z-index: 3;
-    transition: transform .3s ease;
-  }
-  .cup-stage.shaking { animation: cup-shake .34s ease-in-out infinite; }
-  @keyframes cup-shake {
-    0%,100% { transform: translate(0,0) rotate(0); }
-    25% { transform: translate(-9px,-7px) rotate(-7deg); }
-    75% { transform: translate(9px,-7px) rotate(7deg); }
-  }
-  .cup-stage svg { width: 100%; height: 100%; overflow: visible; }
-  .wc-lid { opacity: 0; transition: opacity .3s ease, transform .3s ease; transform: translateY(-14px); }
-  .cup-stage.sealed .wc-lid { opacity: 1; transform: translateY(0); }
-  .wc-syrup, .wc-tea, .wc-milk { transition: y .35s cubic-bezier(.3,.9,.4,1); }
+  /* cups to choose from, standing on the counter */
+  .cup-choice { position: absolute; z-index: 6; cursor: pointer; text-align: center; }
+  .cup-choice .cc-art { background: linear-gradient(180deg,#F6F2F4,#DFD6DB); border: 2.5px solid #C2B6BC;
+    border-radius: 4px 4px 16px 16px; margin: 0 auto 6px; transition: transform .18s ease; }
+  .cup-choice:hover .cc-art { transform: translateY(-5px); }
+  .cup-choice.on .cc-art { border-color: var(--wine-700); box-shadow: 0 0 0 4px rgba(123,30,62,.16); }
+  .cup-choice .cc-label { font-size: .7rem; font-weight: 700; color: var(--gray-700);
+    background: rgba(255,255,255,.88); padding: 2px 8px; border-radius: 999px; }
 
-  /* cup size choices sitting on the counter */
-  .cup-picks { display: flex; gap: 14px; justify-content: center; }
-  .cup-pick {
-    border: 2px solid var(--gray-300); background: var(--surface); border-radius: var(--r-md);
-    padding: 12px 16px 10px; cursor: pointer; font-family: inherit; text-align: center;
-    transition: all .18s ease;
-  }
-  .cup-pick:hover { border-color: var(--wine-300); transform: translateY(-2px); }
-  .cup-pick.on { border-color: var(--wine-700); background: var(--wine-50); }
-  .cup-pick .cp-art { display: block; margin: 0 auto 6px; background: var(--gray-200); border-radius: 3px 3px 8px 8px; }
-  .cup-pick .cp-label { font-size: .78rem; font-weight: 600; }
-
-  /* ================= CONTROLS ================= */
-  .panel {
-    max-width: 560px; margin: 0 auto; background: var(--surface);
-    border-radius: 0 0 var(--r-xl) var(--r-xl);
-    padding: 20px 22px 26px; box-shadow: var(--sh-2); text-align: center;
-  }
-  .panel h2 { font-size: 1.2rem; margin-bottom: 4px; }
-  .panel .hint-txt { color: var(--text-soft); font-size: .86rem; margin: 0 0 16px; }
-
-  .readout { font-family: var(--ff-display); font-size: 2.2rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }
-  .readout small { font-size: .95rem; font-weight: 500; color: var(--text-faint); margin-left: 4px; }
+  /* ================= readout ================= */
+  .panel { max-width: 580px; margin: 0 auto; background: var(--surface);
+    border-radius: 0 0 var(--r-xl) var(--r-xl); padding: 18px 22px 24px;
+    box-shadow: var(--sh-2); text-align: center; }
+  .panel h2 { font-size: 1.15rem; margin-bottom: 3px; }
+  .panel .hint-txt { color: var(--text-soft); font-size: .85rem; margin: 0 0 14px; }
+  .readout { font-family: var(--ff-display); font-size: 2rem; font-weight: 700; line-height: 1.1; }
+  .readout small { font-size: .9rem; font-weight: 500; color: var(--text-faint); margin-left: 4px; }
   .target { font-size: .74rem; color: var(--text-faint); margin-top: 2px; }
   .target.good { color: var(--success); font-weight: 600; }
+  .gauge { height: 9px; border-radius: 5px; background: var(--gray-200); margin: 12px 0 4px;
+           position: relative; overflow: hidden; }
+  .gauge .zone-bar { position: absolute; top: 0; bottom: 0; left: 30%; width: 40%; background: rgba(31,122,77,.22); }
+  .gauge .bar { position: absolute; top: 0; bottom: 0; left: 0; width: 0; background: var(--wine-700);
+                border-radius: 5px; transition: width .1s linear; }
+  .shake-meter .bar { background: linear-gradient(90deg, var(--wine-500), #FFD75E); }
 
-  .gauge { height: 8px; border-radius: 5px; background: var(--gray-200); margin: 14px 0 4px; position: relative; overflow: hidden; }
-  .gauge .zone { position: absolute; top: 0; bottom: 0; background: rgba(31,122,77,.22); }
-  .gauge .bar { position: absolute; top: 0; bottom: 0; left: 0; background: var(--wine-700); border-radius: 5px; transition: width .12s linear; }
-
-  .pour-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 14px; }
-  .nudge {
-    width: 46px; height: 46px; border-radius: 14px; border: 1px solid var(--border);
-    background: var(--surface); font-size: 1.3rem; cursor: pointer; color: var(--text);
-    box-shadow: var(--sh-1);
-  }
-  .nudge:hover { background: var(--gray-50); }
-  .pour-btn {
-    flex: 1; max-width: 250px; padding: 15px 20px; border-radius: 16px; border: none;
-    background: var(--wine-700); color: #fff; font-family: inherit; font-weight: 700; font-size: 1rem;
-    cursor: pointer; box-shadow: var(--sh-wine); user-select: none; touch-action: none;
-  }
-  .pour-btn:active, .pour-btn.holding { transform: translateY(2px); background: var(--wine-600); }
-
-  .bin-row { display: flex; flex-wrap: wrap; gap: 9px; justify-content: center; }
-  .bin {
-    display: flex; align-items: center; gap: 8px;
-    border: 2px solid var(--gray-300); background: var(--surface);
-    border-radius: var(--r-md); padding: 9px 14px; cursor: pointer;
-    font-family: inherit; font-size: .85rem; font-weight: 500; transition: all .16s ease;
-  }
-  .bin .dot { width: 13px; height: 13px; border-radius: 50%; background: #2A1017; }
-  .bin:hover { border-color: var(--wine-300); }
-  .bin.on { background: var(--wine-700); border-color: var(--wine-700); color: #fff; }
-
-  .recap { text-align: left; background: var(--gray-50); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 16px; margin-bottom: 14px; font-size: .85rem; line-height: 1.9; }
-  .recap b { color: var(--text); }
-  .recap span { color: var(--text-soft); }
-
-  .acts { display: flex; gap: 10px; margin-top: 18px; }
+  .acts { display: flex; gap: 10px; margin-top: 16px; }
   .acts .btn { flex: 1; }
-  .lock-note { font-size: .75rem; color: var(--text-faint); margin-top: 12px; }
+  .lock-note { font-size: .74rem; color: var(--text-faint); margin-top: 10px; }
+  .recap { text-align: left; background: var(--gray-50); border: 1px solid var(--border);
+    border-radius: var(--r-md); padding: 13px 16px; margin-bottom: 12px; font-size: .84rem; line-height: 1.85; }
+  .recap b { color: var(--text); } .recap span { color: var(--text-soft); }
 
-  @media (max-width: 560px) {
+  @media (max-width: 580px) {
     .kitchen, .panel { border-radius: 0; }
-    .wall { height: 210px; }
-    .cup-stage { transform: scale(.9); }
+    .wall { height: 268px; }
+    .chef { width: 90px; left: 4px; }
+    .chef-bubble { max-width: 168px; font-size: .78rem; bottom: 180px; }
   }
-  @media (prefers-reduced-motion: reduce) {
-    .rail .machine, .cup-stage, .stream, .lump span { transition: none; animation: none; }
-  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 </style>
 </head>
 <body>
@@ -255,7 +189,7 @@
 
 <div class="progress" id="prog"></div>
 
-<div class="kitchen">
+<div class="kitchen" id="kitchen">
   <div class="wall">
     <div class="shelf">
       <div class="board"></div>
@@ -267,20 +201,21 @@
       <div class="jar" style="left:78%;height:32px;background:#7B1E3E"></div>
     </div>
     <div class="rail" id="rail"></div>
-    <div class="machine-tag" id="mTag"></div>
-    <div class="steam" id="steam"><i style="left:4px;animation-delay:0s"></i><i style="left:20px;animation-delay:.8s"></i><i style="left:34px;animation-delay:1.6s"></i></div>
-    <div class="stream" id="stream"></div>
-    <div class="lump" id="lump"></div>
-    <div class="burst" id="burst"></div>
     <div class="spot"></div>
   </div>
-  <div class="counter">
-    <div class="top"></div><div class="lip"></div><div class="grain"></div>
-  </div>
+  <div class="counter"><div class="top"></div><div class="lip"></div><div class="grain"></div></div>
+
   <div class="chef" id="chef"></div>
   <div class="chef-bubble" id="chefBubble"></div>
+
+  <div class="zone" id="zone"></div>
   <div class="cup-stage" id="cupStage"></div>
+  <div class="stream" id="stream"></div>
+  <div class="lump" id="lump"></div>
+  <div class="burst" id="burst"></div>
   <div class="perfect" id="perfect">PERFECT!</div>
+  <div id="toolLayer"></div>
+  <div id="choiceLayer"></div>
 </div>
 
 <div class="panel" id="panel"></div>
@@ -291,12 +226,14 @@
 <script src="assets/character.js"></script>
 <script src="assets/ui.js"></script>
 <script src="assets/kitchen-art.js"></script>
+<script src="assets/kitchen-tools.js"></script>
 <script>
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
   const C = KoraAPI.catalog;
   const M = KoraKitchen.machines;
+  const T = KoraTools;
 
   let spec = null;
   try { spec = JSON.parse(localStorage.getItem('kora_kitchen_spec') || 'null'); } catch (e) {}
@@ -306,128 +243,134 @@
   const ST = C.stations || [];
   let idx = 0;
 
-  const V = { cup: 'Regular 500ml', brew: 180, creamer: 150, sweet: 25, ice: 90,
-              toppings: [], shaken: false, sealed: false, name: spec.customer || '' };
+  const V = { cup: 'Regular 500ml', brew: 0, creamer: 0, sweet: 0, ice: 0,
+              toppings: [], shakes: 0, shaken: false, sealed: false, name: spec.customer || '' };
 
   $('brandSlot').innerHTML = KoraUI.brandMark({ size: 26, tagline: false, onDark: true, color: '#fff' });
   $('modeTag').textContent = OPTIONAL ? 'Play mode · skippable' : 'Every step counts';
 
-  /* ---------------- build the machine rail once ---------------- */
-  $('rail').innerHTML = M.filter(m => m.id !== 'cup')
-    .map(m => `<div class="machine" data-m="${m.id}">${m.art()}</div>`).join('');
-  const machineEls = {};
-  $('rail').querySelectorAll('.machine').forEach(el => { machineEls[el.dataset.m] = el; });
-
-  // Slide the rail so the active machine sits centred above the cup.
-  function focusMachine(id) {
-    const order = M.filter(m => m.id !== 'cup').map(m => m.id);
-    const active = order.indexOf(id);
-    order.forEach((mid, i) => {
-      const el = machineEls[mid];
-      // With no active machine (the cup-picking step) slide the whole rail
-      // off to the side so nothing hovers over the cup.
-      const offset = (active < 0 ? (i + 1) : (i - active)) * 132;
-      el.style.setProperty('--x', offset + 'px');
-      el.style.transform = 'translateX(' + offset + 'px)' + (i === active ? '' : ' scale(.8)');
-      el.classList.toggle('on', i === active);
-    });
-    const m = M.find(x => x.id === id);
-    $('mTag').textContent = m ? m.name : '';
-    $('mTag').style.opacity = m ? '1' : '0';
-  }
-
-  /* ---------------- the barista ---------------- */
+  /* ---------------- the barista does the talking ---------------- */
   $('chef').innerHTML = KoraChar.chef({ mouth: 'smile' });
-  function chefFace(o) { $('chef').querySelector('.c-head').innerHTML = KoraChar.face(o); }
+  const chefFace = o => { $('chef').querySelector('.c-head').innerHTML = KoraChar.face(o); };
 
-  // In the kitchen the barista on screen delivers the lines, so redirect the
-  // mascot's speech into a bubble above his head instead of the corner helper.
-  (function () {
-    let t;
-    KoraUI.mascot.say = function (text, ms, reaction) {
-      const b = $('chefBubble');
-      b.textContent = text;
-      b.classList.add('on');
-      if (reaction === 'shock') chefFace({ mouth: 'oh' });
-      else if (reaction) chefFace({ mouth: 'grin', eyes: 'happy' });
-      clearTimeout(t);
-      t = setTimeout(() => { b.classList.remove('on'); chefFace({ mouth: 'smile' }); }, ms || 4000);
-    };
-  })();
+  let bubbleT;
+  function say(text, ms, mood) {
+    const b = $('chefBubble');
+    b.textContent = text;
+    b.classList.add('on');
+    if (mood === 'shock') chefFace({ mouth: 'oh' });
+    else if (mood) chefFace({ mouth: 'grin', eyes: 'happy' });
+    clearTimeout(bubbleT);
+    bubbleT = setTimeout(() => { b.classList.remove('on'); chefFace({ mouth: 'smile' }); }, ms || 4200);
+  }
+  KoraUI.mascot.say = say;   // shared mascot lines come out of his mouth in here
+
+  /* Egyptian coaching, one line per station */
+  const GUIDE = {
+    cup:      'اختار الكوباية الأول — كبيرة ولا عادية؟',
+    brew:     'امسك الكتلة واقلبها فوق الكوباية.. براحة على إيدك!',
+    creamer:  'دلوقتي الحليب. صبّه بالراحة عشان الشكل يطلع حلو',
+    sweet:    'شيل المضخة فوق الكوباية ودوس عليها.. كل ضغطة شوية سيرب',
+    toppings: 'اغرف اللؤلؤ بالمغرفة واقلبها فوق الكوباية',
+    ice:      'التلج آخر حاجة.. متغرقهاش يا معلم',
+    shake:    'امسك الكوباية نفسها ورجّها يمين وشمال!',
+    seal:     'حط الغطا على الكوباية واقفلها، وخلاص كده'
+  };
+  const NAG = {
+    much:   ['بس بقى! كده كتير أوي 😅', 'ياعم وقّف، هتطفح!', 'الكوباية بتقولك خلاص 🙈'],
+    little: ['ده رشة يا معلم، زوّد شوية', 'كده مش هتحس بيه خالص'],
+    nice:   ['جامد! كده مظبوط', 'إيدك حلوة والله 👌', 'كده تمام يا وحش']
+  };
+  const pick = a => a[Math.floor(Math.random() * a.length)];
 
   /* ---------------- the cup ---------------- */
   $('cupStage').innerHTML = KoraKitchen.workCup();
   const cupEl = $('cupStage');
-
-  // Liquid layers stack from the bottom of the cup upward.
-  // Cup interior runs y≈44 (top) to y≈174 (bottom) in the SVG.
   const CUP_TOP = 44, CUP_BOTTOM = 174, CUP_H = CUP_BOTTOM - CUP_TOP;
+  const capacity = () => (V.cup.indexOf('Large') === 0 ? 600 : 480);
+
   function paintCup() {
-    const size = V.cup.indexOf('Large') === 0 ? 1.25 : 1;
-    const cap = 480 * size;                       // total ml the cup can hold
-    const syr = Math.min(1, V.sweet / cap);
-    const tea = Math.min(1, V.brew / cap);
-    const milk = Math.min(1, V.creamer / cap);
-
+    const cap = capacity();
     let acc = 0;
-    const setLayer = (cls, frac) => {
-      acc += frac;
-      const h = Math.min(1, acc) * CUP_H;
-      cupEl.querySelector(cls).setAttribute('y', (CUP_BOTTOM - h).toFixed(1));
+    const layer = (cls, amount) => {
+      acc += Math.min(1, amount / cap);
+      cupEl.querySelector(cls).setAttribute('y', (CUP_BOTTOM - Math.min(1, acc) * CUP_H).toFixed(1));
     };
-    setLayer('.wc-syrup', syr);
-    setLayer('.wc-tea', tea);
-    setLayer('.wc-milk', milk);
+    layer('.wc-syrup', V.sweet);
+    layer('.wc-tea', V.brew);
+    layer('.wc-milk', V.creamer);
 
-    // ice cubes floating near the surface
-    const iceN = Math.round(V.ice / 34);
     let ice = '';
-    for (let i = 0; i < iceN; i++) {
+    for (let i = 0; i < Math.round(V.ice / 34); i++) {
       const x = 36 + (i % 4) * 22, y = 58 + Math.floor(i / 4) * 20;
       ice += `<rect x="${x}" y="${y}" width="17" height="17" rx="4" fill="#fff" opacity=".72"
-               transform="rotate(${(i * 37) % 40 - 20} ${x + 8} ${y + 8})"/>`;
+              transform="rotate(${(i * 37) % 40 - 20} ${x + 8} ${y + 8})"/>`;
     }
     cupEl.querySelector('.wc-ice').innerHTML = ice;
 
-    // pearls settle at the bottom
-    const pN = Math.min(12, 4 + V.toppings.length * 3);
     let pearls = '';
-    for (let i = 0; i < pN; i++) {
+    for (let i = 0; i < Math.min(12, V.toppings.length * 3); i++) {
       const row = Math.floor(i / 4);
       pearls += `<circle cx="${44 + (i % 4) * 22 + (row % 2 ? 9 : 0)}" cy="${162 - row * 17}" r="8"
-                  fill="#2A1017" opacity=".85"/>`;
+                 fill="#2A1017" opacity=".85"/>`;
     }
     cupEl.querySelector('.wc-pearls').innerHTML = pearls;
     cupEl.classList.toggle('sealed', V.sealed);
   }
 
-  /* ---------------- pouring feedback ---------------- */
-  let lumpTimer;
-  function startPour(station) {
-    const m = M.find(x => x.id === station.id);
-    const solid = station.id === 'ice' || station.id === 'toppings';
-    if (solid) {
-      dropLumps(station.id);
-      clearInterval(lumpTimer);
-      lumpTimer = setInterval(() => dropLumps(station.id), 180);
-    } else {
-      const s = $('stream');
-      s.style.background = m ? m.color : 'var(--wine-700)';
-      s.classList.add('on');
-    }
-    if (machineEls[station.id]) machineEls[station.id].classList.add('pouring');
-    $('chef').classList.add('busy');
-    chefFace({ mouth: 'grin', eyes: 'happy' });
-  }
-  function stopPour(station) {
-    $('stream').classList.remove('on');
-    clearInterval(lumpTimer);
-    if (machineEls[station.id]) machineEls[station.id].classList.remove('pouring');
-    $('chef').classList.remove('busy');
-    chefFace({ mouth: 'smile' });
+  /* ---------------- scenery machines ---------------- */
+  $('rail').innerHTML = M.map(m => `<div class="machine" data-m="${m.id}">${m.art()}</div>`).join('');
+  const machineEls = {};
+  $('rail').querySelectorAll('.machine').forEach(el => { machineEls[el.dataset.m] = el; });
+  function focusMachine(id) {
+    const order = M.map(m => m.id);
+    const active = order.indexOf(id);
+    order.forEach((mid, i) => {
+      const off = (active < 0 ? (i + 1) : (i - active)) * 132;
+      machineEls[mid].style.transform = 'translateX(' + off + 'px)' + (i === active ? '' : ' scale(.82)');
+      machineEls[mid].classList.toggle('on', i === active);
+    });
   }
 
-  /* a shower of sparks plus a PERFECT! pop when a pour lands in the zone */
+  /* ---------------- geometry ---------------- */
+  const kit = () => $('kitchen').getBoundingClientRect();
+  function cupBox() {
+    const k = kit(), c = cupEl.getBoundingClientRect();
+    return { top: c.top - k.top, cx: c.left - k.left + c.width / 2 };
+  }
+  function showZone(on) {
+    const z = $('zone'), c = cupBox();
+    z.style.left = (c.cx - 76) + 'px';
+    z.style.top = (c.top - 96) + 'px';
+    z.style.width = '152px';
+    z.style.height = '112px';
+    z.classList.toggle('show', !!on);
+    if (!on) z.classList.remove('hot');
+  }
+
+  /* ---------------- pouring feedback ---------------- */
+  function stream(on, color, fromX, fromY) {
+    const s = $('stream');
+    if (!on) { s.classList.remove('on'); return; }
+    const c = cupBox();
+    s.style.background = color;
+    s.style.left = (fromX - 6) + 'px';
+    s.style.top = fromY + 'px';
+    s.style.height = Math.max(12, (c.top + 30) - fromY) + 'px';
+    s.classList.add('on');
+  }
+  function dropLumps(kind, fromX, fromY) {
+    const box = $('lump');
+    box.style.left = fromX + 'px';
+    box.style.top = fromY + 'px';
+    const el = document.createElement('span');
+    const ice = kind === 'ice';
+    el.style.cssText = `left:${-8 + Math.random() * 16}px;width:${ice ? 15 : 13}px;height:${ice ? 15 : 13}px;
+      background:${ice ? '#EAF6FF' : '#2A1017'};border-radius:${ice ? '4px' : '50%'};
+      box-shadow:0 1px 3px rgba(0,0,0,.3);`;
+    box.appendChild(el);
+    setTimeout(() => el.remove(), 560);
+  }
   function celebrate() {
     const box = $('burst');
     for (let i = 0; i < 12; i++) {
@@ -441,83 +384,337 @@
     }
     const p = $('perfect');
     p.classList.remove('go'); void p.offsetWidth; p.classList.add('go');
-    chefFace({ mouth: 'grin', eyes: 'happy' });
-    setTimeout(() => chefFace({ mouth: 'smile' }), 1400);
-  }
-  function dropLumps(kind) {
-    const box = $('lump');
-    const el = document.createElement('span');
-    const ice = kind === 'ice';
-    el.style.cssText = `left:${-10 + Math.random() * 20}px;width:${ice ? 15 : 12}px;height:${ice ? 15 : 12}px;
-      background:${ice ? 'rgba(255,255,255,.9)' : '#2A1017'};border-radius:${ice ? '4px' : '50%'};`;
-    box.appendChild(el);
-    setTimeout(() => el.remove(), 600);
   }
 
-  /* ---------------- progress ---------------- */
+  /* =====================================================================
+     Shared drag plumbing for anything you pick up off the counter
+     ===================================================================== */
+  function spawnTool(cfg, hint, artArg) {
+    const k = kit();
+    const homeX = Math.max(12, k.width - cfg.w - 16);
+    const homeY = Math.max(60, k.height - 168);
+    const el = document.createElement('div');
+    el.className = 'tool';
+    el.style.width = cfg.w + 'px';
+    el.style.left = homeX + 'px';
+    el.style.top = homeY + 'px';
+    el.innerHTML = cfg.art(artArg) + `<span class="tool-hint">${hint}</span>`;
+    $('toolLayer').appendChild(el);
+
+    const api = { el, homeX, homeY };
+    api.spout = () => {
+      const r = el.getBoundingClientRect(), k2 = kit();
+      return { x: r.left - k2.left + r.width * cfg.spout.x,
+               y: r.top - k2.top + r.height * cfg.spout.y };
+    };
+    api.overCup = () => {
+      const sp = api.spout(), c = cupBox();
+      return Math.abs(sp.x - c.cx) < 82 && sp.y > c.top - 150 && sp.y < c.top + 70;
+    };
+    api.goHome = () => { el.style.left = homeX + 'px'; el.style.top = homeY + 'px'; };
+    return api;
+  }
+
+  function wireDrag(api, hooks) {
+    const el = api.el;
+    const S = { held: false, ox: 0, oy: 0 };
+    el.addEventListener('pointerdown', e => {
+      S.held = true;
+      el.classList.add('held');
+      try { el.setPointerCapture(e.pointerId); } catch (err) {}
+      const r = el.getBoundingClientRect();
+      S.ox = e.clientX - r.left; S.oy = e.clientY - r.top;
+      showZone(true);
+      if (hooks.onGrab) hooks.onGrab();
+      e.preventDefault();
+    });
+    el.addEventListener('pointermove', e => {
+      if (!S.held) return;
+      const k = kit();
+      el.style.left = (e.clientX - k.left - S.ox) + 'px';
+      el.style.top = (e.clientY - k.top - S.oy) + 'px';
+      const on = api.overCup();
+      $('zone').classList.toggle('hot', on);
+      if (hooks.onMove) hooks.onMove(on);
+    });
+    const release = e => {
+      if (!S.held) return;
+      S.held = false;
+      el.classList.remove('held');
+      const wasOver = api.overCup();
+      try { el.releasePointerCapture(e.pointerId); } catch (err) {}
+      showZone(false);
+      if (hooks.onDrop) hooks.onDrop(wasOver);
+    };
+    el.addEventListener('pointerup', release);
+    el.addEventListener('pointercancel', release);
+    return S;
+  }
+
+  /* ---- tip-to-pour: kettle, jug, ice scoop, pearl scoop ---- */
+  function makePourTool(kindKey, station, opts) {
+    const cfg = T[kindKey];
+    const api = spawnTool(cfg, opts.hint);
+    const P = { on: false, raf: 0 };
+
+    function start() {
+      if (P.on) return;
+      P.on = true;
+      api.el.style.transform = 'rotate(' + cfg.tilt + 'deg)';
+      $('chef').classList.add('busy');
+      chefFace({ mouth: 'grin', eyes: 'happy' });
+      const tick = () => {
+        if (!P.on) return;
+        const sp = api.spout();
+        if (opts.solid) {
+          if (opts.field) V[opts.field] = Math.min(station.max, V[opts.field] + 1.5);
+          if (Math.random() < .3) dropLumps(opts.lump, sp.x, sp.y);
+        } else {
+          V[opts.field] = Math.min(station.max, V[opts.field] + 1.5);
+          stream(true, cfg.color, sp.x, sp.y);
+        }
+        refresh(station);
+        P.raf = requestAnimationFrame(tick);
+      };
+      tick();
+    }
+    function stop() {
+      if (!P.on) return;
+      P.on = false;
+      cancelAnimationFrame(P.raf);
+      stream(false);
+      api.el.style.transform = '';
+      $('chef').classList.remove('busy');
+      chefFace({ mouth: 'smile' });
+    }
+
+    wireDrag(api, {
+      onMove: on => { if (on) start(); else stop(); },
+      onDrop: wasOver => {
+        stop(); api.goHome();
+        if (opts.onDrop) opts.onDrop(wasOver);
+        else judge(station);
+      }
+    });
+    return { destroy() { stop(); api.el.remove(); } };
+  }
+
+  /* ---- press-to-pump: the syrup bottle ---- */
+  function makePump(station) {
+    const cfg = T.pump;
+    const api = spawnTool(cfg, 'اسحبني وادوس ✋', cfg.color);
+
+    function pumpOnce() {
+      const head = api.el.querySelector('.pump-head');
+      if (head) { head.style.transform = 'translateY(7px)'; setTimeout(() => { head.style.transform = ''; }, 130); }
+      const sp = api.spout();
+      V.sweet = Math.min(station.max, V.sweet + 5);
+      stream(true, cfg.color, sp.x, sp.y);
+      setTimeout(() => stream(false), 200);
+      refresh(station);
+      cupEl.classList.remove('wobble'); void cupEl.offsetWidth; cupEl.classList.add('wobble');
+    }
+
+    wireDrag(api, {
+      onGrab: () => { if (api.overCup()) pumpOnce(); },
+      onDrop: () => { api.goHome(); judge(station); }
+    });
+    // tapping it again while it sits over the cup pumps another shot
+    api.el.addEventListener('click', () => { if (api.overCup()) pumpOnce(); });
+    return { destroy() { api.el.remove(); } };
+  }
+
+  /* ---- scoop of pearls: tip it over the cup to drop a topping in ---- */
+  function makePearlScoop(station) {
+    return makePourTool('pearlScoop', station, {
+      hint: 'اسحبني واقلبني ✋', solid: true, lump: 'pearl',
+      onDrop: wasOver => {
+        if (!wasOver) return;
+        const next = (station.options || []).find(o => !V.toppings.includes(o));
+        if (!next) { say('خلاص حطينا كل حاجة يا كبير 😄', 3200); return; }
+        V.toppings.push(next);
+        paintCup(); refresh(station);
+        cupEl.classList.remove('wobble'); void cupEl.offsetWidth; cupEl.classList.add('wobble');
+        if (V.toppings.length > 4) say(pick(NAG.much), 3600, 'shock');
+        else say('زوّدنا ' + next + ' 👌', 2800, 'happy');
+      }
+    });
+  }
+
+  /* ---- lid: drop it on the cup ---- */
+  function makeLid(station) {
+    const cfg = T.lid;
+    const api = spawnTool(cfg, 'حطني على الكوباية ✋');
+    const onCup = () => {
+      const r = api.el.getBoundingClientRect(), k = kit(), c = cupBox();
+      const cx = r.left - k.left + r.width / 2, cy = r.top - k.top + r.height / 2;
+      return Math.abs(cx - c.cx) < 74 && Math.abs(cy - c.top) < 66;
+    };
+    api.overCup = onCup;
+    wireDrag(api, {
+      onDrop: () => {
+        if (onCup()) {
+          V.sealed = true; paintCup();
+          api.el.style.display = 'none';
+          celebrate(); say('اتقفلت! تحفة 🎉', 4200, 'happy');
+          refresh(station);
+        } else api.goHome();
+      }
+    });
+    return { destroy() { api.el.remove(); } };
+  }
+
+  /* ---- shaking: grab the cup itself and swing it ---- */
+  function makeShaker(station) {
+    cupEl.classList.add('grabbable');
+    const S = { held: false, lastX: 0, dir: 0 };
+    function down(e) {
+      S.held = true; S.lastX = e.clientX; S.dir = 0;
+      cupEl.classList.add('grabbing');
+      try { cupEl.setPointerCapture(e.pointerId); } catch (err) {}
+      e.preventDefault();
+    }
+    function move(e) {
+      if (!S.held) return;
+      const dx = e.clientX - S.lastX;
+      if (Math.abs(dx) < 9) return;
+      const d = dx > 0 ? 1 : -1;
+      if (S.dir && d !== S.dir && !V.shaken) {      // each change of direction is one shake
+        V.shakes = Math.min(12, V.shakes + 1);
+        refresh(station);
+        if (V.shakes >= 12) {
+          V.shaken = true; celebrate();
+          say('كده اتخلطت صح! 🎉', 4200, 'happy');
+        }
+      }
+      S.dir = d;
+      S.lastX = e.clientX;
+      cupEl.style.transform = 'rotate(' + (d * 9) + 'deg) translateX(' + (d * 8) + 'px)';
+    }
+    function up(e) {
+      if (!S.held) return;
+      S.held = false;
+      cupEl.classList.remove('grabbing');
+      cupEl.style.transform = '';
+      try { cupEl.releasePointerCapture(e.pointerId); } catch (err) {}
+    }
+    cupEl.addEventListener('pointerdown', down);
+    cupEl.addEventListener('pointermove', move);
+    cupEl.addEventListener('pointerup', up);
+    cupEl.addEventListener('pointercancel', up);
+    return { destroy() {
+      cupEl.classList.remove('grabbable', 'grabbing');
+      cupEl.style.transform = '';
+      cupEl.removeEventListener('pointerdown', down);
+      cupEl.removeEventListener('pointermove', move);
+      cupEl.removeEventListener('pointerup', up);
+      cupEl.removeEventListener('pointercancel', up);
+    } };
+  }
+
+  /* ---- the two cups you can start from ---- */
+  function makeChoices(station) {
+    const k = kit(), layer = $('choiceLayer');
+    layer.innerHTML = '';
+    (station.options || []).forEach((o, i) => {
+      const big = o.indexOf('Large') === 0;
+      const d = document.createElement('div');
+      d.className = 'cup-choice' + (V.cup === o ? ' on' : '');
+      d.style.left = (k.width * (i ? .76 : .18) - 30) + 'px';
+      d.style.bottom = '34px';
+      d.innerHTML = `<div class="cc-art" style="width:${big ? 52 : 42}px;height:${big ? 70 : 56}px"></div>
+                     <div class="cc-label">${o}</div>`;
+      d.onclick = () => {
+        V.cup = o; paintCup();
+        layer.querySelectorAll('.cup-choice').forEach(x => x.classList.toggle('on', x === d));
+        say(big ? 'كبيرة! واحد جدع 😄' : 'عادية وحلوة', 2600, 'happy');
+      };
+      layer.appendChild(d);
+    });
+  }
+
+  /* ---------------- judging + readout ---------------- */
+  const zoneOf = s => ({ lo: Math.round(s.min + (s.max - s.min) * .3),
+                         hi: Math.round(s.min + (s.max - s.min) * .7) });
+  let lastNag = 0;
+  function judge(s) {
+    if (s.type !== 'range') return;
+    const v = V[s.id], z = zoneOf(s), now = Date.now();
+    if (now - lastNag < 1600) return;
+    lastNag = now;
+    if (v >= s.max * .96) say(pick(NAG.much), 3600, 'shock');
+    else if (v <= s.max * .08) say(pick(NAG.little), 3400);
+    else if (v >= z.lo && v <= z.hi) { celebrate(); say(pick(NAG.nice), 3200, 'happy'); }
+  }
+
+  function refresh(s) {
+    paintCup();
+    if (s.type === 'range') {
+      const v = Math.round(V[s.id]), z = zoneOf(s);
+      const ro = $('ro'); if (ro) ro.innerHTML = v + '<small>' + s.unit + '</small>';
+      const bar = $('bar'); if (bar) bar.style.width = ((v - s.min) / (s.max - s.min) * 100) + '%';
+      const t = $('tgt');
+      if (t) {
+        const good = v >= z.lo && v <= z.hi;
+        t.className = 'target' + (good ? ' good' : '');
+        t.textContent = good ? '✓ right in the sweet spot' : 'aim for ' + z.lo + '–' + z.hi + s.unit;
+      }
+    } else if (s.type === 'shake') {
+      const bar = $('bar'); if (bar) bar.style.width = (V.shakes / 12 * 100) + '%';
+      const ro = $('ro'); if (ro) ro.textContent = V.shaken ? 'Mixed!' : V.shakes + '/12';
+    } else if (s.type === 'multi') {
+      const ro = $('ro'); if (ro) ro.textContent = V.toppings.length ? V.toppings.join(' · ') : 'none yet';
+    }
+    const nx = $('nextBtn');
+    if (nx) nx.disabled = !canAdvance(s);
+  }
+
+  function canAdvance(s) {
+    if (OPTIONAL) return true;
+    if (s.type === 'range') return V[s.id] > s.min + (s.max - s.min) * .05;
+    if (s.type === 'shake') return V.shaken;
+    return true;
+  }
+
+  /* ---------------- render ---------------- */
+  let tool = null;
   function paintProgress() {
     $('prog').innerHTML = ST.map((s, i) =>
       `<i class="${i < idx ? 'done' : (i === idx ? 'now' : '')}"></i>`).join('');
   }
 
-  /* ---------------- render a station ---------------- */
   function render() {
     paintProgress();
     const s = ST[idx];
-    focusMachine(s.id === 'cup' ? null : s.id);
-    const mm = M.find(x => x.id === s.id);
-    $('steam').classList.toggle('on', !!(mm && mm.steam));
+    if (tool) { tool.destroy(); tool = null; }
+    $('choiceLayer').innerHTML = '';
+    focusMachine(s.id);
     paintCup();
 
     let html = `<h2>${s.title}</h2><p class="hint-txt">${s.hint}</p>`;
-
-    if (s.type === 'choice') {
-      html += `<div class="cup-picks">` + s.options.map(o => {
-        const big = o.indexOf('Large') === 0;
-        return `<button class="cup-pick ${V.cup === o ? 'on' : ''}" data-cup="${o}">
-            <span class="cp-art" style="width:${big ? 40 : 32}px;height:${big ? 54 : 44}px"></span>
-            <span class="cp-label">${o}</span>
-          </button>`;
-      }).join('') + `</div>`;
-    }
-    else if (s.type === 'range') {
-      const v = V[s.id];
-      const lo = Math.round(s.min + (s.max - s.min) * .3), hi = Math.round(s.min + (s.max - s.min) * .7);
-      const pct = ((v - s.min) / (s.max - s.min)) * 100;
-      const inZone = v >= lo && v <= hi;
-      html += `<div class="readout" id="ro">${v}<small>${s.unit}</small></div>
-        <div class="target ${inZone ? 'good' : ''}" id="tgt">${inZone ? '✓ right in the sweet spot' : 'aim for ' + lo + '–' + hi + s.unit}</div>
-        <div class="gauge">
-          <div class="zone" style="left:30%;width:40%"></div>
-          <div class="bar" id="bar" style="width:${pct}%"></div>
-        </div>
-        <div class="pour-row">
-          <button class="nudge" data-step="-5">−</button>
-          <button class="pour-btn" id="pourBtn">Hold to pour</button>
-          <button class="nudge" data-step="5">+</button>
-        </div>`;
-    }
-    else if (s.type === 'multi') {
-      html += `<div class="bin-row">` + s.options.map(o =>
-        `<button class="bin ${V.toppings.includes(o) ? 'on' : ''}" data-top="${o}">
-           <span class="dot"></span>${o}</button>`).join('') + `</div>`;
-    }
-    else if (s.type === 'shake') {
-      html += V.shaken
-        ? `<p style="color:var(--success);font-weight:600;margin:6px 0 0">Nicely mixed.</p>`
-        : `<button class="btn btn-primary btn-lg" id="shakeBtn">Shake it</button>`;
-    }
-    else if (s.type === 'final') {
+    if (s.type === 'range') {
+      const z = zoneOf(s);
+      html += `<div class="readout" id="ro">${Math.round(V[s.id])}<small>${s.unit}</small></div>
+        <div class="target" id="tgt">aim for ${z.lo}–${z.hi}${s.unit}</div>
+        <div class="gauge"><div class="zone-bar"></div><div class="bar" id="bar"></div></div>`;
+    } else if (s.type === 'shake') {
+      html += `<div class="readout" id="ro">${V.shaken ? 'Mixed!' : V.shakes + '/12'}</div>
+        <div class="target">grab the cup and swing it side to side</div>
+        <div class="gauge shake-meter"><div class="bar" id="bar"></div></div>`;
+    } else if (s.type === 'multi') {
+      html += `<div class="readout" id="ro" style="font-size:1.05rem">none yet</div>
+        <div class="target">tip the scoop over the cup to add one</div>`;
+    } else if (s.type === 'final') {
       html += `<div class="recap">
           <b>Cup</b> <span>${V.cup}</span><br>
-          <b>Base</b> <span>${V.brew} ml${spec.labels ? ' · ' + spec.labels.base : ''}</span><br>
-          <b>Creamer</b> <span>${V.creamer} ml${spec.labels ? ' · ' + spec.labels.creamer : ''}</span><br>
-          <b>Syrup</b> <span>${V.sweet} ml${spec.labels && spec.labels.flavor.length ? ' · ' + spec.labels.flavor.join(', ') : ''}</span><br>
-          <b>Ice</b> <span>${V.ice} g</span><br>
+          <b>Base</b> <span>${Math.round(V.brew)} ml${spec.labels ? ' · ' + spec.labels.base : ''}</span><br>
+          <b>Creamer</b> <span>${Math.round(V.creamer)} ml${spec.labels ? ' · ' + spec.labels.creamer : ''}</span><br>
+          <b>Syrup</b> <span>${Math.round(V.sweet)} ml${spec.labels && spec.labels.flavor.length ? ' · ' + spec.labels.flavor.join(', ') : ''}</span><br>
+          <b>Ice</b> <span>${Math.round(V.ice)} g</span><br>
           <b>Toppings</b> <span>${V.toppings.length ? V.toppings.join(', ') : 'none'}</span>
         </div>
         <input class="input" id="drinkName" placeholder="Name your creation"
-               value="${V.name ? V.name + '’s blend' : ''}" style="margin-bottom:6px">`;
+               value="${V.name ? V.name + '’s blend' : ''}">`;
     }
 
     html += `<div class="acts">`;
@@ -529,106 +726,39 @@
       if (OPTIONAL) html += `<button class="btn btn-quiet" id="skipBtn">Skip all</button>`;
     }
     html += `</div>`;
-    if (!OPTIONAL && s.type !== 'final') {
-      html += `<p class="lock-note">Brand-new drink — the bar makes it exactly as you set it here.</p>`;
-    }
-
+    if (!OPTIONAL && s.type !== 'final') html += `<p class="lock-note">Brand-new drink — the bar makes it exactly as you set it here.</p>`;
     $('panel').innerHTML = html;
+
+    /* hand over the right tool */
+    if (s.id === 'cup') makeChoices(s);
+    else if (s.id === 'brew') tool = makePourTool('kettle', s, { hint: 'اسحبني فوق الكوباية ✋', field: 'brew' });
+    else if (s.id === 'creamer') tool = makePourTool('jug', s, { hint: 'اسحبني فوق الكوباية ✋', field: 'creamer' });
+    else if (s.id === 'sweet') tool = makePump(s);
+    else if (s.id === 'toppings') tool = makePearlScoop(s);
+    else if (s.id === 'ice') tool = makePourTool('iceScoop', s, { hint: 'اسحبني واقلبني ✋', field: 'ice', solid: true, lump: 'ice' });
+    else if (s.type === 'shake') tool = makeShaker(s);
+    else if (s.id === 'seal') { V.sealed = false; paintCup(); tool = makeLid(s); }
+
     wire(s);
+    refresh(s);
+    if (GUIDE[s.id]) say(GUIDE[s.id], 5200);
   }
 
-  /* ---------------- wiring ---------------- */
   function wire(s) {
-    const next = $('nextBtn');
-    if (next) next.onclick = () => {
-      if (s.type === 'shake' && !V.shaken) { KoraUI.mascot.blocked(); KoraUI.toast('Give it a proper shake first'); return; }
+    const n = $('nextBtn');
+    if (n) n.onclick = () => {
+      if (!canAdvance(s)) { say('لسه مخلصناش الخطوة دي يا معلم', 3400, 'shock'); return; }
       idx = Math.min(ST.length - 1, idx + 1);
-      if (ST[idx].type === 'final') { V.sealed = true; }
       render();
     };
-    const back = $('backBtn');
-    if (back) back.onclick = () => { idx = Math.max(0, idx - 1); V.sealed = false; render(); };
-    const skip = $('skipBtn');
-    if (skip) skip.onclick = () => { idx = ST.length - 1; V.sealed = true; render(); };
-
-    $('panel').querySelectorAll('[data-cup]').forEach(b => {
-      b.onclick = () => { V.cup = b.dataset.cup; render(); };
-    });
-    $('panel').querySelectorAll('[data-top]').forEach(b => {
-      b.onclick = () => {
-        const t = b.dataset.top, i = V.toppings.indexOf(t);
-        if (i > -1) V.toppings.splice(i, 1);
-        else { V.toppings.push(t); dropLumps('toppings'); }
-        if (V.toppings.length > 4) KoraUI.mascot.tooMuch();
-        render();
-      };
-    });
-
-    /* --- hold-to-pour --- */
-    const pourBtn = $('pourBtn');
-    if (pourBtn) {
-      const apply = (delta) => {
-        const before = V[s.id];
-        V[s.id] = Math.max(s.min, Math.min(s.max, V[s.id] + delta));
-        if (V[s.id] === before) return false;
-        refreshRange(s);
-        return true;
-      };
-      let raf, holding = false;
-      const tick = () => { if (!holding) return; if (!apply(2)) { end(); return; } raf = requestAnimationFrame(tick); };
-      const begin = (e) => {
-        e.preventDefault();
-        if (holding) return;
-        holding = true; pourBtn.classList.add('holding');
-        startPour(s); tick();
-      };
-      const end = () => {
-        if (!holding) return;
-        holding = false; pourBtn.classList.remove('holding');
-        cancelAnimationFrame(raf); stopPour(s);
-        const v = V[s.id];
-        const lo = s.min + (s.max - s.min) * .3, hi = s.min + (s.max - s.min) * .7;
-        if (v >= s.max * .95) KoraUI.mascot.tooMuch();
-        else if (s.min === 0 && v <= s.max * .06) KoraUI.mascot.tooLittle();
-        else if (v >= lo && v <= hi) { celebrate(); if (Math.random() < .5) KoraUI.mascot.working(); }
-        else if (Math.random() < .35) KoraUI.mascot.working();
-      };
-      pourBtn.addEventListener('pointerdown', begin);
-      ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => pourBtn.addEventListener(ev, end));
-      window.addEventListener('blur', end);
-
-      $('panel').querySelectorAll('.nudge').forEach(b => {
-        b.onclick = () => { apply(Number(b.dataset.step)); };
-      });
-    }
-
-    const shake = $('shakeBtn');
-    if (shake) shake.onclick = () => {
-      V.shaken = true;
-      cupEl.classList.add('shaking');
-      KoraUI.mascot.working();
-      setTimeout(() => { cupEl.classList.remove('shaking'); render(); }, 1500);
-    };
-
-    const fin = $('finishBtn');
-    if (fin) fin.onclick = finish;
+    const b = $('backBtn');
+    if (b) b.onclick = () => { idx = Math.max(0, idx - 1); render(); };
+    const sk = $('skipBtn');
+    if (sk) sk.onclick = () => { idx = ST.length - 1; V.sealed = true; render(); };
+    const f = $('finishBtn');
+    if (f) f.onclick = finish;
   }
 
-  function refreshRange(s) {
-    const v = V[s.id];
-    const ro = $('ro'); if (ro) ro.innerHTML = v + '<small>' + s.unit + '</small>';
-    const bar = $('bar'); if (bar) bar.style.width = (((v - s.min) / (s.max - s.min)) * 100) + '%';
-    const lo = Math.round(s.min + (s.max - s.min) * .3), hi = Math.round(s.min + (s.max - s.min) * .7);
-    const tgt = $('tgt');
-    if (tgt) {
-      const inZone = v >= lo && v <= hi;
-      tgt.className = 'target' + (inZone ? ' good' : '');
-      tgt.textContent = inZone ? '✓ right in the sweet spot' : 'aim for ' + lo + '–' + hi + s.unit;
-    }
-    paintCup();
-  }
-
-  /* ---------------- done ---------------- */
   function finish() {
     localStorage.removeItem('kora_kitchen_spec');
     if (OPTIONAL) { location.href = 'guest.html'; return; }
@@ -639,8 +769,9 @@
       build_price: spec.build_price || 0,
       selections: spec.selections || null,
       labels: spec.labels || null,
-      kitchen: { cup: V.cup, brew: V.brew, creamer: V.creamer,
-                 sweet: V.sweet, ice: V.ice, toppings: V.toppings, shaken: V.shaken }
+      kitchen: { cup: V.cup, brew: Math.round(V.brew), creamer: Math.round(V.creamer),
+                 sweet: Math.round(V.sweet), ice: Math.round(V.ice),
+                 toppings: V.toppings, shaken: V.shaken }
     }));
     location.href = 'guest.html';
   }
