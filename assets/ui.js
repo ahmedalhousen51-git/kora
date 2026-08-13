@@ -155,12 +155,6 @@
           animation: kora-bob 3.4s ease-in-out infinite; transform-origin:60px 130px;
           pointer-events:auto; cursor:grab; touch-action:none; }
         #koraMascot.dragging .kora-mascot-svg { cursor:grabbing; animation:none; }
-        /* on a narrow screen he leans in from the edge so he covers as
-           little of the page as possible */
-        #koraMascot.peek-left  .kora-mascot-svg { margin-left:-44px; }
-        #koraMascot.peek-right .kora-mascot-svg { margin-right:-44px; }
-        #koraMascot.dragging.peek-left .kora-mascot-svg,
-        #koraMascot.dragging.peek-right .kora-mascot-svg { margin:0; }
         /* a bouncier bob while he is walking to a new spot */
         #koraMascot.walking .kora-mascot-svg { animation: kora-walk .5s ease-in-out infinite; }
         @keyframes kora-walk { 0%,100%{transform:translateY(0) rotate(-2deg)}
@@ -292,26 +286,21 @@
           if (isFree(x, y, w, h, blocked)) target = { x, y };
         }
       }
-      // No free margin (narrow screen): peek in from the edge instead of
-      // planting himself on top of whatever the customer is reading.
-      let peek = null;
+      // No free margin (narrow screen): hug a side, but always fully on
+      // screen — he should never be half cut off by the edge.
       if (!target) {
         const cands = [];
         const rightX = window.innerWidth - w - PAD;
         for (let y = maxY; y > PAD; y -= 40) {
-          if (isFree(PAD, y, w, h, blocked)) { cands.push({ x: PAD, y, side: 'left' }); break; }
+          if (isFree(PAD, y, w, h, blocked)) { cands.push({ x: PAD, y }); break; }
         }
         for (let y = maxY; y > PAD; y -= 40) {
-          if (isFree(rightX, y, w, h, blocked)) { cands.push({ x: rightX, y, side: 'right' }); break; }
+          if (isFree(rightX, y, w, h, blocked)) { cands.push({ x: rightX, y }); break; }
         }
-        const c = cands.length ? cands[Math.floor(Math.random() * cands.length)]
-                               : { x: PAD, y: Math.max(PAD, maxY * 0.5), side: 'left' };
-        target = { x: c.x, y: c.y };
-        peek = c.side;
+        target = cands.length ? cands[Math.floor(Math.random() * cands.length)]
+                              : { x: PAD, y: Math.max(PAD, maxY * 0.5) };
       }
 
-      el.classList.remove('peek-left', 'peek-right');
-      if (peek) el.classList.add('peek-' + peek);
       el.classList.add('walking');
       put(target.x, target.y);
       setTimeout(() => el.classList.remove('walking'), 2400);
@@ -329,7 +318,6 @@
     svg.addEventListener('pointerdown', e => {
       S.dragging = true; S.moved = false;
       el.classList.add('dragging');
-      el.classList.remove('peek-left', 'peek-right');   // full body while held
       const r = el.getBoundingClientRect();
       offX = e.clientX - r.left; offY = e.clientY - r.top;
       svg.setPointerCapture(e.pointerId);

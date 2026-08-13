@@ -64,6 +64,21 @@
 
   .price-tag { font-family: var(--ff-display); font-size: 1.25rem; font-weight: 700; }
 
+  /* the invitation into the kitchen — available on every kind of order */
+  .kitchen-cta {
+    width: 100%; margin-top: 6px; display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; border-radius: var(--r-lg); cursor: pointer;
+    font-family: inherit; text-align: left; color: #fff; border: none;
+    background: linear-gradient(120deg, var(--gray-950), var(--wine-800));
+    box-shadow: var(--sh-2); transition: transform .16s ease, box-shadow .16s ease;
+  }
+  .kitchen-cta:hover { transform: translateY(-2px); box-shadow: var(--sh-3); }
+  .kitchen-cta .kc-icon { font-size: 1.5rem; }
+  .kitchen-cta .kc-text { flex: 1; }
+  .kitchen-cta .kc-text b { display: block; font-size: .93rem; }
+  .kitchen-cta .kc-text small { color: rgba(255,255,255,.7); font-size: .76rem; }
+  .kitchen-cta .kc-go { font-size: 1.2rem; opacity: .8; }
+
   /* cart */
   .cartbar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
@@ -527,8 +542,13 @@
          <label class="label">Toppings <span class="hint">priced individually</span></label>
          <div id="topList"></div>
        </div>
-       <button class="btn btn-ghost btn-block" onclick="optionalKitchen()">
-         Want to make it yourself? Open the kitchen
+       <button class="kitchen-cta" onclick="optionalKitchen()">
+         <span class="kc-icon">🧑‍🍳</span>
+         <span class="kc-text">
+           <b>Make it yourself in the kitchen</b>
+           <small>Pour it, shake it, seal it — the bar follows your numbers</small>
+         </span>
+         <span class="kc-go">→</span>
        </button>`;
 
     $('topList').innerHTML = C.toppings.map(t => `
@@ -585,8 +605,13 @@
 
   window.optionalKitchen = function () {
     persist();
+    // Carry the drink itself along, so whatever they measure in there comes
+    // back attached to this exact order line instead of being thrown away.
     localStorage.setItem('kora_kitchen_spec', JSON.stringify({
-      mode: 'optional', name: cur.name, customer: S.customer.name
+      mode: 'optional',
+      name: cur.name,
+      customer: S.customer.name,
+      item: Object.assign({}, cur)
     }));
     location.href = 'kitchen-sim.html';
   };
@@ -671,6 +696,12 @@
   }
 
   function optsLine(i) {
+    if (i.handmade && i.kitchen) {
+      const k = i.kitchen;
+      return [k.cup, k.brew + 'ml base', k.creamer + 'ml creamer',
+              k.sweet + 'ml syrup', k.ice + 'g ice',
+              (k.toppings || []).join(', ')].filter(Boolean).join(' · ');
+    }
     if (i.kind === 'custom') {
       const k = i.kitchen || {};
       return [
@@ -693,7 +724,8 @@
         <div style="flex-shrink:0">${KoraUI.cupArt(i.kind === 'custom' ? '#7B1E3E' : ((C.menu.find(m => m.id === i.menu_id) || {}).art || '#7B1E3E'), 44)}</div>
         <div class="l-body">
           <div class="l-name">${i.name}${(i.qty || 1) > 1 ? ' ×' + i.qty : ''}
-            ${i.kind === 'custom' ? '<span class="pill pill-wine" style="margin-left:6px">New creation</span>' : ''}</div>
+            ${i.kind === 'custom' ? '<span class="pill pill-wine" style="margin-left:6px">New creation</span>' : ''}
+            ${i.handmade ? '<span class="pill pill-amber" style="margin-left:6px">Made by you</span>' : ''}</div>
           <div class="l-opts">${optsLine(i)}</div>
         </div>
         <div style="text-align:right">
@@ -724,7 +756,8 @@
           size: i.size, sugar: i.sugar, ice: i.ice, milk: i.milk,
           toppings: i.toppings, qty: i.qty || 1,
           build_price: i.build_price, kitchen: i.kitchen,
-          selections: i.selections, labels: i.labels
+          selections: i.selections, labels: i.labels,
+          kitchen: i.kitchen, handmade: i.handmade
         }))
       });
       S.cart = []; paintCart(); persist();

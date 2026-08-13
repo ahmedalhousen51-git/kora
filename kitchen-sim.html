@@ -275,7 +275,7 @@
     brew:     'امسك الكتلة واقلبها فوق الكوباية.. براحة على إيدك!',
     creamer:  'دلوقتي الحليب. صبّه بالراحة عشان الشكل يطلع حلو',
     sweet:    'شيل المضخة فوق الكوباية ودوس عليها.. كل ضغطة شوية سيرب',
-    toppings: 'اغرف اللؤلؤ بالمغرفة واقلبها فوق الكوباية',
+    toppings: 'اغرف البوبا بالمغرفة واقلبها فوق الكوباية',
     ice:      'التلج آخر حاجة.. متغرقهاش يا معلم',
     shake:    'امسك الكوباية نفسها ورجّها يمين وشمال!',
     seal:     'حط الغطا على الكوباية واقفلها، وخلاص كده'
@@ -794,7 +794,23 @@
 
   function finish() {
     localStorage.removeItem('kora_kitchen_spec');
-    if (OPTIONAL) { location.href = 'guest.html'; return; }
+    const madeByHand = {
+      cup: V.cup, brew: Math.round(V.brew), creamer: Math.round(V.creamer),
+      sweet: Math.round(V.sweet), ice: Math.round(V.ice),
+      toppings: V.toppings, shaken: V.shaken
+    };
+
+    // Play mode still counts: the measurements ride back with the drink so
+    // the bar makes it the way the customer just made it.
+    if (OPTIONAL) {
+      if (spec.item) {
+        localStorage.setItem('kora_custom_result', JSON.stringify(
+          Object.assign({}, spec.item, { id: 'i' + Date.now(), handmade: true, kitchen: madeByHand })
+        ));
+      }
+      location.href = 'guest.html';
+      return;
+    }
     const nameField = $('drinkName');
     const name = (nameField && nameField.value.trim()) || 'Custom Blend';
     localStorage.setItem('kora_custom_result', JSON.stringify({
@@ -802,9 +818,7 @@
       build_price: spec.build_price || 0,
       selections: spec.selections || null,
       labels: spec.labels || null,
-      kitchen: { cup: V.cup, brew: Math.round(V.brew), creamer: Math.round(V.creamer),
-                 sweet: Math.round(V.sweet), ice: Math.round(V.ice),
-                 toppings: V.toppings, shaken: V.shaken }
+      kitchen: madeByHand
     }));
     location.href = 'guest.html';
   }

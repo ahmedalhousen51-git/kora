@@ -29,8 +29,10 @@
   --gray-100: #F2E9EC;
   --gray-50:  #F9F4F6;
 
-  --bg: #F4ECEF;
-  --surface: #FFFDFE;
+  /* Cards and panels are a light warm gray rather than white, so the whole
+     page reads as gray-in-burgundy instead of white boxes on a tint. */
+  --bg: #E7DDE2;
+  --surface: #F6F0F3;
   --text: #211820;
   --text-soft: #5E4551;
   --text-faint: #A68E99;

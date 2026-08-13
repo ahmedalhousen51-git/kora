@@ -167,6 +167,18 @@
       (k.toppings || []).forEach(t => { rows[t] = 'portion'; });
       return { rows, note: 'Cup: ' + (k.cup || '—') + (k.shaken ? ' · shaken' : '') };
     }
+    // The customer went into the kitchen and measured this one themselves —
+    // pour it the way they poured it, not by the standard recipe.
+    if (item.handmade && item.kitchen) {
+      const k = item.kitchen;
+      if (k.brew) rows['Tea base'] = Math.round(k.brew) + ' ml';
+      if (k.creamer) rows['Creamer'] = Math.round(k.creamer) + ' ml';
+      if (k.sweet) rows['Syrup'] = Math.round(k.sweet) + ' ml';
+      if (k.ice) rows['Ice'] = Math.round(k.ice) + ' g';
+      (k.toppings || []).forEach(t => { rows[t] = 'portion'; });
+      return { rows, note: '✋ Made by the customer · ' + (k.cup || '') + (k.shaken ? ' · shaken' : '') };
+    }
+
     const m = C.menu.find(x => x.id === item.menu_id);
     const size = C.sizes.find(s => s.key === item.size);
     const scale = size ? Number(size.scale || 1) : 1;

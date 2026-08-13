@@ -8,7 +8,7 @@ window.KORA_SEED = {
 
   /* ---------------- Drinks ---------------- */
   menu: [
-    { id:'brown_sugar_boba', name:'Brown Sugar Boba', category:'Milk Tea', tagline:'Caramelised brown sugar, fresh milk, warm pearls', price:85, art:'#7B1E3E',
+    { id:'brown_sugar_boba', name:'Brown Sugar Boba', category:'Milk Tea', tagline:'Caramelised brown sugar, fresh milk, warm boba', price:85, art:'#7B1E3E',
       recipe:{ black_tea:120, milk:180, brown_sugar_syrup:35, tapioca:80 } },
     { id:'classic_milk_tea', name:'Classic Milk Tea', category:'Milk Tea', tagline:'The original — strong black tea, creamy finish', price:70, art:'#94264C',
       recipe:{ black_tea:150, milk:150, cane_sugar:25, tapioca:80 } },
@@ -30,7 +30,7 @@ window.KORA_SEED = {
 
     { id:'oreo_cream', name:'Cookies & Cream', category:'Specialty', tagline:'Blended cookie crumble, milk, whipped top', price:100, art:'#3A3A41',
       recipe:{ milk:220, cookie_crumble:45, cane_sugar:25, whipped_cream:35 } },
-    { id:'coffee_boba', name:'Coffee Boba', category:'Specialty', tagline:'Double espresso, milk, brown sugar pearls', price:95, art:'#5A3A22',
+    { id:'coffee_boba', name:'Coffee Boba', category:'Specialty', tagline:'Double espresso, milk, brown sugar boba', price:95, art:'#5A3A22',
       recipe:{ espresso:40, milk:200, brown_sugar_syrup:30, tapioca:80 } },
     { id:'coconut_dream', name:'Coconut Dream', category:'Specialty', tagline:'Coconut milk, grass jelly, gently sweet', price:90, art:'#7FA5A0',
       recipe:{ coconut_milk:220, cane_sugar:20, grass_jelly:70 } }
@@ -38,7 +38,7 @@ window.KORA_SEED = {
 
   /* ---------------- Toppings (priced individually) ---------------- */
   toppings: [
-    { key:'tapioca',      name:'Tapioca Pearls',  price:12, unit:'g', portion:80 },
+    { key:'tapioca',      name:'Boba Pearls',  price:12, unit:'g', portion:80 },
     { key:'popping_boba', name:'Popping Boba',    price:14, unit:'g', portion:60 },
     { key:'grass_jelly',  name:'Grass Jelly',     price:12, unit:'g', portion:70 },
     { key:'pudding',      name:'Egg Pudding',     price:14, unit:'g', portion:70 },
@@ -111,7 +111,7 @@ window.KORA_SEED = {
     { id:'brew',     title:'Brew the base',   hint:'Steep it right — this is the backbone.',      type:'range',  unit:'ml', min:80,  max:280, def:180 },
     { id:'creamer',  title:'Add the creamer', hint:'Pour slowly for that marbled look.',          type:'range',  unit:'ml', min:0,   max:250, def:150 },
     { id:'sweet',    title:'Sweeten it',      hint:'Careful — syrup adds up fast.',               type:'range',  unit:'ml', min:0,   max:60,  def:25 },
-    { id:'toppings', title:'Drop the toppings', hint:'Pearls first, always.',                     type:'multi',  options:['Tapioca Pearls','Popping Boba','Grass Jelly','Egg Pudding','Aloe Vera','Cheese Foam'] },
+    { id:'toppings', title:'Drop the toppings', hint:'Boba first, always.',                     type:'multi',  options:['Boba Pearls','Popping Boba','Grass Jelly','Egg Pudding','Aloe Vera','Cheese Foam'] },
     { id:'ice',      title:'Ice it down',     hint:'Too much ice waters down the flavour.',       type:'range',  unit:'g',  min:0,   max:220, def:90 },
     { id:'shake',    title:'Shake it',        hint:'Give it a proper shake to mix everything.',   type:'shake' },
     { id:'seal',     title:'Seal & name it',  hint:'Name your creation and send it to the bar.',  type:'final' }
@@ -133,7 +133,7 @@ window.KORA_SEED = {
     black_tea:{n:'Black Tea',u:'ml'}, green_tea:{n:'Green Tea',u:'ml'}, oolong_tea:{n:'Oolong Tea',u:'ml'},
     thai_tea:{n:'Thai Tea',u:'ml'}, espresso:{n:'Espresso',u:'ml'},
     milk:{n:'Milk',u:'ml'}, coconut_milk:{n:'Coconut Milk',u:'ml'}, condensed_milk:{n:'Condensed Milk',u:'ml'},
-    tapioca:{n:'Tapioca Pearls',u:'g'}, popping_boba:{n:'Popping Boba',u:'g'}, grass_jelly:{n:'Grass Jelly',u:'g'},
+    tapioca:{n:'Boba Pearls',u:'g'}, popping_boba:{n:'Popping Boba',u:'g'}, grass_jelly:{n:'Grass Jelly',u:'g'},
     pudding:{n:'Egg Pudding',u:'g'}, aloe:{n:'Aloe Vera',u:'g'}, cheese_foam:{n:'Cheese Foam',u:'g'},
     red_bean:{n:'Red Bean',u:'g'}, coconut_jelly:{n:'Coconut Jelly',u:'g'}, whipped_cream:{n:'Whipped Cream',u:'g'},
     brown_sugar_syrup:{n:'Brown Sugar Syrup',u:'ml'}, cane_sugar:{n:'Cane Sugar',u:'g'},
