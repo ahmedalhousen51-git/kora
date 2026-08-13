@@ -1,650 +1,749 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>كورة ☕ — اطلب دلوقتي</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="assets/korra-theme.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Order — Kora</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="assets/theme.css">
 <style>
-  .k-topbar .k-demo-flag { margin-inline-start: 8px; }
-  .step { display: none; padding: 22px 0 110px; }
-  .step.active { display: block; }
-  .step-title { font-size: 1.3rem; font-weight: 900; margin-bottom: 4px; }
-  .step-hint { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 20px; }
+  body { padding-bottom: 96px; }
+  .step { display: none; padding: 30px 0 40px; }
+  .step.on { display: block; }
 
-  /* اختيار نوع الطلب */
+  /* order type */
   .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width:600px){ .type-grid{ grid-template-columns:1fr; } }
-  .type-card { padding: 26px 20px; text-align: center; cursor: pointer; transition: all .2s; }
-  .type-card:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(61,36,18,0.18); }
-  .type-card .ic { font-size: 2.4rem; margin-bottom: 10px; }
-  .type-card h3 { margin: 0 0 6px; }
-  .type-card p { margin: 0; color: var(--text-muted); font-size: 0.82rem; }
+  @media (max-width: 640px) { .type-grid { grid-template-columns: 1fr; } }
+  .type-card { padding: 26px; cursor: pointer; text-align: left; border: 1px solid var(--border); background: var(--surface); border-radius: var(--r-lg); font-family: inherit; }
+  .type-card h3 { font-size: 1.1rem; margin-bottom: 6px; }
+  .type-card p { color: var(--text-soft); font-size: .88rem; margin: 0; }
+  .type-icon { width: 42px; height: 42px; border-radius: 12px; background: var(--wine-100); color: var(--wine-700); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
 
-  /* فورم بيانات */
-  .form-card { padding: 24px; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
-  .field-label { font-weight: 700; font-size: 0.88rem; margin-bottom: 6px; display: block; }
-  #mapBox { height: 220px; border-radius: 12px; overflow: hidden; border: 2px solid var(--border); display:none; margin-top: 6px; }
-  .gps-status { font-size: 0.8rem; color: var(--pitch); font-weight: 700; margin-top: 6px; display:none; }
+  /* info */
+  #map { height: 230px; border-radius: var(--r-md); border: 1px solid var(--border); margin-top: 10px; display: none; }
 
-  /* المنيو */
-  .tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
-  .tab-btn { padding: 8px 16px; border-radius: 20px; border: 2px solid var(--border); background:#fff; cursor:pointer; font-weight:800; font-size:0.82rem; font-family:inherit; }
-  .tab-btn.active { background: var(--pitch); color:#fff; border-color: var(--pitch); }
-  .menu-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(230px,1fr)); gap: 16px; }
-  .menu-card { padding: 18px; display:flex; flex-direction:column; gap:8px; }
-  .menu-card .em { font-size: 2.2rem; }
-  .menu-card h3 { margin:0; font-size: 1.02rem; }
-  .menu-card p { margin:0; color: var(--text-muted); font-size:0.8rem; line-height:1.6; flex:1; }
-  .menu-card .price { font-weight:900; color: var(--coffee); font-size:1.05rem; }
-  .build-cta {
-    grid-column: 1 / -1; padding: 22px; text-align:center;
-    background: linear-gradient(135deg, var(--pitch), var(--pitch-dark)); color:#fff;
-    display:flex; flex-direction:column; gap:10px; align-items:center; border: none;
+  /* menu */
+  .cat-bar { position: sticky; top: 62px; background: var(--bg); padding: 14px 0; z-index: 40; }
+  .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
+  .drink { padding: 20px; display: flex; flex-direction: column; gap: 4px; text-align: left; font-family: inherit; cursor: pointer; }
+  .drink-art { display: flex; justify-content: center; margin-bottom: 6px; }
+  .drink h3 { font-size: 1rem; }
+  .drink .tag { color: var(--text-soft); font-size: .82rem; margin: 2px 0 12px; flex: 1; line-height: 1.5; }
+  .drink .foot { display: flex; align-items: center; justify-content: space-between; }
+  .drink .price { font-family: var(--ff-display); font-weight: 700; font-size: 1.05rem; color: var(--wine-700); }
+
+  .build-banner {
+    grid-column: 1/-1; padding: 26px; border-radius: var(--r-lg);
+    background: linear-gradient(120deg, var(--gray-950), var(--wine-800));
+    color: #fff; display: flex; align-items: center; justify-content: space-between;
+    gap: 18px; flex-wrap: wrap; border: none; cursor: pointer; font-family: inherit; text-align: left;
   }
-  .build-cta h3 { margin:0; font-size:1.15rem; }
-  .build-cta p { margin:0; opacity:0.9; font-size:0.85rem; }
+  .build-banner h3 { font-size: 1.15rem; margin-bottom: 4px; }
+  .build-banner p { margin: 0; color: rgba(255,255,255,.72); font-size: .88rem; }
 
-  /* Modal */
-  .overlay { position: fixed; inset:0; background: rgba(42,26,16,0.55); display:none; align-items:flex-end; justify-content:center; z-index: 500; }
-  .overlay.show { display:flex; }
-  .modal { background:#fdf6ec; width:100%; max-width: 560px; max-height: 88vh; overflow-y:auto; border-radius: 22px 22px 0 0; padding: 22px 20px 100px; position:relative; }
-  @media (min-width:700px){ .overlay{ align-items:center; } .modal{ border-radius:22px; max-height:80vh; } }
-  .modal-close { position:absolute; top:14px; left:14px; background:var(--cream-2); border:none; width:34px; height:34px; border-radius:50%; font-size:1rem; cursor:pointer; }
-  .modal h2 { margin: 0 0 4px; font-size:1.25rem; }
-  .modal .sub { color:var(--text-muted); font-size:0.85rem; margin-bottom:16px; }
-  .stepper-row { display:flex; align-items:center; justify-content:space-between; padding: 12px 0; border-bottom: 1px solid var(--border); gap: 10px; }
-  .stepper-row .info { flex:1; }
-  .stepper-row .info b { display:block; font-size:0.92rem; }
-  .stepper-row .info small { color:var(--text-muted); font-size:0.76rem; }
-  .stepper-ctl { display:flex; align-items:center; gap:10px; }
-  .stepper-ctl button { width:32px; height:32px; border-radius:50%; border:2px solid var(--pitch); background:#fff; color:var(--pitch); font-weight:900; cursor:pointer; font-size:1rem; }
-  .stepper-ctl button:disabled { opacity:0.35; cursor:not-allowed; }
-  .stepper-ctl .qty { min-width: 46px; text-align:center; font-weight:800; }
-  .free-adj { display:flex; align-items:center; gap:8px; padding: 8px 0; font-size:0.88rem; }
-  .section-label { font-weight:800; font-size:0.9rem; margin: 18px 0 6px; color: var(--coffee); }
-  .choice-grid { display:flex; flex-wrap:wrap; gap:8px; }
-  .choice-chip { padding: 9px 14px; border-radius: 12px; border:2px solid var(--border); background:#fff; cursor:pointer; font-size:0.82rem; font-weight:700; font-family:inherit; }
-  .choice-chip.sel { background: var(--pitch); color:#fff; border-color:var(--pitch); }
-  .modal-footer { position:sticky; bottom:-1px; background: linear-gradient(180deg, rgba(253,246,236,0) 0%, #fdf6ec 30%); padding-top: 16px; display:flex; align-items:center; justify-content:space-between; gap:14px; }
-  .modal-total { font-weight:900; font-size:1.15rem; color:var(--coffee); }
+  /* modal internals */
+  .opt-block { margin-bottom: 20px; }
+  .opt-block > .label { display: flex; gap: 7px; align-items: baseline; }
+  .top-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border); gap: 12px; }
+  .top-row:last-child { border-bottom: none; }
+  .top-row .t-name { font-size: .9rem; font-weight: 500; }
+  .top-row .t-sub { font-size: .76rem; color: var(--text-faint); }
+  .switch { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch span { position: absolute; inset: 0; background: var(--gray-300); border-radius: 999px; cursor: pointer; transition: .18s; }
+  .switch span::after { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .18s; }
+  .switch input:checked + span { background: var(--wine-700); }
+  .switch input:checked + span::after { transform: translateX(18px); }
 
-  /* سلة عائمة */
-  .cart-bar { position:fixed; bottom:0; inset-inline:0; background:#fff; border-top:1px solid var(--border); padding: 14px 18px; display:none; align-items:center; justify-content:space-between; box-shadow: 0 -8px 24px rgba(0,0,0,0.08); z-index:400; }
-  .cart-bar.show { display:flex; }
-  .cart-bar .info { font-weight:800; font-size:0.9rem; }
-  .cart-bar .info small { display:block; color:var(--text-muted); font-weight:600; font-size:0.76rem; }
+  .qty-ctl { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--gray-300); border-radius: var(--r-md); padding: 3px; }
+  .qty-ctl button { width: 30px; height: 30px; border: none; background: transparent; border-radius: 8px; cursor: pointer; font-size: 1.05rem; color: var(--text); }
+  .qty-ctl button:hover { background: var(--gray-100); }
+  .qty-ctl .q { min-width: 26px; text-align: center; font-weight: 600; }
 
-  /* تراكينج */
-  .track-card { max-width: 520px; margin: 0 auto; padding: 28px; text-align:center; }
-  .track-steps { display:flex; justify-content:space-between; margin: 26px 0; position:relative; }
-  .track-steps::before { content:''; position:absolute; top:17px; inset-inline:6%; height:4px; background: var(--border); z-index:0; }
-  .track-steps .ts { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; }
-  .track-steps .dot { width:34px; height:34px; border-radius:50%; background:#fff; border:3px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:1rem; }
-  .track-steps .ts.done .dot { background:var(--pitch); border-color:var(--pitch); color:#fff; }
-  .track-steps .ts.now .dot { background:var(--gold); border-color:var(--gold); color:var(--coffee-dark); animation: pulse 1.4s infinite; }
-  @keyframes pulse { 0%,100%{ box-shadow:0 0 0 0 rgba(244,185,66,0.5);} 50%{ box-shadow:0 0 0 8px rgba(244,185,66,0);} }
-  .track-steps .ts span { font-size:0.72rem; font-weight:700; color:var(--text-muted); }
-  .countdown { font-size: 2.6rem; font-weight:900; color: var(--coffee); margin: 10px 0; }
-  .toast { position:fixed; top:18px; left:50%; transform:translateX(-50%); background:var(--pitch); color:#fff; padding:12px 22px; border-radius:12px; font-weight:800; font-size:0.88rem; z-index:9998; opacity:0; transition:all .25s; pointer-events:none; }
-  .toast.show { opacity:1; }
+  .price-tag { font-family: var(--ff-display); font-size: 1.25rem; font-weight: 700; }
+
+  /* cart */
+  .cartbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
+    background: var(--surface); border-top: 1px solid var(--border);
+    box-shadow: 0 -6px 24px rgba(18,18,20,.08);
+    padding: 12px 0; transform: translateY(110%); transition: transform .22s ease;
+  }
+  .cartbar.on { transform: translateY(0); }
+
+  .line { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .line:last-of-type { border-bottom: none; }
+  .line .l-body { flex: 1; }
+  .line .l-name { font-weight: 600; font-size: .95rem; }
+  .line .l-opts { font-size: .8rem; color: var(--text-soft); margin-top: 3px; line-height: 1.6; }
+
+  /* tracking */
+  .track { max-width: 520px; margin: 0 auto; }
+  .track-head { text-align: center; padding: 30px 24px 10px; }
+  .order-no { font-family: var(--ff-display); font-size: 2rem; font-weight: 700; color: var(--wine-700); letter-spacing: -.02em; }
+  .rail { display: flex; align-items: flex-start; padding: 26px 24px; gap: 4px; }
+  .rail .node { flex: 1; text-align: center; position: relative; }
+  .rail .node::before {
+    content: ''; position: absolute; top: 15px; left: -50%; width: 100%; height: 2px; background: var(--gray-200);
+  }
+  .rail .node:first-child::before { display: none; }
+  .rail .node.done::before, .rail .node.now::before { background: var(--wine-700); }
+  .rail .dot {
+    width: 32px; height: 32px; border-radius: 50%; margin: 0 auto 8px;
+    border: 2px solid var(--gray-200); background: var(--surface);
+    display: flex; align-items: center; justify-content: center; position: relative; z-index: 1;
+    font-size: .8rem; color: var(--text-faint);
+  }
+  .rail .node.done .dot { background: var(--wine-700); border-color: var(--wine-700); color: #fff; }
+  .rail .node.now .dot { background: var(--wine-700); border-color: var(--wine-700); color: #fff; animation: ping 1.6s infinite; }
+  @keyframes ping { 0%,100%{ box-shadow: 0 0 0 0 rgba(123,30,62,.45);} 50%{ box-shadow: 0 0 0 9px rgba(123,30,62,0);} }
+  .rail .node span { font-size: .74rem; font-weight: 600; color: var(--text-soft); }
+  .countdown { font-family: var(--ff-display); font-size: 3rem; font-weight: 700; letter-spacing: -.03em; }
 </style>
 </head>
 <body>
 
-<div class="k-topbar">
-  <div class="k-container">
-    <div class="k-brand"><span class="ball">☕</span> كورة</div>
-    <span class="k-demo-flag">ديمو</span>
+<div class="topbar">
+  <div class="container topbar-inner">
+    <div id="brandSlot"></div>
+    <div class="row">
+      <span class="pill pill-outline" id="ctxPill" style="display:none"></span>
+      <a href="index.html" class="btn btn-quiet btn-sm">Exit</a>
+    </div>
   </div>
 </div>
 
-<div class="k-container">
+<div class="container">
 
-  <!-- STEP: اختيار نوع الطلب (بس للينك العام) -->
-  <div class="step" id="step-type">
-    <div class="step-title">أول حاجة.. طلبك هيوصلك إزاي؟</div>
-    <div class="step-hint">اختار اللي يناسبك</div>
+  <!-- 1 · order type -->
+  <div class="step" id="s-type">
+    <div class="section-head">
+      <div class="eyebrow">Step 1</div>
+      <h2>How would you like it?</h2>
+      <p>Pick one — we only ask for what we actually need.</p>
+    </div>
     <div class="type-grid">
-      <div class="k-card type-card" onclick="selectType('delivery')">
-        <div class="ic">🛵</div>
-        <h3>ديليفري</h3>
-        <p>هنوصلك في عنوانك، هنحتاج بياناتك وموقعك بالظبط</p>
+      <button class="type-card card-hover" onclick="setType('pickup')">
+        <div class="type-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9h18l-1.5 11.5A2 2 0 0 1 17.5 22h-11a2 2 0 0 1-2-1.5L3 9Z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg>
+        </div>
+        <h3>Pickup</h3>
+        <p>Order now, collect at the counter. Just your name.</p>
+      </button>
+      <button class="type-card card-hover" onclick="setType('delivery')">
+        <div class="type-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="18" r="3"/><path d="M9 18h6M6 15V7h7l3 5h2"/></svg>
+        </div>
+        <h3>Delivery</h3>
+        <p>We'll bring it to you — we'll need your address and location.</p>
+      </button>
+    </div>
+  </div>
+
+  <!-- 2 · details -->
+  <div class="step" id="s-info">
+    <div class="section-head">
+      <div class="eyebrow">Step 2</div>
+      <h2>Your details</h2>
+      <p id="infoHint"></p>
+    </div>
+    <div class="card card-pad" style="max-width:520px">
+      <div class="opt-block">
+        <label class="label" for="fName">Name <span style="color:var(--danger)">*</span></label>
+        <input id="fName" class="input" placeholder="What should we call out?" autocomplete="name">
       </div>
-      <div class="k-card type-card" onclick="selectType('pickup')">
-        <div class="ic">🏬</div>
-        <h3>استلام من الفرع</h3>
-        <p>تعال خده بنفسك، اسمك بس يكفينا</p>
+      <div class="opt-block" id="phoneWrap">
+        <label class="label" for="fPhone">Phone <span id="phoneReq" style="color:var(--danger);display:none">*</span></label>
+        <input id="fPhone" class="input" type="tel" placeholder="01x xxxx xxxx" autocomplete="tel">
+      </div>
+      <div class="opt-block" id="addrWrap" style="display:none">
+        <label class="label" for="fAddr">Delivery address <span style="color:var(--danger)">*</span></label>
+        <textarea id="fAddr" class="input" rows="3" placeholder="Street, building, floor, landmark…"></textarea>
+        <button class="btn btn-ghost btn-block" style="margin-top:10px" onclick="useGPS()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.6"/></svg>
+          Pin my exact location
+        </button>
+        <p class="hint" id="gpsHint" style="margin-top:8px"></p>
+        <div id="map"></div>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="submitInfo()">Continue to menu</button>
+    </div>
+  </div>
+
+  <!-- 3 · menu -->
+  <div class="step" id="s-menu">
+    <div class="section-head">
+      <div class="eyebrow">Step 3</div>
+      <h2>The menu</h2>
+      <p>Tap a drink to customise it — or build something new from scratch.</p>
+    </div>
+    <div class="cat-bar"><div class="segment" id="cats"></div></div>
+    <div class="menu-grid" id="grid"></div>
+  </div>
+
+  <!-- 4 · review -->
+  <div class="step" id="s-review">
+    <div class="section-head">
+      <div class="eyebrow">Almost there</div>
+      <h2>Review your order</h2>
+    </div>
+    <div class="card card-pad" style="max-width:560px">
+      <div id="reviewLines"></div>
+      <hr class="divider">
+      <div class="spread">
+        <span class="muted">Total</span>
+        <span class="price-tag" id="reviewTotal">—</span>
+      </div>
+      <button class="btn btn-primary btn-block" style="margin-top:18px" id="placeBtn" onclick="placeOrder()">Send order to the bar</button>
+      <button class="btn btn-ghost btn-block" style="margin-top:10px" onclick="show('menu')">Add something else</button>
+    </div>
+  </div>
+
+  <!-- 5 · tracking -->
+  <div class="step" id="s-track">
+    <div class="card track">
+      <div class="track-head">
+        <p class="muted" style="margin:0;font-size:.85rem">Order</p>
+        <div class="order-no" id="tOrderNo">—</div>
+      </div>
+      <div class="rail">
+        <div class="node" id="n-received"><div class="dot">1</div><span>Received</span></div>
+        <div class="node" id="n-preparing"><div class="dot">2</div><span>Making it</span></div>
+        <div class="node" id="n-ready"><div class="dot">3</div><span>Ready</span></div>
+      </div>
+      <div class="center" style="padding:0 24px 26px">
+        <p class="muted" style="margin:0 0 2px;font-size:.85rem" id="etaLabel">Waiting for the bar to set a time…</p>
+        <div class="countdown" id="tCount"></div>
+        <div id="tShortage" style="margin-top:12px"></div>
+        <a href="index.html" class="btn btn-ghost" style="margin-top:22px">Start another order</a>
       </div>
     </div>
   </div>
 
-  <!-- STEP: بيانات العميل -->
-  <div class="step" id="step-info">
-    <div class="step-title">بياناتك</div>
-    <div class="step-hint" id="infoHint"></div>
-    <div class="k-card form-card">
+</div>
+
+<!-- cart bar -->
+<div class="cartbar" id="cartbar">
+  <div class="container spread">
+    <div>
+      <div style="font-weight:600;font-size:.92rem" id="cartCount">0 items</div>
+      <div class="hint" id="cartTotal">—</div>
+    </div>
+    <button class="btn btn-primary" onclick="show('review'); renderReview();">Review order</button>
+  </div>
+</div>
+
+<!-- customise modal -->
+<div class="overlay" id="mCustom">
+  <div class="modal">
+    <div class="modal-head">
+      <button class="modal-close" onclick="closeM('mCustom')">✕</button>
+      <h2 id="cTitle" style="font-size:1.25rem"></h2>
+      <p class="muted" id="cTag" style="margin:4px 0 0;font-size:.85rem"></p>
+    </div>
+    <div class="modal-body" id="cBody"></div>
+    <div class="modal-foot">
       <div>
-        <label class="field-label">الاسم *</label>
-        <input type="text" id="cName" class="k-input" placeholder="اسمك">
+        <div class="hint">Total</div>
+        <div class="price-tag" id="cPrice">—</div>
       </div>
-      <div id="phoneField">
-        <label class="field-label">رقم التليفون</label>
-        <input type="tel" id="cPhone" class="k-input" placeholder="01xxxxxxxxx">
+      <div class="row">
+        <div class="qty-ctl">
+          <button onclick="bumpQty(-1)">−</button><span class="q" id="cQty">1</span><button onclick="bumpQty(1)">+</button>
+        </div>
+        <button class="btn btn-primary" onclick="addToCart()">Add</button>
       </div>
-      <div id="addressField" style="display:none">
-        <label class="field-label">العنوان بالتفصيل *</label>
-        <textarea id="cAddress" class="k-input" rows="3" placeholder="اسم الشارع، رقم العمارة، علامة مميزة..."></textarea>
-        <button type="button" class="k-btn k-btn-outline" style="margin-top:10px; width:100%;" onclick="useGPS()">📍 إرفاق موقعي بالضبط (GPS)</button>
-        <div class="gps-status" id="gpsStatus"></div>
-        <div id="mapBox"></div>
-      </div>
-      <button class="k-btn k-btn-primary" onclick="confirmInfo()">كمّل للمنيو ⚽</button>
     </div>
   </div>
-
-  <!-- STEP: المنيو -->
-  <div class="step" id="step-menu">
-    <div class="step-title">المنيو</div>
-    <div class="step-hint">اختار جاهز، أو ابتكر مشروبك الخاص من الصفر</div>
-    <div class="tabs" id="tabs"></div>
-    <div class="menu-grid" id="menuGrid"></div>
-  </div>
-
-  <!-- STEP: مراجعة الطلب -->
-  <div class="step" id="step-checkout">
-    <div class="step-title">مراجعة الطلب</div>
-    <div class="step-hint">اتأكد من طلبك قبل الإرسال</div>
-    <div class="k-card" style="padding:20px; max-width:560px; margin:0 auto;">
-      <div id="checkoutList"></div>
-      <div style="display:flex; justify-content:space-between; padding-top:14px; margin-top:10px; border-top:2px solid var(--border); font-weight:900; font-size:1.1rem;">
-        <span>الإجمالي</span><span id="checkoutTotal">0 جنيه</span>
-      </div>
-      <button class="k-btn k-btn-primary" style="width:100%; margin-top:16px;" onclick="submitOrder()">✅ إرسال الطلب</button>
-      <button class="k-btn k-btn-outline" style="width:100%; margin-top:10px;" onclick="goToStep('menu')">➕ ضيف كمان من المنيو</button>
-    </div>
-  </div>
-
-  <!-- STEP: تتبع الطلب -->
-  <div class="step" id="step-track">
-    <div class="k-card track-card">
-      <div style="font-size:2.4rem;">☕</div>
-      <h2 style="margin:8px 0 2px;">طلبك جوه!</h2>
-      <div style="color:var(--text-muted); font-size:0.85rem;">رقم الطلب: <b id="trackOrderId"></b></div>
-      <div class="track-steps">
-        <div class="ts" id="ts-received"><div class="dot">📝</div><span>استلام</span></div>
-        <div class="ts" id="ts-preparing"><div class="dot">🔥</div><span>بيتحضر</span></div>
-        <div class="ts" id="ts-ready"><div class="dot">✅</div><span>جاهز</span></div>
-      </div>
-      <div id="etaBox">
-        <div style="color:var(--text-muted); font-size:0.85rem;">الوقت المتوقع</div>
-        <div class="countdown" id="countdown">--:--</div>
-      </div>
-      <div id="shortageBanner" class="k-badge k-badge-red" style="display:none; margin-top:10px; padding:10px 16px; font-size:0.85rem;"></div>
-      <button class="k-btn k-btn-outline" style="margin-top:18px;" onclick="location.href='index.html'">🏠 طلب جديد</button>
-    </div>
-  </div>
-
 </div>
 
-<!-- سلة عائمة -->
-<div class="cart-bar" id="cartBar">
-  <div class="info">🛒 <span id="cartCount">0</span> صنف<small id="cartTotal">0 جنيه</small></div>
-  <button class="k-btn k-btn-primary" onclick="goToStep('checkout'); renderCheckout();">مراجعة وإرسال</button>
-</div>
-
-<!-- Modal: تخصيص مشروب جاهز -->
-<div class="overlay" id="customizeOverlay">
+<!-- build modal -->
+<div class="overlay" id="mBuild">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('customizeOverlay')">✕</button>
-    <h2 id="cmName"></h2>
-    <div class="sub" id="cmDesc"></div>
-
-    <div class="section-label">تفضيلات مجانية</div>
-    <div id="freeAdjustBox"></div>
-
-    <div class="section-label">إضافات بريميوم (بسعر لوحدها)</div>
-    <div id="steppersBox"></div>
-
-    <button class="k-btn k-btn-outline" style="width:100%; margin-top:14px;" onclick="enterOptionalKitchen()">🎮 عايز تدخل المطبخ بنفسك؟ (اختياري)</button>
-
-    <div class="modal-footer">
-      <div class="modal-total" id="cmTotal">0 جنيه</div>
-      <button class="k-btn k-btn-primary" onclick="addMenuItemToCart()">أضف للسلة (طلب سريع)</button>
+    <div class="modal-head">
+      <button class="modal-close" onclick="closeM('mBuild')">✕</button>
+      <h2 style="font-size:1.25rem">Build your own</h2>
+      <p class="muted" style="margin:4px 0 0;font-size:.85rem">Choose your components, then measure everything yourself in the kitchen.</p>
+    </div>
+    <div class="modal-body" id="bBody"></div>
+    <div class="modal-foot">
+      <div>
+        <div class="hint">Base price</div>
+        <div class="price-tag" id="bPrice">—</div>
+      </div>
+      <button class="btn btn-primary" onclick="toKitchen()">Enter the kitchen →</button>
     </div>
   </div>
 </div>
 
-<!-- Modal: ابتكر مشروبك -->
-<div class="overlay" id="buildOverlay">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('buildOverlay')">✕</button>
-    <h2>🎨 ابتكر مشروبك</h2>
-    <div class="sub">اختار المكونات، وبعدين هتدخل المطبخ تظبط الكميات بنفسك بالظبط</div>
-    <div id="buildBox"></div>
-    <div class="modal-footer">
-      <div class="modal-total" id="buildTotal">0 جنيه</div>
-      <button class="k-btn k-btn-primary" onclick="goToKitchenSim()">التالي: المطبخ 👨‍🍳</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script src="assets/korra-data.js"></script>
-<script src="assets/korra-store.js"></script>
-<script src="assets/korra-mascot.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/ui.js"></script>
 <script>
-(function(){
+(function () {
   'use strict';
+  const $ = id => document.getElementById(id);
+  const C = KoraAPI.catalog;
+  const money = KoraAPI.money;
 
-  const STATE = {
-    orderType: null,
-    table: null,
-    customer: { name:'', phone:'', address:'', lat:null, lng:null },
-    cart: [],
-    activeCategory: 'الكل'
+  const S = {
+    type: null, table: null,
+    customer: { name: '', phone: '', address: '', lat: null, lng: null },
+    cart: [], cat: 'All', pollTimer: null, tickTimer: null
   };
 
-  const MENU = KorraStore.getMenu();
-  const CUSTOMS = KorraStore.getCustomizations();
-  const BUILD = KorraStore.getBuildCatalog();
-
-  // ---------- أدوات عامة ----------
-  function goToStep(id){
-    document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
-    document.getElementById('step-'+id).classList.add('active');
-    window.scrollTo({top:0, behavior:'smooth'});
+  /* ------------------------------------------------------- navigation -- */
+  function show(id) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('on'));
+    $('s-' + id).classList.add('on');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
-  function showToast(msg){
-    const t = document.getElementById('toast');
-    t.textContent = msg; t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'), 2600);
-  }
-  function money(n){ return Math.round(n) + ' جنيه'; }
-  function closeModal(id){ document.getElementById(id).classList.remove('show'); }
-  function openModal(id){ document.getElementById(id).classList.add('show'); }
-  window.goToStep = goToStep; window.closeModal = closeModal;
+  window.show = show;
+  window.closeM = id => $(id).classList.remove('show');
+  const openM = id => $(id).classList.add('show');
 
-  // ---------- تهيئة أولية ----------
-  function initFromURL(){
+  /* ------------------------------------------------------------ boot --- */
+  $('brandSlot').innerHTML = KoraUI.brandMark({ size: 28, tagline: false });
+
+  KoraAPI.ready().then(start).catch(err => {
+    KoraUI.toast('Could not load the menu: ' + err.message, 'err');
+  });
+
+  function start() {
     const p = new URLSearchParams(location.search);
-    const mode = p.get('mode');
-    if (mode === 'table') {
-      STATE.orderType = 'table';
-      STATE.table = p.get('table') || '?';
-      goToStep('info'); renderInfoStep();
+    if (p.get('mode') === 'table') {
+      S.type = 'table';
+      S.table = p.get('table') || '1';
+      $('ctxPill').style.display = 'inline-flex';
+      $('ctxPill').textContent = 'Table ' + S.table;
+      show('info'); paintInfo();
     } else {
-      goToStep('type');
+      show('type');
     }
-    // رجوع من محاكاة المطبخ بمشروب مبتكر جاهز
-    const pending = localStorage.getItem('korra_pending_custom_result');
+
+    // returning from the kitchen with a finished custom drink
+    const pending = localStorage.getItem('kora_custom_result');
     if (pending) {
       try {
         const item = JSON.parse(pending);
-        STATE.cart.push(item);
-        localStorage.removeItem('korra_pending_custom_result');
-        updateCartBar();
-        showToast('✅ اتضاف مشروبك المبتكر للسلة');
-      } catch(e){}
+        localStorage.removeItem('kora_custom_result');
+        const saved = JSON.parse(localStorage.getItem('kora_guest_state') || 'null');
+        if (saved) { Object.assign(S, saved); }
+        S.cart.push(item);
+        paintCart();
+        if (S.type) { show('menu'); paintMenu(); }
+        KoraUI.toast('Your creation was added to the order', 'ok');
+      } catch (e) {}
     }
+    paintCats();
   }
 
-  window.selectType = function(type){
-    STATE.orderType = type;
-    goToStep('info'); renderInfoStep();
-  };
+  function persist() {
+    localStorage.setItem('kora_guest_state', JSON.stringify({
+      type: S.type, table: S.table, customer: S.customer, cart: S.cart
+    }));
+  }
 
-  function renderInfoStep(){
-    const hint = document.getElementById('infoHint');
-    const addressField = document.getElementById('addressField');
-    const phoneField = document.getElementById('phoneField');
-    if (STATE.orderType === 'table') {
-      hint.textContent = 'إنت على طاولة رقم ' + STATE.table + ' — اسمك بس يكفينا';
-      addressField.style.display = 'none';
-      phoneField.style.display = 'none';
-    } else if (STATE.orderType === 'pickup') {
-      hint.textContent = 'هتيجي تستلم من الفرع — اسمك بس يكفي';
-      addressField.style.display = 'none';
-      phoneField.style.display = 'block';
+  /* -------------------------------------------------------- step 1/2 --- */
+  window.setType = function (t) { S.type = t; show('info'); paintInfo(); };
+
+  function paintInfo() {
+    const hint = $('infoHint');
+    if (S.type === 'table') {
+      hint.textContent = 'You\'re at table ' + S.table + ' — your name is all we need.';
+      $('phoneWrap').style.display = 'none';
+      $('addrWrap').style.display = 'none';
+    } else if (S.type === 'pickup') {
+      hint.textContent = 'Collecting at the counter. Phone is optional — we\'ll use it to tell you it\'s ready.';
+      $('phoneWrap').style.display = 'block';
+      $('phoneReq').style.display = 'none';
+      $('addrWrap').style.display = 'none';
     } else {
-      hint.textContent = 'ديليفري — محتاجين بياناتك كاملة عشان نوصلك بسرعة';
-      addressField.style.display = 'block';
-      phoneField.style.display = 'block';
+      hint.textContent = 'Delivery — the more precise your location, the faster it gets to you.';
+      $('phoneWrap').style.display = 'block';
+      $('phoneReq').style.display = 'inline';
+      $('addrWrap').style.display = 'block';
     }
   }
 
-  window.confirmInfo = function(){
-    const name = document.getElementById('cName').value.trim();
-    if (!name) { KorraMascot.invalidStep(); showToast('⚠️ اكتب اسمك الأول'); return; }
-    STATE.customer.name = name;
-    STATE.customer.phone = document.getElementById('cPhone').value.trim();
-    if (STATE.orderType === 'delivery') {
-      const addr = document.getElementById('cAddress').value.trim();
-      if (!addr) { showToast('⚠️ اكتب العنوان بالتفصيل'); return; }
-      if (!STATE.customer.phone) { showToast('⚠️ رقم التليفون مطلوب للديليفري'); return; }
-      STATE.customer.address = addr;
+  window.submitInfo = function () {
+    const name = $('fName').value.trim();
+    if (!name) { KoraUI.toast('We need a name for the order', 'err'); KoraUI.mascot.blocked(); return; }
+    S.customer.name = name;
+    S.customer.phone = $('fPhone').value.trim();
+    if (S.type === 'delivery') {
+      const addr = $('fAddr').value.trim();
+      if (!S.customer.phone) { KoraUI.toast('Phone number is required for delivery', 'err'); return; }
+      if (!addr) { KoraUI.toast('Please add your delivery address', 'err'); return; }
+      S.customer.address = addr;
     }
-    KorraMascot.greet();
-    goToStep('menu'); renderMenu();
+    persist();
+    show('menu'); paintMenu();
+    KoraUI.mascot.greet();
   };
 
-  // ---------- GPS ----------
   let map, marker;
-  window.useGPS = function(){
-    const statusEl = document.getElementById('gpsStatus');
-    if (!navigator.geolocation) { showToast('⚠️ المتصفح ده مش بيدعم تحديد الموقع'); return; }
-    statusEl.style.display = 'block';
-    statusEl.textContent = '📡 بنحدد موقعك...';
-    navigator.geolocation.getCurrentPosition(function(pos){
-      const lat = pos.coords.latitude, lng = pos.coords.longitude;
-      STATE.customer.lat = lat; STATE.customer.lng = lng;
-      statusEl.textContent = '✅ اتحدد موقعك (' + lat.toFixed(4) + ', ' + lng.toFixed(4) + ') — اسحب الدبوس لو محتاج تظبطه';
-      document.getElementById('mapBox').style.display = 'block';
-      setTimeout(()=>{
+  window.useGPS = function () {
+    if (!navigator.geolocation) { KoraUI.toast('This browser can\'t share location', 'err'); return; }
+    $('gpsHint').textContent = 'Locating…';
+    navigator.geolocation.getCurrentPosition(pos => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+      S.customer.lat = lat; S.customer.lng = lng;
+      $('gpsHint').textContent = 'Pinned. Drag the marker if it\'s slightly off.';
+      $('map').style.display = 'block';
+      setTimeout(() => {
         if (!map) {
-          map = L.map('mapBox').setView([lat,lng], 16);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-          marker = L.marker([lat,lng], {draggable:true}).addTo(map);
-          marker.on('dragend', function(){
-            const p = marker.getLatLng();
-            STATE.customer.lat = p.lat; STATE.customer.lng = p.lng;
+          map = L.map('map').setView([lat, lng], 16);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+          }).addTo(map);
+          marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+          marker.on('dragend', () => {
+            const ll = marker.getLatLng();
+            S.customer.lat = ll.lat; S.customer.lng = ll.lng;
           });
         } else {
-          map.setView([lat,lng], 16);
-          marker.setLatLng([lat,lng]);
+          map.setView([lat, lng], 16); marker.setLatLng([lat, lng]);
         }
-        setTimeout(()=>map.invalidateSize(), 200);
-      }, 50);
-    }, function(err){
-      statusEl.textContent = '⚠️ مقدرناش نحدد موقعك، اكتب العنوان يدوي بس';
+        map.invalidateSize();
+      }, 60);
+    }, () => {
+      $('gpsHint').textContent = 'Couldn\'t get your location — the written address works fine.';
     });
   };
 
-  // ---------- المنيو ----------
-  function renderTabs(){
-    const cats = ['الكل', ...new Set(MENU.map(m=>m.category))];
-    const box = document.getElementById('tabs');
-    box.innerHTML = cats.map(c =>
-      `<button class="tab-btn ${c===STATE.activeCategory?'active':''}" onclick="filterCat('${c}')">${c}</button>`
-    ).join('');
+  /* ---------------------------------------------------------- menu ----- */
+  function paintCats() {
+    const cats = ['All', ...new Set(C.menu.map(m => m.category))];
+    $('cats').innerHTML = cats.map(c =>
+      `<button class="${c === S.cat ? 'on' : ''}" data-c="${c}">${c}</button>`).join('');
+    $('cats').querySelectorAll('button').forEach(b => {
+      b.onclick = () => { S.cat = b.dataset.c; paintCats(); paintMenu(); };
+    });
   }
-  window.filterCat = function(c){ STATE.activeCategory = c; renderMenu(); };
 
-  function renderMenu(){
-    renderTabs();
-    const grid = document.getElementById('menuGrid');
-    const items = MENU.filter(m => STATE.activeCategory==='الكل' || m.category===STATE.activeCategory);
-    grid.innerHTML = items.map(m => `
-      <div class="k-card menu-card">
-        <div class="em">${m.emoji}</div>
+  function paintMenu() {
+    const items = C.menu.filter(m => S.cat === 'All' || m.category === S.cat);
+    $('grid').innerHTML = items.map(m => `
+      <button class="card card-hover drink" data-id="${m.id}">
+        <div class="drink-art">${KoraUI.cupArt(m.art || '#7B1E3E', 70)}</div>
         <h3>${m.name}</h3>
-        <p>${m.desc}</p>
-        <div class="price">${money(m.basePrice)}</div>
-        <button class="k-btn k-btn-primary" onclick="openCustomize('${m.id}')">خصص واطلب</button>
-      </div>
-    `).join('') + `
-      <button class="k-card build-cta" onclick="openBuild()">
-        <h3>🎨 مش عاجبك حاجة؟ ابتكر مشروبك من الصفر</h3>
-        <p>هتدخل المطبخ وتظبط كل حاجة بإيدك — تجربة مختلفة تماماً</p>
-      </button>
-    `;
-  }
-
-  // ---------- تخصيص مشروب جاهز ----------
-  let cmItem = null, cmAddons = {}, cmFree = new Set();
-  window.openCustomize = function(id){
-    cmItem = MENU.find(m=>m.id===id);
-    cmAddons = {}; cmFree = new Set();
-    document.getElementById('cmName').textContent = cmItem.emoji + ' ' + cmItem.name;
-    document.getElementById('cmDesc').textContent = cmItem.desc + ' — السعر الأساسي ' + money(cmItem.basePrice);
-
-    document.getElementById('freeAdjustBox').innerHTML = [
-      'سكر أقل','من غير سكر','حليب أقل','بدون تلج'
-    ].map((f,i)=>`
-      <label class="free-adj">
-        <input type="checkbox" onchange="toggleFree('${f}', this.checked)"> ${f} <span class="k-badge k-badge-green">مجاناً</span>
-      </label>
-    `).join('');
-
-    document.getElementById('steppersBox').innerHTML = CUSTOMS.map(c => `
-      <div class="stepper-row">
-        <div class="info"><b>${c.name}</b><small>${money(c.unitPrice)} / ${c.step}${c.unit}</small></div>
-        <div class="stepper-ctl">
-          <button onclick="stepAddon('${c.key}',-1)">−</button>
-          <span class="qty" id="qty_${c.key}">0</span>
-          <button onclick="stepAddon('${c.key}',1)">+</button>
+        <p class="tag">${m.tagline || ''}</p>
+        <div class="foot">
+          <span class="price">${money(m.price)}</span>
+          <span class="pill pill-wine">Customise</span>
         </div>
-      </div>
-    `).join('');
-    updateCmTotal();
-    openModal('customizeOverlay');
-  };
-  window.toggleFree = function(f, checked){ if (checked) cmFree.add(f); else cmFree.delete(f); };
-
-  window.stepAddon = function(key, dir){
-    const cfg = CUSTOMS.find(c=>c.key===key);
-    let cur = cmAddons[key] || 0;
-    const next = cur + dir*cfg.step;
-    if (next > cfg.max) { KorraMascot.limitExceeded(); return; }
-    if (next < cfg.min) { return; }
-    cmAddons[key] = next;
-    document.getElementById('qty_'+key).textContent = next;
-    updateCmTotal();
-    if (Math.random() < 0.18) KorraMascot.working();
-  };
-
-  function cmAddonsTotal(){
-    let t = 0;
-    Object.keys(cmAddons).forEach(k=>{
-      const cfg = CUSTOMS.find(c=>c.key===k);
-      const qty = cmAddons[k];
-      if (qty>0) t += (qty/cfg.step)*cfg.unitPrice;
-    });
-    return t;
-  }
-  function updateCmTotal(){
-    const total = cmItem.basePrice + cmAddonsTotal();
-    document.getElementById('cmTotal').textContent = money(total);
-  }
-
-  window.addMenuItemToCart = function(){
-    const addons = Object.keys(cmAddons).filter(k=>cmAddons[k]>0).map(k=>{
-      const cfg = CUSTOMS.find(c=>c.key===k);
-      return { key:k, name:cfg.name, qty: cmAddons[k], unit: cfg.unit, lineTotal: (cmAddons[k]/cfg.step)*cfg.unitPrice };
-    });
-    const total = cmItem.basePrice + cmAddonsTotal();
-    STATE.cart.push({
-      id: KorraStore.genId('item'),
-      kind: 'menu',
-      name: cmItem.name, emoji: cmItem.emoji,
-      basePrice: cmItem.basePrice,
-      baseRecipe: cmItem.baseRecipe,
-      addons, freeAdjustments: [...cmFree],
-      totalPrice: total,
-      wentThroughKitchenSim: false
-    });
-    closeModal('customizeOverlay');
-    updateCartBar();
-    showToast('✅ اتضاف للسلة');
-  };
-
-  // ---------- ابتكر مشروبك ----------
-  let buildSel = { base:null, milk:null, syrup:[], topping:[], sweetener:null };
-  const CRAFT_FEE = 20;
-  window.openBuild = function(){
-    buildSel = { base:null, milk:null, syrup:[], topping:[], sweetener:'sweet_sugar' };
-    const box = document.getElementById('buildBox');
-    box.innerHTML = '';
-    box.innerHTML += buildCategoryHtml('base','القاعدة', BUILD.base, 'single');
-    box.innerHTML += buildCategoryHtml('milk','الحليب', BUILD.milk, 'single');
-    box.innerHTML += buildCategoryHtml('syrup','السيرب (اختياري، أكتر من واحد)', BUILD.syrup, 'multi');
-    box.innerHTML += buildCategoryHtml('topping','التوبينج (اختياري)', BUILD.topping, 'multi');
-    box.innerHTML += buildCategoryHtml('sweetener','التحلية', BUILD.sweetener, 'single');
-    updateBuildTotal();
-    openModal('buildOverlay');
-    KorraMascot.customDrinkStart();
-  };
-
-  function buildCategoryHtml(cat, title, options, mode){
-    return `<div class="section-label">${title}</div>
-      <div class="choice-grid" id="cat_${cat}">
-        ${options.map(o=>`<div class="choice-chip" data-cat="${cat}" data-key="${o.key}" onclick="pickBuild('${cat}','${o.key}','${mode}')">${o.name}${o.unitPrice?` (+${o.unitPrice})`:''}</div>`).join('')}
-      </div>`;
-  }
-
-  window.pickBuild = function(cat, key, mode){
-    if (mode === 'single') {
-      buildSel[cat] = key;
-    } else {
-      const arr = buildSel[cat];
-      const idx = arr.indexOf(key);
-      if (idx === -1) arr.push(key); else arr.splice(idx,1);
-    }
-    document.querySelectorAll('#cat_'+cat+' .choice-chip').forEach(el=>{
-      const k = el.getAttribute('data-key');
-      const active = mode==='single' ? (buildSel[cat]===k) : buildSel[cat].includes(k);
-      el.classList.toggle('sel', active);
-    });
-    updateBuildTotal();
-  };
-
-  function findOpt(cat, key){ return (BUILD[cat]||[]).find(o=>o.key===key); }
-  function buildTotal(){
-    let t = CRAFT_FEE;
-    if (buildSel.base) t += (findOpt('base',buildSel.base)||{}).unitPrice || 0;
-    if (buildSel.milk) t += (findOpt('milk',buildSel.milk)||{}).unitPrice || 0;
-    if (buildSel.sweetener) t += (findOpt('sweetener',buildSel.sweetener)||{}).unitPrice || 0;
-    buildSel.syrup.forEach(k=> t += (findOpt('syrup',k)||{}).unitPrice || 0);
-    buildSel.topping.forEach(k=> t += (findOpt('topping',k)||{}).unitPrice || 0);
-    return t;
-  }
-  function updateBuildTotal(){ document.getElementById('buildTotal').textContent = money(buildTotal()); }
-
-  window.goToKitchenSim = function(){
-    if (!buildSel.base || !buildSel.milk) { showToast('⚠️ لازم تختار قاعدة ونوع حليب على الأقل'); return; }
-    const spec = {
-      id: KorraStore.genId('custom'),
-      name: 'مشروبك المبتكر',
-      selections: buildSel,
-      price: buildTotal(),
-      customerName: STATE.customer.name || ''
-    };
-    localStorage.setItem('korra_pending_custom_spec', JSON.stringify(spec));
-    localStorage.setItem('korra_kitchen_skippable', 'false');
-    location.href = 'kitchen-sim.html?return=guest.html';
-  };
-
-  // ---------- زر اختياري: ادخل المطبخ لمشروب جاهز (Skippable) ----------
-  window.enterOptionalKitchen = function(){
-    const spec = {
-      id: KorraStore.genId('menuplay'),
-      name: cmItem.name,
-      selections: null,
-      price: 0,
-      customerName: STATE.customer.name || ''
-    };
-    localStorage.setItem('korra_pending_custom_spec', JSON.stringify(spec));
-    localStorage.setItem('korra_kitchen_skippable', 'true');
-    location.href = 'kitchen-sim.html?return=guest.html&optional=1';
-  };
-
-  // ---------- السلة ----------
-  function cartTotal(){ return STATE.cart.reduce((s,i)=>s+i.totalPrice,0); }
-  function updateCartBar(){
-    const bar = document.getElementById('cartBar');
-    if (STATE.cart.length===0) { bar.classList.remove('show'); return; }
-    bar.classList.add('show');
-    document.getElementById('cartCount').textContent = STATE.cart.length;
-    document.getElementById('cartTotal').textContent = money(cartTotal());
-  }
-
-  function renderCheckout(){
-    const list = document.getElementById('checkoutList');
-    list.innerHTML = STATE.cart.map((item,idx)=>`
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);">
+      </button>`).join('') + `
+      <button class="build-banner" id="buildBtn">
         <div>
-          <b>${item.emoji||'🎨'} ${item.name}</b>
-          ${item.kind==='custom' ? '<div class="k-badge k-badge-gold" style="margin-top:4px;">مشروب مبتكر</div>' : ''}
+          <h3>Build your own drink</h3>
+          <p>Pick your base, milk and flavours — then measure every gram yourself in the kitchen.</p>
         </div>
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span>${money(item.totalPrice)}</span>
-          <button class="k-btn k-btn-outline" style="padding:6px 10px;" onclick="removeFromCart(${idx})">🗑️</button>
-        </div>
-      </div>
-    `).join('') || '<p style="color:var(--text-muted)">السلة فاضية</p>';
-    document.getElementById('checkoutTotal').textContent = money(cartTotal());
-  }
-  window.renderCheckout = renderCheckout;
-  window.removeFromCart = function(idx){ STATE.cart.splice(idx,1); renderCheckout(); updateCartBar(); };
-
-  window.submitOrder = function(){
-    if (STATE.cart.length===0) { showToast('⚠️ السلة فاضية'); return; }
-    const order = KorraStore.createOrder({
-      type: STATE.orderType,
-      table: STATE.table,
-      customer: STATE.customer,
-      items: STATE.cart,
-      totalPrice: cartTotal()
+        <span class="btn btn-light btn-sm">Start building →</span>
+      </button>`;
+    $('grid').querySelectorAll('.drink').forEach(el => {
+      el.onclick = () => openCustom(el.dataset.id);
     });
-    KorraMascot.orderSubmitted();
-    STATE.cart = [];
-    updateCartBar();
-    startTracking(order.id);
+    $('buildBtn').onclick = openBuild;
+  }
+
+  /* ------------------------------------------------------ customise ---- */
+  let cur = null;
+  function openCustom(id) {
+    const m = C.menu.find(x => x.id === id);
+    cur = {
+      kind: 'menu', menu_id: id, name: m.name,
+      size: (C.sizes[0] || {}).key, sugar: '100', ice: '100',
+      milk: (C.milkOptions[0] || {}).key, toppings: [], qty: 1
+    };
+    $('cTitle').textContent = m.name;
+    $('cTag').textContent = m.tagline || '';
+    $('cQty').textContent = '1';
+
+    const seg = (title, list, field, keyName) => `
+      <div class="opt-block">
+        <label class="label">${title}</label>
+        <div class="chips" data-field="${field}">
+          ${list.map(o => `<button class="chip" data-key="${o.key}">${o[keyName || 'name']}${
+            o.priceDelta ? `<span class="chip-price">+${o.priceDelta}</span>` : ''}</button>`).join('')}
+        </div>
+      </div>`;
+
+    $('cBody').innerHTML =
+      seg('Size', C.sizes, 'size') +
+      seg('Sugar level', C.sugarLevels, 'sugar') +
+      seg('Ice level', C.iceLevels, 'ice') +
+      seg('Milk', C.milkOptions, 'milk') +
+      `<div class="opt-block">
+         <label class="label">Toppings <span class="hint">priced individually</span></label>
+         <div id="topList"></div>
+       </div>
+       <button class="btn btn-ghost btn-block" onclick="optionalKitchen()">
+         Want to make it yourself? Open the kitchen
+       </button>`;
+
+    $('topList').innerHTML = C.toppings.map(t => `
+      <div class="top-row">
+        <div>
+          <div class="t-name">${t.name}</div>
+          <div class="t-sub">${money(t.price)} · ${t.portion}${t.unit}</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" data-top="${t.key}"><span></span>
+        </label>
+      </div>`).join('');
+
+    $('cBody').querySelectorAll('.chips').forEach(box => {
+      const f = box.dataset.field;
+      box.querySelectorAll('.chip').forEach(ch => {
+        if (ch.dataset.key === cur[f]) ch.classList.add('on');
+        ch.onclick = () => {
+          cur[f] = ch.dataset.key;
+          box.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === ch));
+          priceNow();
+        };
+      });
+    });
+    $('topList').querySelectorAll('input[data-top]').forEach(inp => {
+      inp.onchange = () => {
+        const k = inp.dataset.top;
+        if (inp.checked) cur.toppings.push(k);
+        else cur.toppings = cur.toppings.filter(x => x !== k);
+        if (cur.toppings.length > 4 && inp.checked) KoraUI.mascot.tooMuch();
+        priceNow();
+      };
+    });
+
+    priceNow();
+    openM('mCustom');
+  }
+
+  function priceNow() { $('cPrice').textContent = money(KoraAPI.priceItem(cur)); }
+  window.bumpQty = d => {
+    cur.qty = Math.max(1, Math.min(9, cur.qty + d));
+    $('cQty').textContent = cur.qty;
+    priceNow();
   };
 
-  // ---------- التتبع اللحظي ----------
-  let trackTimer = null;
-  function startTracking(orderId){
-    document.getElementById('trackOrderId').textContent = '#' + orderId.slice(-6);
-    goToStep('track');
-    renderTrack(orderId);
-    KorraStore.onUpdate(()=> renderTrack(orderId));
-    clearInterval(trackTimer);
-    trackTimer = setInterval(()=> renderTrack(orderId), 1000);
+  window.addToCart = function () {
+    S.cart.push(Object.assign({ id: 'i' + Date.now() }, cur));
+    closeM('mCustom');
+    paintCart(); persist();
+    KoraUI.toast('Added to your order', 'ok');
+  };
+
+  window.optionalKitchen = function () {
+    persist();
+    localStorage.setItem('kora_kitchen_spec', JSON.stringify({
+      mode: 'optional', name: cur.name, customer: S.customer.name
+    }));
+    location.href = 'kitchen-sim.html';
+  };
+
+  /* --------------------------------------------------------- build ----- */
+  let build = null;
+  function openBuild() {
+    build = { base: null, creamer: null, flavor: [] };
+    const B = C.buildCatalog;
+    const group = (title, key, list, multi) => `
+      <div class="opt-block">
+        <label class="label">${title}${multi ? ' <span class="hint">pick any</span>' : ''}</label>
+        <div class="chips" data-g="${key}" data-multi="${multi ? 1 : 0}">
+          ${(list || []).map(o => `<button class="chip" data-key="${o.key}">${o.name}<span class="chip-price">+${o.price}</span></button>`).join('')}
+        </div>
+      </div>`;
+    $('bBody').innerHTML =
+      group('Tea base', 'base', B.base) +
+      group('Creamer', 'creamer', B.creamer) +
+      group('Flavours', 'flavor', B.flavor, true);
+
+    $('bBody').querySelectorAll('.chips').forEach(box => {
+      const g = box.dataset.g, multi = box.dataset.multi === '1';
+      box.querySelectorAll('.chip').forEach(ch => {
+        ch.onclick = () => {
+          const k = ch.dataset.key;
+          if (multi) {
+            const i = build[g].indexOf(k);
+            if (i > -1) build[g].splice(i, 1); else build[g].push(k);
+            ch.classList.toggle('on');
+            if (build[g].length > 3) KoraUI.mascot.tooMuch();
+          } else {
+            build[g] = k;
+            box.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === ch));
+          }
+          $('bPrice').textContent = money(C.craftFee + buildPrice());
+        };
+      });
+    });
+    $('bPrice').textContent = money(C.craftFee);
+    openM('mBuild');
+    KoraUI.mascot.buildStart();
   }
 
-  function renderTrack(orderId){
-    const order = KorraStore.getOrder(orderId);
-    if (!order) return;
-    ['received','preparing','ready'].forEach(s=>{
-      const el = document.getElementById('ts-'+s);
-      el.classList.remove('done','now');
-    });
-    const order_seq = ['received','preparing','ready'];
-    const curIdx = order_seq.indexOf(order.status);
-    order_seq.forEach((s,i)=>{
-      const el = document.getElementById('ts-'+s);
-      if (i < curIdx) el.classList.add('done');
-      else if (i === curIdx) el.classList.add('now');
-    });
-
-    const cd = document.getElementById('countdown');
-    if (order.etaMinutes && order.etaSetAt) {
-      const endAt = order.etaSetAt + order.etaMinutes*60000;
-      const remain = Math.max(0, endAt - Date.now());
-      const mm = Math.floor(remain/60000);
-      const ss = Math.floor((remain%60000)/1000);
-      cd.textContent = (remain>0) ? (String(mm).padStart(2,'0')+':'+String(ss).padStart(2,'0')) : 'خلص دلوقتي! 🎉';
-    } else {
-      cd.textContent = 'مستنيين الباريستا يحدد الوقت...';
-    }
-
-    const banner = document.getElementById('shortageBanner');
-    if (order.shortageFlag) {
-      banner.style.display = 'inline-flex';
-      banner.textContent = '⚠️ في نقص في: ' + order.shortageFlag + ' — الباريستا هيتواصل معاك';
-    } else {
-      banner.style.display = 'none';
-    }
-
-    if (order.status === 'ready') clearInterval(trackTimer);
+  function findOpt(g, k) { return (C.buildCatalog[g] || []).find(o => o.key === k); }
+  function buildPrice() {
+    let t = 0;
+    if (build.base) t += (findOpt('base', build.base) || {}).price || 0;
+    if (build.creamer) t += (findOpt('creamer', build.creamer) || {}).price || 0;
+    build.flavor.forEach(k => t += (findOpt('flavor', k) || {}).price || 0);
+    return t;
   }
 
-  initFromURL();
+  window.toKitchen = function () {
+    if (!build.base || !build.creamer) {
+      KoraUI.toast('Pick a tea base and a creamer first', 'err');
+      KoraUI.mascot.blocked(); return;
+    }
+    persist();
+    localStorage.setItem('kora_kitchen_spec', JSON.stringify({
+      mode: 'build',
+      selections: build,
+      build_price: buildPrice(),
+      labels: {
+        base: (findOpt('base', build.base) || {}).name,
+        creamer: (findOpt('creamer', build.creamer) || {}).name,
+        flavor: build.flavor.map(k => (findOpt('flavor', k) || {}).name)
+      },
+      customer: S.customer.name
+    }));
+    location.href = 'kitchen-sim.html';
+  };
+
+  /* ---------------------------------------------------------- cart ----- */
+  function paintCart() {
+    const bar = $('cartbar');
+    if (!S.cart.length) { bar.classList.remove('on'); return; }
+    bar.classList.add('on');
+    const n = S.cart.reduce((s, i) => s + (i.qty || 1), 0);
+    $('cartCount').textContent = n + (n === 1 ? ' item' : ' items');
+    $('cartTotal').textContent = money(KoraAPI.priceCart(S.cart));
+  }
+
+  function optsLine(i) {
+    if (i.kind === 'custom') {
+      const k = i.kitchen || {};
+      return [
+        k.cup, k.brew != null ? k.brew + 'ml base' : null,
+        k.creamer != null ? k.creamer + 'ml creamer' : null,
+        k.sweet != null ? k.sweet + 'ml syrup' : null,
+        k.ice != null ? k.ice + 'g ice' : null,
+        (k.toppings || []).join(', ')
+      ].filter(Boolean).join(' · ');
+    }
+    const size = (C.sizes.find(s => s.key === i.size) || {}).name;
+    const milk = (C.milkOptions.find(s => s.key === i.milk) || {}).name;
+    const tops = i.toppings.map(k => (C.toppings.find(t => t.key === k) || {}).name).filter(Boolean);
+    return [size, i.sugar + '% sugar', i.ice + '% ice', milk, tops.join(', ')].filter(Boolean).join(' · ');
+  }
+
+  function renderReview() {
+    $('reviewLines').innerHTML = S.cart.map((i, idx) => `
+      <div class="line">
+        <div style="flex-shrink:0">${KoraUI.cupArt(i.kind === 'custom' ? '#7B1E3E' : ((C.menu.find(m => m.id === i.menu_id) || {}).art || '#7B1E3E'), 44)}</div>
+        <div class="l-body">
+          <div class="l-name">${i.name}${(i.qty || 1) > 1 ? ' ×' + i.qty : ''}
+            ${i.kind === 'custom' ? '<span class="pill pill-wine" style="margin-left:6px">New creation</span>' : ''}</div>
+          <div class="l-opts">${optsLine(i)}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:600">${money(KoraAPI.priceItem(i))}</div>
+          <button class="btn btn-quiet btn-sm" style="padding:4px 8px" onclick="dropLine(${idx})">Remove</button>
+        </div>
+      </div>`).join('') || '<p class="muted">Your order is empty.</p>';
+    $('reviewTotal').textContent = money(KoraAPI.priceCart(S.cart));
+  }
+  window.renderReview = renderReview;
+  window.dropLine = i => { S.cart.splice(i, 1); renderReview(); paintCart(); persist(); };
+
+  /* --------------------------------------------------------- submit ---- */
+  window.placeOrder = async function () {
+    if (!S.cart.length) { KoraUI.toast('Your order is empty', 'err'); return; }
+    const btn = $('placeBtn');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      const res = await KoraAPI.placeOrder({
+        order_type: S.type,
+        table_number: S.table,
+        customer_name: S.customer.name,
+        customer_phone: S.customer.phone,
+        address: S.customer.address,
+        lat: S.customer.lat, lng: S.customer.lng,
+        items: S.cart.map(i => ({
+          kind: i.kind, menu_id: i.menu_id, name: i.name,
+          size: i.size, sugar: i.sugar, ice: i.ice, milk: i.milk,
+          toppings: i.toppings, qty: i.qty || 1,
+          build_price: i.build_price, kitchen: i.kitchen,
+          selections: i.selections, labels: i.labels
+        }))
+      });
+      S.cart = []; paintCart(); persist();
+      localStorage.removeItem('kora_guest_state');
+      KoraUI.mascot.submitted();
+      trackOrder(res.token, res.order_number);
+    } catch (err) {
+      KoraUI.toast(err.message || 'Could not send the order', 'err');
+      btn.disabled = false; btn.textContent = 'Send order to the bar';
+    }
+  };
+
+  /* ---------------------------------------------------------- track ---- */
+  const STEPS = ['received', 'preparing', 'ready'];
+  let lastStatus = null;
+
+  function trackOrder(token, number) {
+    $('tOrderNo').textContent = number;
+    show('track');
+    const poll = async () => {
+      try {
+        const st = await KoraAPI.orderStatus(token);
+        if (st) paintTrack(st);
+      } catch (e) {}
+    };
+    poll();
+    clearInterval(S.pollTimer); S.pollTimer = setInterval(poll, 3000);
+    clearInterval(S.tickTimer); S.tickTimer = setInterval(tick, 1000);
+    window._track = { token, eta: null, setAt: null };
+  }
+
+  function paintTrack(st) {
+    const idx = STEPS.indexOf(st.status);
+    STEPS.forEach((s, i) => {
+      const n = $('n-' + s);
+      n.classList.toggle('done', i < idx);
+      n.classList.toggle('now', i === idx);
+    });
+    window._track.eta = st.eta_minutes;
+    window._track.setAt = st.eta_set_at ? new Date(st.eta_set_at).getTime() : null;
+
+    if (st.status === 'ready' && lastStatus !== 'ready') {
+      KoraUI.toast('Your drink is ready!', 'ok');
+      $('etaLabel').textContent = 'Ready for you';
+      $('tCount').textContent = '🎉';
+      clearInterval(S.tickTimer);
+    }
+    lastStatus = st.status;
+
+    $('tShortage').innerHTML = st.shortage
+      ? `<span class="pill pill-red">Out of stock: ${st.shortage} — the bar will reach out</span>` : '';
+    if (!st.eta_minutes) $('etaLabel').textContent = 'Waiting for the bar to set a time…';
+    else if (st.status !== 'ready') $('etaLabel').textContent = 'Estimated time remaining';
+    tick();
+  }
+
+  function tick() {
+    const t = window._track;
+    if (!t || !t.eta || !t.setAt || lastStatus === 'ready') return;
+    const left = Math.max(0, t.setAt + t.eta * 60000 - Date.now());
+    const m = Math.floor(left / 60000), s = Math.floor((left % 60000) / 1000);
+    $('tCount').textContent = left > 0
+      ? String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0')
+      : 'Any second now';
+  }
 })();
 </script>
 </body>
