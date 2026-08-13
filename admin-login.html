@@ -1,46 +1,66 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>كورة ☕ — دخول الإدارة</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/korra-theme.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — Kora</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/theme.css">
 <style>
-  body { min-height:100vh; display:flex; align-items:center; justify-content:center; background: linear-gradient(160deg,var(--coffee-dark),var(--coffee)); }
-  .login-card { max-width:400px; width:100%; padding:34px 28px; text-align:center; margin:20px; }
-  .login-card .ic { font-size:2.8rem; margin-bottom:10px; }
-  .demo-hint { background: var(--cream-2); border-radius:10px; padding:12px; font-size:0.78rem; color:var(--text-muted); margin-top:16px; text-align:right; line-height:1.9; }
+  body {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+    background: linear-gradient(150deg, var(--gray-950), var(--wine-900));
+  }
+  .box { width: 100%; max-width: 400px; padding: 34px 30px; }
+  .box-icon { width: 54px; height: 54px; border-radius: 16px; background: var(--wine-700); color: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
+  .demo-box { background: var(--gray-50); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px; margin-top: 18px; font-size: .78rem; color: var(--text-soft); line-height: 1.8; }
 </style>
 </head>
 <body>
-  <div class="k-card login-card">
-    <div class="ic">🛡️☕</div>
-    <h2>لوحة إدارة كورة</h2>
-    <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:22px;">منطقة محمية للإدارة فقط</p>
-    <input type="email" id="aEmail" class="k-input" placeholder="البريد الإلكتروني" style="margin-bottom:10px;">
-    <input type="password" id="aPass" class="k-input" placeholder="كلمة المرور" style="margin-bottom:10px;">
-    <button class="k-btn k-btn-primary" style="width:100%;" onclick="doLogin()">دخول</button>
-    <div class="demo-hint">
-      🧪 <b>حساب ديمو للتجربة:</b><br>
-      البريد: admin@korra.demo<br>
-      الباسورد: korra2026
+  <div class="card box center">
+    <div class="box-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2 4 6v6c0 5 3.4 8.9 8 10 4.6-1.1 8-5 8-10V6l-8-4Z"/></svg>
     </div>
+    <h2 style="font-size:1.3rem">Kora Admin</h2>
+    <p class="muted" style="font-size:.86rem;margin:6px 0 22px">Owner access only.</p>
+    <div class="stack" style="text-align:left">
+      <input id="email" class="input" type="email" placeholder="Email" autocomplete="email">
+      <input id="pass" class="input" type="password" placeholder="Password" autocomplete="current-password">
+      <button class="btn btn-primary btn-block" id="go">Sign in</button>
+    </div>
+    <div class="demo-box" id="demoBox"></div>
+    <a href="index.html" class="btn btn-quiet btn-sm" style="margin-top:14px">← Back to site</a>
   </div>
 
-<script src="assets/korra-data.js"></script>
-<script src="assets/korra-store.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/ui.js"></script>
 <script>
-  function doLogin(){
-    const email = document.getElementById('aEmail').value.trim();
-    const pass = document.getElementById('aPass').value;
-    const res = KorraStore.adminLogin(email, pass);
-    if (!res.ok) { alert('⚠️ ' + res.error); return; }
-    KorraStore.setSession('admin', res.admin);
-    location.href = 'admin-dashboard.html';
-  }
-  const sess = KorraStore.getSession();
-  if (sess && sess.role === 'admin') location.href = 'admin-dashboard.html';
+  KoraAPI.ready().then(async () => {
+    document.getElementById('demoBox').innerHTML = KoraAPI.mode === 'supabase'
+      ? 'Connected to Supabase — sign in with your admin account.'
+      : '<b>Demo mode</b><br>Email: <b>admin@kora.local</b><br>Password: <b>kora2026</b>';
+    if (await KoraAPI.adminSession()) location.href = 'admin-dashboard.html';
+  });
+
+  document.getElementById('go').onclick = async () => {
+    const email = document.getElementById('email').value.trim();
+    const pass = document.getElementById('pass').value;
+    if (!email || !pass) { KoraUI.toast('Enter your email and password', 'err'); return; }
+    const btn = document.getElementById('go');
+    btn.disabled = true; btn.textContent = 'Signing in…';
+    try {
+      const res = await KoraAPI.adminLogin(email, pass);
+      if (!res.ok) { KoraUI.toast(res.error, 'err'); btn.disabled = false; btn.textContent = 'Sign in'; return; }
+      location.href = 'admin-dashboard.html';
+    } catch (e) {
+      KoraUI.toast(e.message, 'err'); btn.disabled = false; btn.textContent = 'Sign in';
+    }
+  };
+  document.getElementById('pass').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('go').click(); });
 </script>
 </body>
 </html>
