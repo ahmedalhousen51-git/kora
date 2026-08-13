@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كورة ☕ — الصفحة الرئيسية (ديمو)</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/korra-theme.css">
+<style>
+  .hero {
+    background: radial-gradient(circle at 20% 10%, rgba(244,185,66,0.25), transparent 50%),
+                linear-gradient(160deg, var(--coffee-dark), var(--coffee) 70%);
+    color: #fff; padding: 54px 0 70px; text-align: center; position: relative; overflow: hidden;
+  }
+  .hero::after {
+    content: '⚽'; position: absolute; font-size: 14rem; opacity: 0.06;
+    right: -40px; bottom: -60px; transform: rotate(-12deg);
+  }
+  .hero h1 { font-size: 2.4rem; font-weight: 900; margin: 14px 0 8px; }
+  .hero p { color: rgba(255,255,255,0.8); font-size: 1rem; max-width: 520px; margin: 0 auto; line-height: 1.8; }
+  .logo-mark { font-size: 3rem; }
+  .demo-note {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(244,185,66,0.15); border: 1px solid rgba(244,185,66,0.5);
+    color: var(--gold); padding: 8px 16px; border-radius: 30px;
+    font-weight: 800; font-size: 0.82rem; margin-top: 18px;
+  }
+  .section { padding: 40px 0; }
+  .section h2 { font-size: 1.3rem; font-weight: 900; margin-bottom: 6px; }
+  .section .hint { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 20px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+  .path-card { padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+  .path-card .icon { font-size: 2.2rem; }
+  .path-card h3 { margin: 0; font-size: 1.1rem; }
+  .path-card p { margin: 0; color: var(--text-muted); font-size: 0.86rem; line-height: 1.7; flex: 1; }
+  .table-row { display: flex; gap: 10px; align-items: center; }
+  .table-row input { width: 90px; text-align: center; font-weight: 800; }
+  .staff-links { display: flex; gap: 12px; flex-wrap: wrap; }
+  .staff-links a { flex: 1; min-width: 160px; text-align: center; text-decoration: none; }
+  footer { text-align: center; padding: 30px 0 50px; color: var(--text-muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+  <div class="hero">
+    <div class="k-container">
+      <div class="logo-mark">☕⚽</div>
+      <h1>كافيه كورة</h1>
+      <p>اطلب مشروبك بالظبط زي ما نفسك فيه — اختار من المنيو أو ابتكر مشروبك الخاص، وشوف طلبك بيتحضر لحظة بلحظة.</p>
+      <div class="demo-note">
+        <span>⚠️ نسخة ديمو — المنيو والأسعار تجريبية لحد ما يوصل المنيو الحقيقي</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="k-container section">
+    <h2>جرّب دخول العميل</h2>
+    <p class="hint">في الحقيقة العميل هيدخل من QR فوق الطاولة أو من اللينك العام مباشرة — هنا بنحاكي الاختيارين للتجربة.</p>
+
+    <div class="grid-2">
+      <div class="k-card path-card">
+        <div class="icon">🪑</div>
+        <h3>الدخول من QR طاولة</h3>
+        <p>رقم الطاولة بيتحدد أوتوماتيك من الرابط، والعميل بيدخل على المنيو على طول من غير أي اختيارات إضافية.</p>
+        <div class="table-row">
+          <span>رقم الطاولة:</span>
+          <input type="number" id="tableNum" class="k-input" value="5" min="1" max="99">
+        </div>
+        <button class="k-btn k-btn-primary" onclick="goTable()">امسح QR الطاولة دي (ديمو) ⚽</button>
+      </div>
+
+      <div class="k-card path-card">
+        <div class="icon">🌍</div>
+        <h3>الدخول من اللينك العام</h3>
+        <p>لعميل بره الكافيه — هيختار الأول ديليفري وللا استلام من الفرع، وبعدها يكمل لنفس المنيو.</p>
+        <div style="flex:1"></div>
+        <button class="k-btn k-btn-gold" onclick="goGeneral()">افتح كورة أونلاين ☕</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="k-container section">
+    <h2>لوحات فريق العمل (ديمو)</h2>
+    <p class="hint">في النظام الحقيقي دي مش هتتحط كلينكات على الصفحة الرئيسية — هنا بس للتجربة السريعة.</p>
+    <div class="staff-links">
+      <a href="barista.html" class="k-btn k-btn-outline">👨‍🍳 واجهة الباريستا</a>
+      <a href="admin-login.html" class="k-btn k-btn-outline">🛡️ لوحة الإدارة</a>
+    </div>
+  </div>
+
+  <footer>كورة ☕⚽ — نسخة ديمو لعرض الفلو، مش النظام النهائي</footer>
+
+  <script>
+    function goTable() {
+      const t = document.getElementById('tableNum').value || '1';
+      location.href = 'guest.html?mode=table&table=' + encodeURIComponent(t);
+    }
+    function goGeneral() {
+      location.href = 'guest.html?mode=general';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كورة ☕ — واجهة الباريستا</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/korra-theme.css">
+<style>
+  .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .login-card { max-width:380px; width:100%; padding:32px 26px; text-align:center; }
+  .login-card .ic { font-size:2.6rem; margin-bottom:8px; }
+  .demo-hint { background: var(--cream-2); border-radius:10px; padding:10px; font-size:0.76rem; color:var(--text-muted); margin-top:14px; }
+
+  .board { display:none; }
+  .board.show { display:block; }
+  .k-topbar .who { font-size:0.85rem; opacity:0.85; }
+  .board-grid { display:grid; grid-template-columns: 2fr 1fr; gap:20px; padding: 20px 0 50px; }
+  @media (max-width:900px) { .board-grid { grid-template-columns:1fr; } }
+
+  .order-card { padding:16px; margin-bottom:14px; }
+  .order-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+  .order-head .oid { font-weight:900; font-size:0.95rem; }
+  .order-head .meta { font-size:0.76rem; color:var(--text-muted); margin-top:2px; }
+  .item-block { background: var(--cream-2); border-radius:10px; padding:10px 12px; margin-bottom:8px; font-size:0.82rem; line-height:1.9; }
+  .item-block b { display:block; margin-bottom:2px; }
+  .status-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .status-btn { flex:1; padding:9px; border-radius:10px; border:2px solid var(--border); background:#fff; font-weight:800; font-size:0.78rem; cursor:pointer; font-family:inherit; }
+  .status-btn.active { background: var(--pitch); color:#fff; border-color:var(--pitch); }
+  .eta-row { display:flex; gap:8px; margin-top:10px; align-items:center; }
+  .eta-row input { width:70px; }
+  .shortage-row { margin-top:10px; display:flex; gap:8px; }
+  .shortage-row select { flex:1; }
+
+  .inv-item { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:0.84rem; }
+  .inv-item .lvl { font-weight:800; }
+  .inv-item .lvl.low { color: var(--danger); }
+  .inv-ctl { display:flex; gap:6px; }
+  .inv-ctl button { width:26px; height:26px; border-radius:50%; border:2px solid var(--border); background:#fff; cursor:pointer; }
+
+  .empty-state { text-align:center; padding:40px 20px; color:var(--text-muted); }
+</style>
+</head>
+<body>
+
+<!-- تسجيل الدخول -->
+<div class="login-wrap" id="loginWrap">
+  <div class="k-card login-card">
+    <div class="ic">👨‍🍳</div>
+    <h2>دخول الباريستا</h2>
+    <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:20px;">النظام محمي — بياناتك من الأدمن</p>
+    <input type="text" id="bName" class="k-input" placeholder="الاسم" style="margin-bottom:10px;">
+    <input type="password" id="bPass" class="k-input" placeholder="الباسورد" style="margin-bottom:10px;">
+    <button class="k-btn k-btn-primary" style="width:100%;" onclick="doLogin()">دخول</button>
+    <div class="demo-hint">🧪 حساب ديمو: <b>باريستا تجريبي</b> / <b>1234</b></div>
+  </div>
+</div>
+
+<!-- اللوحة -->
+<div class="board" id="board">
+  <div class="k-topbar">
+    <div class="k-container">
+      <div class="k-brand">☕ كورة — الباريستا</div>
+      <div class="who" id="whoName"></div>
+      <button class="k-btn k-btn-outline" onclick="doLogout()" style="padding:8px 14px;">خروج</button>
+    </div>
+  </div>
+
+  <div class="k-container board-grid">
+    <div>
+      <h2 style="margin-bottom:14px;">📋 الطلبات الحية</h2>
+      <div id="ordersList"></div>
+    </div>
+    <div>
+      <div class="k-card" style="padding:16px;">
+        <h3 style="margin-top:0;">📦 المخزون</h3>
+        <div id="invList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/korra-data.js"></script>
+<script src="assets/korra-store.js"></script>
+<script src="assets/korra-mascot.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  const LABELS = KORRA_SEED.ingredientLabels;
+  const BUILD = KorraStore.getBuildCatalog();
+
+  function labelOf(cat, key){
+    const f = (BUILD[cat]||[]).find(o=>o.key===key);
+    return f ? f.name : key;
+  }
+  function ingLabel(key){ return LABELS[key] ? LABELS[key].name : key; }
+  function ingUnit(key){ return LABELS[key] ? LABELS[key].unit : ''; }
+
+  window.doLogin = function(){
+    const name = document.getElementById('bName').value.trim();
+    const pass = document.getElementById('bPass').value;
+    const res = KorraStore.baristaLogin(name, pass);
+    if (!res.ok) { alert('⚠️ ' + res.error); return; }
+    KorraStore.setSession('barista', res.barista);
+    enterBoard(res.barista);
+  };
+  window.doLogout = function(){
+    KorraStore.clearSession();
+    document.getElementById('board').classList.remove('show');
+    document.getElementById('loginWrap').style.display = 'flex';
+  };
+
+  function enterBoard(barista){
+    document.getElementById('loginWrap').style.display = 'none';
+    document.getElementById('board').classList.add('show');
+    document.getElementById('whoName').textContent = '👋 ' + barista.name;
+    renderOrders();
+    renderInventory();
+    KorraStore.onUpdate(()=>{ renderOrders(); renderInventory(); });
+    setInterval(renderOrders, 15000);
+  }
+
+  const STATUS_FLOW = [
+    { key:'received', label:'استلام' },
+    { key:'preparing', label:'قيد التحضير' },
+    { key:'ready', label:'جاهز' },
+    { key:'delivered', label:'تم التسليم' }
+  ];
+
+  function typeLabel(o){
+    if (o.type==='table') return '🪑 طاولة ' + o.table;
+    if (o.type==='delivery') return '🛵 ديليفري';
+    return '🏬 استلام من الفرع';
+  }
+
+  function itemDetailsHtml(item){
+    if (item.kind === 'custom') {
+      const log = item.customStepsLog || {};
+      const sel = log.selections || {};
+      let html = `<b>🎨 ${item.name} (مبتكر جديد)</b>`;
+      html += `الكوب: ${log.cup||'-'}<br>`;
+      if (sel.base) html += `القاعدة: ${labelOf('base', sel.base)} — ${log.base_ml||'-'} مل<br>`;
+      if (sel.milk) html += `الحليب: ${labelOf('milk', sel.milk)} — ${log.milk_ml||'-'} مل<br>`;
+      if (sel.syrup && sel.syrup.length) html += `السيرب: ${sel.syrup.map(k=>labelOf('syrup',k)).join('، ')} — ${log.syrup_ml||'-'} مل<br>`;
+      if (log.ice_g!=null) html += `التلج: ${log.ice_g} جم<br>`;
+      if (log.topping && log.topping.length) html += `توبينج: ${log.topping.join('، ')}<br>`;
+      if (sel.sweetener) html += `التحلية: ${labelOf('sweetener', sel.sweetener)}<br>`;
+      return html;
+    }
+    let html = `<b>${item.emoji||''} ${item.name}</b>`;
+    Object.keys(item.baseRecipe||{}).forEach(k=>{
+      html += `${ingLabel(k)}: ${item.baseRecipe[k]} ${ingUnit(k)}<br>`;
+    });
+    (item.addons||[]).forEach(a=>{
+      html += `➕ ${a.name}: ${a.qty} ${a.unit}<br>`;
+    });
+    if (item.freeAdjustments && item.freeAdjustments.length) {
+      html += `🆓 ${item.freeAdjustments.join('، ')}<br>`;
+    }
+    return html;
+  }
+
+  function renderOrders(){
+    const orders = KorraStore.getOrders().filter(o=>o.status!=='delivered');
+    const box = document.getElementById('ordersList');
+    if (orders.length===0) { box.innerHTML = '<div class="k-card empty-state">مفيش طلبات دلوقتي ☕</div>'; return; }
+
+    box.innerHTML = orders.map(o=>{
+      const itemsHtml = (o.items||[]).map(it=>`<div class="item-block">${itemDetailsHtml(it)}</div>`).join('');
+      const statusBtns = STATUS_FLOW.map(s=>
+        `<button class="status-btn ${o.status===s.key?'active':''}" onclick="setStatus('${o.id}','${s.key}')">${s.label}</button>`
+      ).join('');
+      const invKeys = Object.keys(KorraStore.getInventory());
+      const shortageOpts = invKeys.map(k=>`<option value="${k}">${ingLabel(k)}</option>`).join('');
+
+      return `<div class="k-card order-card">
+        <div class="order-head">
+          <div>
+            <div class="oid">#${o.id.slice(-6)} — ${o.customer.name||'بدون اسم'}</div>
+            <div class="meta">${typeLabel(o)} ${o.customer.phone?(' · ☎ '+o.customer.phone):''}</div>
+            ${o.customer.address ? `<div class="meta">📍 ${o.customer.address}</div>` : ''}
+          </div>
+          <div class="k-badge k-badge-gold">${money(o.totalPrice)}</div>
+        </div>
+        ${itemsHtml}
+        <div class="status-row">${statusBtns}</div>
+        <div class="eta-row">
+          <span style="font-size:0.8rem;">⏱ الوقت المتوقع:</span>
+          <input type="number" min="1" class="k-input" id="eta_${o.id}" placeholder="دقيقة" value="${o.etaMinutes||''}">
+          <button class="k-btn k-btn-outline" style="padding:8px 12px;" onclick="setEta('${o.id}')">ظبط</button>
+        </div>
+        <div class="shortage-row">
+          <select id="short_${o.id}" class="k-input">
+            <option value="">-- نبّه العميل بنقص مكون --</option>
+            ${shortageOpts}
+          </select>
+          <button class="k-btn k-btn-danger" style="padding:8px 12px;" onclick="flagShortage('${o.id}')">تنبيه</button>
+        </div>
+        ${o.shortageFlag ? `<div class="k-badge k-badge-red" style="margin-top:8px;">⚠️ متبلّغ: ${ingLabel(o.shortageFlag)} <span style="cursor:pointer; margin-right:6px;" onclick="clearShortage('${o.id}')">✕ إلغاء</span></div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  function money(n){ return Math.round(n) + ' جنيه'; }
+
+  window.setStatus = function(id, status){
+    KorraStore.setOrderStatus(id, status);
+    renderOrders();
+  };
+  window.setEta = function(id){
+    const v = Number(document.getElementById('eta_'+id).value);
+    if (!v || v<=0) { alert('اكتب رقم دقايق صحيح'); return; }
+    KorraStore.setOrderTimer(id, v);
+    renderOrders();
+  };
+  window.flagShortage = function(id){
+    const key = document.getElementById('short_'+id).value;
+    if (!key) return;
+    KorraStore.flagShortage(id, key);
+    renderOrders();
+  };
+  window.clearShortage = function(id){
+    KorraStore.clearShortage(id);
+    renderOrders();
+  };
+
+  function renderInventory(){
+    const inv = KorraStore.getInventory();
+    const box = document.getElementById('invList');
+    box.innerHTML = Object.keys(inv).map(k=>{
+      const low = inv[k] <= 300;
+      return `<div class="inv-item">
+        <span>${ingLabel(k)}</span>
+        <div class="inv-ctl">
+          <button onclick="adjInv('${k}',-50)">−</button>
+          <span class="lvl ${low?'low':''}">${inv[k]} ${ingUnit(k)}</span>
+          <button onclick="adjInv('${k}',50)">+</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  window.adjInv = function(key, delta){
+    KorraStore.adjustInventory(key, delta);
+    renderInventory();
+  };
+
+  // استعادة الجلسة لو مسجل بالفعل
+  const sess = KorraStore.getSession();
+  if (sess && sess.role === 'barista') enterBoard(sess.data);
+
+})();
+</script>
+</body>
+</html>

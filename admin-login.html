@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كورة ☕ — دخول الإدارة</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/korra-theme.css">
+<style>
+  body { min-height:100vh; display:flex; align-items:center; justify-content:center; background: linear-gradient(160deg,var(--coffee-dark),var(--coffee)); }
+  .login-card { max-width:400px; width:100%; padding:34px 28px; text-align:center; margin:20px; }
+  .login-card .ic { font-size:2.8rem; margin-bottom:10px; }
+  .demo-hint { background: var(--cream-2); border-radius:10px; padding:12px; font-size:0.78rem; color:var(--text-muted); margin-top:16px; text-align:right; line-height:1.9; }
+</style>
+</head>
+<body>
+  <div class="k-card login-card">
+    <div class="ic">🛡️☕</div>
+    <h2>لوحة إدارة كورة</h2>
+    <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:22px;">منطقة محمية للإدارة فقط</p>
+    <input type="email" id="aEmail" class="k-input" placeholder="البريد الإلكتروني" style="margin-bottom:10px;">
+    <input type="password" id="aPass" class="k-input" placeholder="كلمة المرور" style="margin-bottom:10px;">
+    <button class="k-btn k-btn-primary" style="width:100%;" onclick="doLogin()">دخول</button>
+    <div class="demo-hint">
+      🧪 <b>حساب ديمو للتجربة:</b><br>
+      البريد: admin@korra.demo<br>
+      الباسورد: korra2026
+    </div>
+  </div>
+
+<script src="assets/korra-data.js"></script>
+<script src="assets/korra-store.js"></script>
+<script>
+  function doLogin(){
+    const email = document.getElementById('aEmail').value.trim();
+    const pass = document.getElementById('aPass').value;
+    const res = KorraStore.adminLogin(email, pass);
+    if (!res.ok) { alert('⚠️ ' + res.error); return; }
+    KorraStore.setSession('admin', res.admin);
+    location.href = 'admin-dashboard.html';
+  }
+  const sess = KorraStore.getSession();
+  if (sess && sess.role === 'admin') location.href = 'admin-dashboard.html';
+</script>
+</body>
+</html>

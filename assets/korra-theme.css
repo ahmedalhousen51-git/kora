@@ -1,0 +1,77 @@
+/* =========================================================================
+   كورة - الهوية البصرية المشتركة (Demo Theme)
+   ========================================================================= */
+:root {
+  --coffee-dark: #3d2412;
+  --coffee: #6b3f1d;
+  --coffee-light: #a9723f;
+  --cream: #fdf6ec;
+  --cream-2: #f4e9d8;
+  --pitch: #1f7a4d;
+  --pitch-dark: #145536;
+  --gold: #f4b942;
+  --text: #2a1a10;
+  --text-muted: #7a6a58;
+  --card: #ffffff;
+  --border: rgba(61,36,18,0.12);
+  --danger: #d64545;
+  --success: #1f7a4d;
+  --radius: 16px;
+  --shadow: 0 10px 30px rgba(61,36,18,0.12);
+}
+* { box-sizing: border-box; }
+body {
+  font-family: 'Cairo', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+.k-btn {
+  font-family: inherit; border: none; cursor: pointer;
+  border-radius: 12px; padding: 13px 20px;
+  font-weight: 800; font-size: 0.95rem;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all .2s;
+}
+.k-btn-primary { background: linear-gradient(135deg,var(--pitch),var(--pitch-dark)); color: #fff; box-shadow: 0 10px 24px rgba(31,122,77,0.35); }
+.k-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(31,122,77,0.45); }
+.k-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+.k-btn-gold { background: linear-gradient(135deg,var(--gold),#e0a12c); color: var(--coffee-dark); box-shadow: 0 10px 24px rgba(244,185,66,0.4); }
+.k-btn-gold:hover { transform: translateY(-2px); }
+.k-btn-outline { background: #fff; color: var(--coffee); border: 2px solid var(--border); }
+.k-btn-outline:hover { background: var(--cream-2); }
+.k-btn-danger { background: var(--danger); color: #fff; }
+.k-card {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); border: 1px solid var(--border);
+}
+.k-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 20px;
+  font-size: 0.78rem; font-weight: 800;
+}
+.k-badge-green { background: rgba(31,122,77,0.12); color: var(--pitch); }
+.k-badge-gold { background: rgba(244,185,66,0.18); color: #a06d1c; }
+.k-badge-red { background: rgba(214,69,69,0.12); color: var(--danger); }
+.k-input {
+  width: 100%; padding: 12px 14px; border-radius: 10px;
+  border: 2px solid var(--border); font-family: inherit; font-size: 0.92rem;
+  background: #fff; color: var(--text); transition: all .2s;
+}
+.k-input:focus { outline: none; border-color: var(--pitch); box-shadow: 0 0 0 4px rgba(31,122,77,0.1); }
+.k-container { max-width: 960px; margin: 0 auto; padding: 0 18px; }
+.k-topbar {
+  background: linear-gradient(135deg,var(--coffee-dark),var(--coffee));
+  color: #fff; padding: 16px 0;
+}
+.k-topbar .k-container { display: flex; align-items: center; justify-content: space-between; }
+.k-brand { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 1.25rem; }
+.k-brand .ball { font-size: 1.4rem; }
+.k-demo-flag {
+  background: var(--gold); color: var(--coffee-dark);
+  font-weight: 800; font-size: 0.72rem; padding: 3px 10px; border-radius: 20px;
+  display: inline-block;
+}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--coffee-light); border-radius: 10px; }

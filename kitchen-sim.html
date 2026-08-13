@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كورة ☕ — المطبخ</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/korra-theme.css">
+<style>
+  body { background: linear-gradient(180deg,#2a1a10,#4a2c16); min-height:100vh; }
+  .kit-top { padding: 18px 0; }
+  .kit-top .k-container { display:flex; align-items:center; justify-content:space-between; color:#fff; }
+  .progress-wrap { display:flex; gap:6px; margin: 0 auto 20px; max-width:500px; padding:0 18px; }
+  .progress-dot { flex:1; height:6px; border-radius:4px; background: rgba(255,255,255,0.15); }
+  .progress-dot.done { background: var(--gold); }
+  .progress-dot.now { background: #fff; }
+
+  .stage {
+    max-width: 480px; margin: 0 auto; padding: 0 18px 60px;
+    perspective: 900px;
+  }
+  .stage-card {
+    background: linear-gradient(160deg,#fdf6ec,#f4e9d8);
+    border-radius: 22px; padding: 26px 22px; text-align:center;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+    transform: rotateX(3deg);
+    transform-style: preserve-3d;
+  }
+  .stage-title { font-size: 1.2rem; font-weight:900; margin-bottom:4px; }
+  .stage-hint { color: var(--text-muted); font-size:0.85rem; margin-bottom: 20px; }
+
+  .equip { display:flex; justify-content:center; margin: 10px 0 24px; }
+  .cup-visual {
+    width: 110px; height: 140px; position:relative;
+    border: 4px solid var(--coffee-dark);
+    border-radius: 0 0 26px 26px; background: rgba(255,255,255,0.5);
+    overflow:hidden; box-shadow: inset 0 0 12px rgba(0,0,0,0.15), 0 12px 24px rgba(0,0,0,0.25);
+    transform: rotateX(8deg);
+  }
+  .cup-fill { position:absolute; bottom:0; inset-inline:0; background: linear-gradient(180deg,#c98a4b,#7a4a1e); transition: height .3s ease; height:0%; }
+  .ice-cubes { position:absolute; top:8px; inset-inline:0; display:flex; flex-wrap:wrap; gap:4px; justify-content:center; padding:0 8px; }
+  .ice-cube { width:14px; height:14px; background: rgba(255,255,255,0.85); border-radius:3px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+
+  .choice-row { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:20px; }
+  .choice-btn { padding: 12px 20px; border-radius:14px; border:2px solid var(--border); background:#fff; font-weight:800; cursor:pointer; font-family:inherit; }
+  .choice-btn.sel { background: var(--pitch); color:#fff; border-color:var(--pitch); }
+
+  .range-box { margin: 10px 0 22px; }
+  .range-val { font-size:1.6rem; font-weight:900; color: var(--coffee); margin-bottom:10px; }
+  input[type=range] { width:100%; accent-color: var(--pitch); height: 8px; }
+  .range-zone { display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted); margin-top:4px; }
+
+  .multi-row { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:20px; }
+  .multi-chip { padding:10px 16px; border-radius:12px; border:2px solid var(--border); font-weight:700; font-size:0.85rem; background:#fff; }
+  .multi-chip.on { background: var(--gold); border-color:var(--gold); color: var(--coffee-dark); }
+
+  .summary-list { text-align:right; font-size:0.86rem; line-height:2; color: var(--text); background: var(--cream-2); border-radius:12px; padding:14px 18px; margin-bottom:16px; }
+
+  .actions { display:flex; gap:10px; margin-top: 18px; }
+  .actions .k-btn { flex:1; }
+  .skip-hint { color: var(--text-muted); font-size:0.75rem; margin-top:10px; }
+</style>
+</head>
+<body>
+
+<div class="kit-top">
+  <div class="k-container">
+    <div class="k-brand" style="color:#fff;">👨‍🍳 المطبخ</div>
+    <span class="k-demo-flag" id="skippableFlag"></span>
+  </div>
+</div>
+
+<div class="progress-wrap" id="progressWrap"></div>
+
+<div class="stage">
+  <div class="stage-card" id="stageCard"></div>
+</div>
+
+<script src="assets/korra-data.js"></script>
+<script src="assets/korra-store.js"></script>
+<script src="assets/korra-mascot.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  const STATIONS = KorraStore.getStations();
+  const skippable = localStorage.getItem('korra_kitchen_skippable') === 'true';
+  const isOptional = new URLSearchParams(location.search).get('optional') === '1';
+  let spec = null;
+  try { spec = JSON.parse(localStorage.getItem('korra_pending_custom_spec') || 'null'); } catch(e){}
+  if (!spec) spec = { id: KorraStore.genId('item'), name:'مشروبك', selections:null, price:0, customerName:'' };
+
+  document.getElementById('skippableFlag').textContent = skippable ? 'وضع اللعب — تقدر تتخطى' : 'إجباري — كل خطوة لازم تتظبط';
+
+  let idx = 0;
+  const values = { cup:'وسط', base:150, milk:150, syrup:15, ice:80, topping:[] };
+
+  function renderProgress(){
+    const wrap = document.getElementById('progressWrap');
+    wrap.innerHTML = STATIONS.map((s,i)=>
+      `<div class="progress-dot ${i<idx?'done':(i===idx?'now':'')}"></div>`
+    ).join('');
+  }
+
+  function next(){
+    if (idx < STATIONS.length-1) { idx++; render(); }
+  }
+  function skipAll(){
+    idx = STATIONS.length-1; render();
+    KorraMascot.say('تمام، خدت الطريق السريع 😄');
+  }
+
+  function nameFromKey(list, key){ const f=(list||[]).find(o=>o.key===key); return f?f.name:key; }
+
+  function render(){
+    renderProgress();
+    const st = STATIONS[idx];
+    const card = document.getElementById('stageCard');
+    let inner = `<div class="stage-title">${st.title}</div><div class="stage-hint">${st.hint}</div>`;
+
+    if (st.type === 'choice') {
+      inner += `<div class="equip"><div class="cup-visual"><div class="cup-fill" style="height:55%"></div></div></div>`;
+      inner += `<div class="choice-row">` + st.options.map(o=>
+        `<button class="choice-btn ${values.cup===o?'sel':''}" onclick="window.__pickCup('${o}')">${o}</button>`
+      ).join('') + `</div>`;
+    }
+    else if (st.type === 'range') {
+      const v = values[st.id];
+      const pct = Math.round(((v - st.min) / (st.max - st.min)) * 100);
+      const isIce = st.id === 'ice';
+      inner += `<div class="equip"><div class="cup-visual">
+          ${isIce ? `<div class="ice-cubes">${'🧊'.repeat(Math.max(1,Math.round(v/50)))}</div>` : `<div class="cup-fill" style="height:${pct}%"></div>`}
+        </div></div>`;
+      inner += `<div class="range-box">
+        <div class="range-val">${v} ${st.unit}</div>
+        <input type="range" min="${st.min}" max="${st.max}" step="5" value="${v}" oninput="window.__setRange('${st.id}', this.value, ${st.min}, ${st.max})">
+        <div class="range-zone"><span>${st.min}</span><span>المنطقة المثالية</span><span>${st.max}</span></div>
+      </div>`;
+    }
+    else if (st.type === 'multi') {
+      if (spec.selections && spec.selections.topping) {
+        // اختيار سابق من شاشة الجيست — عرض تأكيد بس
+        const chosen = spec.selections.topping.map(k => nameFromKey(KORRA_SEED.buildCatalog.topping, k));
+        inner += `<div class="summary-list">${chosen.length? '🧁 ' + chosen.join('، ') : 'من غير توبينج'}</div>`;
+        values.topping = spec.selections.topping;
+      } else {
+        inner += `<div class="multi-row">` + st.options.map(o=>
+          `<button class="multi-chip ${values.topping.includes(o)?'on':''}" onclick="window.__toggleTopping('${o}')">${o}</button>`
+        ).join('') + `</div>`;
+      }
+    }
+    else if (st.type === 'final') {
+      inner += `<div class="summary-list">
+        ☕ الكوب: ${values.cup}<br>
+        💧 القاعدة: ${values.base} مل<br>
+        🥛 الحليب: ${values.milk} مل<br>
+        🍯 السيرب: ${values.syrup} مل<br>
+        🧊 التلج: ${values.ice} جم
+      </div>
+      <input type="text" class="k-input" id="finalName" placeholder="اسمك على الكوب" value="${spec.customerName||''}" style="margin-bottom:14px;">`;
+    }
+
+    inner += `<div class="actions">`;
+    if (st.type !== 'final') {
+      inner += `<button class="k-btn k-btn-primary" onclick="window.__next()">التالي ⚽</button>`;
+      if (skippable) inner += `<button class="k-btn k-btn-outline" onclick="window.__skipAll()">تخطي الكل</button>`;
+    } else {
+      inner += `<button class="k-btn k-btn-primary" onclick="window.__finish()">✅ تسليم الطلب</button>`;
+    }
+    inner += `</div>`;
+    if (!skippable && st.type !== 'final') inner += `<div class="skip-hint">مفيش تخطي هنا — المشروب المبتكر محتاج دقة 🎯</div>`;
+
+    card.innerHTML = inner;
+  }
+
+  window.__pickCup = function(o){ values.cup = o; render(); };
+  window.__setRange = function(id, v, min, max){
+    v = Number(v);
+    values[id] = v;
+    document.querySelector('.range-val').textContent = v + ' ' + STATIONS.find(s=>s.id===id).unit;
+    const fill = document.querySelector('.cup-fill');
+    if (fill) fill.style.height = Math.round(((v-min)/(max-min))*100) + '%';
+    const ice = document.querySelector('.ice-cubes');
+    if (ice) ice.innerHTML = '🧊'.repeat(Math.max(1,Math.round(v/50)));
+    if (v >= max*0.92) KorraMascot.limitExceeded();
+    else if (v <= min + (max-min)*0.06 && min>0) KorraMascot.limitTooLow();
+  };
+  window.__toggleTopping = function(o){
+    const i = values.topping.indexOf(o);
+    if (i===-1) values.topping.push(o); else values.topping.splice(i,1);
+    render();
+  };
+  window.__next = next;
+  window.__skipAll = skipAll;
+
+  window.__finish = function(){
+    const name = (document.getElementById('finalName')||{}).value || spec.customerName || '';
+    const returnUrl = new URLSearchParams(location.search).get('return') || 'guest.html';
+
+    if (isOptional) {
+      // لعب اختياري لمشروب جاهز — مفيش تعديل على السلة، بس تجربة ممتعة
+      localStorage.removeItem('korra_pending_custom_spec');
+      localStorage.removeItem('korra_kitchen_skippable');
+      location.href = returnUrl + '?played=1';
+      return;
+    }
+
+    const item = {
+      id: spec.id,
+      kind: 'custom',
+      name: name ? ('مشروب ' + name) : spec.name,
+      emoji: '🎨',
+      basePrice: 0,
+      addons: [],
+      freeAdjustments: [],
+      totalPrice: spec.price,
+      wentThroughKitchenSim: true,
+      customStepsLog: {
+        cup: values.cup, base_ml: values.base, milk_ml: values.milk,
+        syrup_ml: values.syrup, ice_g: values.ice, topping: values.topping,
+        selections: spec.selections
+      }
+    };
+    localStorage.setItem('korra_pending_custom_result', JSON.stringify(item));
+    localStorage.removeItem('korra_pending_custom_spec');
+    localStorage.removeItem('korra_kitchen_skippable');
+    KorraMascot.orderSubmitted();
+    location.href = returnUrl;
+  };
+
+  render();
+})();
+</script>
+</body>
+</html>

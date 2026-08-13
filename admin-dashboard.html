@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كورة ☕ — لوحة الإدارة</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/korra-theme.css">
+<style>
+  .stats-grid { display:grid; grid-template-columns: repeat(4,1fr); gap:14px; margin: 20px 0; }
+  @media (max-width:800px){ .stats-grid{ grid-template-columns: repeat(2,1fr); } }
+  .stat-card { padding: 18px; text-align:center; }
+  .stat-card .num { font-size:1.7rem; font-weight:900; color:var(--pitch); }
+  .stat-card .lbl { font-size:0.8rem; color:var(--text-muted); margin-top:4px; }
+
+  .tabs { display:flex; gap:8px; margin: 10px 0 20px; flex-wrap:wrap; }
+  .tab-btn { padding:9px 18px; border-radius:20px; border:2px solid var(--border); background:#fff; cursor:pointer; font-weight:800; font-size:0.85rem; font-family:inherit; }
+  .tab-btn.active { background: var(--coffee-dark); color:#fff; border-color:var(--coffee-dark); }
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
+
+  .order-row { padding:14px 16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+  .order-row .l b { display:block; }
+  .order-row .l small { color:var(--text-muted); }
+
+  .invented-card { padding:16px; margin-bottom:12px; }
+  .invented-card .steps { background:var(--cream-2); border-radius:10px; padding:10px 14px; font-size:0.82rem; line-height:1.9; margin-top:8px; }
+
+  .barista-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); }
+  .barista-form { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+  .barista-form input { flex:1; min-width:150px; }
+
+  .empty-state { text-align:center; padding:40px 20px; color:var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div class="k-topbar">
+  <div class="k-container">
+    <div class="k-brand">🛡️☕ إدارة كورة</div>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <span id="whoName" style="font-size:0.85rem; opacity:0.85;"></span>
+      <button class="k-btn k-btn-outline" style="padding:8px 14px;" onclick="doLogout()">خروج</button>
+    </div>
+  </div>
+</div>
+
+<div class="k-container" style="padding-bottom:60px;">
+
+  <div class="stats-grid">
+    <div class="k-card stat-card"><div class="num" id="statOrders">0</div><div class="lbl">إجمالي الطلبات</div></div>
+    <div class="k-card stat-card"><div class="num" id="statRevenue">0</div><div class="lbl">الإيرادات</div></div>
+    <div class="k-card stat-card"><div class="num" id="statActive">0</div><div class="lbl">طلبات شغالة دلوقتي</div></div>
+    <div class="k-card stat-card"><div class="num" id="statInvented">0</div><div class="lbl">مشروبات مبتكرة</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="orders" onclick="switchTab('orders')">📋 الطلبات</button>
+    <button class="tab-btn" data-tab="invented" onclick="switchTab('invented')">🎨 المشروبات المبتكرة</button>
+    <button class="tab-btn" data-tab="baristas" onclick="switchTab('baristas')">👨‍🍳 إدارة الباريستا</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-orders"><div id="ordersBox"></div></div>
+
+  <div class="tab-panel" id="tab-invented"><div id="inventedBox"></div></div>
+
+  <div class="tab-panel" id="tab-baristas">
+    <div class="k-card" style="padding:18px; margin-bottom:16px;">
+      <h3 style="margin-top:0;">إضافة حساب باريستا جديد</h3>
+      <div class="barista-form">
+        <input type="text" id="newBName" class="k-input" placeholder="اسم الباريستا">
+        <input type="text" id="newBPass" class="k-input" placeholder="باسورد">
+        <button class="k-btn k-btn-primary" onclick="addBarista()">إضافة</button>
+      </div>
+      <p style="font-size:0.76rem; color:var(--text-muted); margin:0;">⚠️ ديمو: الباسورد بيتخزن كنص عادي محلياً للتجربة بس. في النظام الحقيقي هيتعمل عن طريق دالة سيرفر محمية بتشفير حقيقي.</p>
+    </div>
+    <div class="k-card" style="padding:18px;">
+      <h3 style="margin-top:0;">الحسابات الحالية</h3>
+      <div id="baristasBox"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/korra-data.js"></script>
+<script src="assets/korra-store.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  const sess = KorraStore.getSession();
+  if (!sess || sess.role !== 'admin') { location.href = 'admin-login.html'; return; }
+  document.getElementById('whoName').textContent = '👋 ' + (sess.data.name || 'أدمن');
+
+  window.doLogout = function(){ KorraStore.clearSession(); location.href = 'admin-login.html'; };
+
+  window.switchTab = function(name){
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('tab-'+name).classList.add('active');
+  };
+
+  function money(n){ return Math.round(n) + ' جنيه'; }
+  function typeLabel(o){
+    if (o.type==='table') return '🪑 طاولة ' + o.table;
+    if (o.type==='delivery') return '🛵 ديليفري';
+    return '🏬 استلام من الفرع';
+  }
+  const STATUS_LABELS = { received:'استلام', preparing:'قيد التحضير', ready:'جاهز', delivered:'تم التسليم' };
+
+  function renderStats(){
+    const orders = KorraStore.getOrders();
+    const revenue = orders.reduce((s,o)=>s+o.totalPrice,0);
+    const active = orders.filter(o=>o.status!=='delivered').length;
+    const invented = orders.reduce((s,o)=> s + (o.items||[]).filter(i=>i.kind==='custom').length, 0);
+    document.getElementById('statOrders').textContent = orders.length;
+    document.getElementById('statRevenue').textContent = money(revenue);
+    document.getElementById('statActive').textContent = active;
+    document.getElementById('statInvented').textContent = invented;
+  }
+
+  function renderOrders(){
+    const orders = KorraStore.getOrders();
+    const box = document.getElementById('ordersBox');
+    if (!orders.length) { box.innerHTML = '<div class="k-card empty-state">مفيش طلبات لسه</div>'; return; }
+    box.innerHTML = orders.map(o=>`
+      <div class="k-card order-row">
+        <div class="l">
+          <b>#${o.id.slice(-6)} — ${o.customer.name||'بدون اسم'}</b>
+          <small>${typeLabel(o)} · ${(o.items||[]).length} صنف · ${new Date(o.createdAt).toLocaleTimeString('ar-EG')}</small>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span class="k-badge k-badge-green">${STATUS_LABELS[o.status]||o.status}</span>
+          <span class="k-badge k-badge-gold">${money(o.totalPrice)}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderInvented(){
+    const orders = KorraStore.getOrders();
+    const box = document.getElementById('inventedBox');
+    const rows = [];
+    orders.forEach(o=>{
+      (o.items||[]).filter(i=>i.kind==='custom').forEach(i=> rows.push({order:o, item:i}));
+    });
+    if (!rows.length) { box.innerHTML = '<div class="k-card empty-state">لسه محدش ابتكر مشروب</div>'; return; }
+    box.innerHTML = rows.map(r=>{
+      const log = r.item.customStepsLog || {};
+      return `<div class="k-card invented-card">
+        <b>🎨 ${r.item.name}</b>
+        <small style="color:var(--text-muted);"> — طلب #${r.order.id.slice(-6)} بواسطة ${r.order.customer.name||'-'}</small>
+        <div class="steps">
+          الكوب: ${log.cup||'-'} | القاعدة: ${log.base_ml||'-'} مل | الحليب: ${log.milk_ml||'-'} مل | السيرب: ${log.syrup_ml||'-'} مل | التلج: ${log.ice_g||'-'} جم
+          ${log.topping && log.topping.length ? '<br>توبينج: '+log.topping.join('، ') : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  window.addBarista = function(){
+    const name = document.getElementById('newBName').value.trim();
+    const pass = document.getElementById('newBPass').value.trim();
+    if (!name || !pass) { alert('اكتب الاسم والباسورد'); return; }
+    KorraStore.addBarista(name, pass);
+    document.getElementById('newBName').value = '';
+    document.getElementById('newBPass').value = '';
+    renderBaristas();
+  };
+  window.toggleBarista = function(id, active){ KorraStore.setBaristaActive(id, active); renderBaristas(); };
+  window.deleteBarista = function(id){ if (confirm('متأكد إنك عايز تشيل الحساب ده؟')) { KorraStore.removeBarista(id); renderBaristas(); } };
+
+  function renderBaristas(){
+    const list = KorraStore.getBaristas();
+    const box = document.getElementById('baristasBox');
+    if (!list.length) { box.innerHTML = '<p style="color:var(--text-muted);">مفيش حسابات باريستا لسه</p>'; return; }
+    box.innerHTML = list.map(b=>`
+      <div class="barista-row">
+        <div>
+          <b>${b.name}</b>
+          <span class="k-badge ${b.active?'k-badge-green':'k-badge-red'}" style="margin-right:8px;">${b.active?'مفعّل':'موقوف'}</span>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="k-btn k-btn-outline" style="padding:6px 12px;" onclick="toggleBarista('${b.id}', ${!b.active})">${b.active?'إيقاف':'تفعيل'}</button>
+          <button class="k-btn k-btn-danger" style="padding:6px 12px;" onclick="deleteBarista('${b.id}')">حذف</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderAll(){ renderStats(); renderOrders(); renderInvented(); renderBaristas(); }
+  renderAll();
+  KorraStore.onUpdate(renderAll);
+  setInterval(renderAll, 15000);
+})();
+</script>
+</body>
+</html>
