@@ -1,197 +1,297 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>كورة ☕ — لوحة الإدارة</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/korra-theme.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — Kora Admin</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/theme.css">
 <style>
-  .stats-grid { display:grid; grid-template-columns: repeat(4,1fr); gap:14px; margin: 20px 0; }
-  @media (max-width:800px){ .stats-grid{ grid-template-columns: repeat(2,1fr); } }
-  .stat-card { padding: 18px; text-align:center; }
-  .stat-card .num { font-size:1.7rem; font-weight:900; color:var(--pitch); }
-  .stat-card .lbl { font-size:0.8rem; color:var(--text-muted); margin-top:4px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 22px 0; }
+  @media (max-width: 860px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat { padding: 18px; }
+  .stat .n { font-family: var(--ff-display); font-size: 1.6rem; font-weight: 700; letter-spacing: -.02em; }
+  .stat .l { font-size: .76rem; color: var(--text-faint); letter-spacing: .04em; text-transform: uppercase; margin-top: 2px; }
+  .stat .sub { font-size: .76rem; color: var(--text-soft); margin-top: 4px; }
 
-  .tabs { display:flex; gap:8px; margin: 10px 0 20px; flex-wrap:wrap; }
-  .tab-btn { padding:9px 18px; border-radius:20px; border:2px solid var(--border); background:#fff; cursor:pointer; font-weight:800; font-size:0.85rem; font-family:inherit; }
-  .tab-btn.active { background: var(--coffee-dark); color:#fff; border-color:var(--coffee-dark); }
-  .tab-panel { display:none; }
-  .tab-panel.active { display:block; }
+  .tabs { margin-bottom: 20px; }
+  .panel { display: none; }
+  .panel.on { display: block; }
 
-  .order-row { padding:14px 16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
-  .order-row .l b { display:block; }
-  .order-row .l small { color:var(--text-muted); }
+  .row-card { padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .row-card .t { font-weight: 600; font-size: .93rem; }
+  .row-card .s { font-size: .8rem; color: var(--text-soft); margin-top: 2px; }
 
-  .invented-card { padding:16px; margin-bottom:12px; }
-  .invented-card .steps { background:var(--cream-2); border-radius:10px; padding:10px 14px; font-size:0.82rem; line-height:1.9; margin-top:8px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 11px 10px; border-bottom: 1px solid var(--border); font-size: .86rem; }
+  th { font-size: .74rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text-faint); font-weight: 600; }
+  td.num { font-variant-numeric: tabular-nums; }
 
-  .barista-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); }
-  .barista-form { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
-  .barista-form input { flex:1; min-width:150px; }
+  .creation { padding: 16px 18px; margin-bottom: 10px; }
+  .creation .recipe { background: var(--gray-50); border-radius: var(--r-sm); padding: 10px 12px; margin-top: 8px; font-size: .82rem; color: var(--text-soft); line-height: 1.8; }
 
-  .empty-state { text-align:center; padding:40px 20px; color:var(--text-muted); }
+  .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+  .qr-card { padding: 16px; text-align: center; }
+  .qr-card .qr-img svg { width: 100%; height: auto; max-width: 150px; }
+  .qr-card .qr-img svg path, .qr-card .qr-img svg rect { fill: var(--wine-800); }
+  .qr-card .qr-img svg > rect:first-child { fill: #fff; }
+  .qr-card .lbl { font-family: var(--ff-display); font-weight: 700; margin-top: 8px; }
+  .qr-card .url { font-size: .68rem; color: var(--text-faint); word-break: break-all; margin-top: 4px; }
+  @media print {
+    .topbar, .tabs, .stats, .no-print { display: none !important; }
+    .qr-card { break-inside: avoid; border: 1px solid #ccc; }
+  }
 </style>
 </head>
 <body>
 
-<div class="k-topbar">
-  <div class="k-container">
-    <div class="k-brand">🛡️☕ إدارة كورة</div>
-    <div style="display:flex; align-items:center; gap:14px;">
-      <span id="whoName" style="font-size:0.85rem; opacity:0.85;"></span>
-      <button class="k-btn k-btn-outline" style="padding:8px 14px;" onclick="doLogout()">خروج</button>
+<div class="topbar topbar-dark">
+  <div class="container topbar-inner">
+    <div id="brandSlot"></div>
+    <div class="row">
+      <span class="pill" style="background:rgba(255,255,255,.12);color:#fff" id="modePill">—</span>
+      <span style="font-size:.85rem;opacity:.8" id="who"></span>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.12);color:#fff" onclick="signOut()">Sign out</button>
     </div>
   </div>
 </div>
 
-<div class="k-container" style="padding-bottom:60px;">
+<div class="container" style="padding-bottom:60px">
 
-  <div class="stats-grid">
-    <div class="k-card stat-card"><div class="num" id="statOrders">0</div><div class="lbl">إجمالي الطلبات</div></div>
-    <div class="k-card stat-card"><div class="num" id="statRevenue">0</div><div class="lbl">الإيرادات</div></div>
-    <div class="k-card stat-card"><div class="num" id="statActive">0</div><div class="lbl">طلبات شغالة دلوقتي</div></div>
-    <div class="k-card stat-card"><div class="num" id="statInvented">0</div><div class="lbl">مشروبات مبتكرة</div></div>
+  <div class="stats">
+    <div class="card stat"><div class="n" id="sOrders">—</div><div class="l">Orders today</div><div class="sub" id="sOrdersAll"></div></div>
+    <div class="card stat"><div class="n" id="sRev">—</div><div class="l">Revenue today</div><div class="sub" id="sRevAll"></div></div>
+    <div class="card stat"><div class="n" id="sActive">—</div><div class="l">In the queue</div></div>
+    <div class="card stat"><div class="n" id="sNew">—</div><div class="l">Customer creations</div></div>
   </div>
 
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="orders" onclick="switchTab('orders')">📋 الطلبات</button>
-    <button class="tab-btn" data-tab="invented" onclick="switchTab('invented')">🎨 المشروبات المبتكرة</button>
-    <button class="tab-btn" data-tab="baristas" onclick="switchTab('baristas')">👨‍🍳 إدارة الباريستا</button>
+  <div class="segment tabs" id="tabs">
+    <button class="on" data-t="orders">Orders</button>
+    <button data-t="creations">Creations</button>
+    <button data-t="staff">Staff</button>
+    <button data-t="stock">Stock</button>
+    <button data-t="qr">Table QR codes</button>
   </div>
 
-  <div class="tab-panel active" id="tab-orders"><div id="ordersBox"></div></div>
+  <div class="panel on" id="p-orders"><div id="ordersBox"></div></div>
 
-  <div class="tab-panel" id="tab-invented"><div id="inventedBox"></div></div>
+  <div class="panel" id="p-creations"><div id="creationsBox"></div></div>
 
-  <div class="tab-panel" id="tab-baristas">
-    <div class="k-card" style="padding:18px; margin-bottom:16px;">
-      <h3 style="margin-top:0;">إضافة حساب باريستا جديد</h3>
-      <div class="barista-form">
-        <input type="text" id="newBName" class="k-input" placeholder="اسم الباريستا">
-        <input type="text" id="newBPass" class="k-input" placeholder="باسورد">
-        <button class="k-btn k-btn-primary" onclick="addBarista()">إضافة</button>
+  <div class="panel" id="p-staff">
+    <div class="card card-pad" style="margin-bottom:16px">
+      <h3 style="font-size:1rem;margin-bottom:12px">Add a bar account</h3>
+      <div class="row" style="flex-wrap:wrap;gap:10px">
+        <input id="stName" class="input" placeholder="Name" style="flex:1;min-width:150px">
+        <input id="stPass" class="input" placeholder="Passcode" style="flex:1;min-width:150px">
+        <button class="btn btn-primary" onclick="addStaff()">Create</button>
       </div>
-      <p style="font-size:0.76rem; color:var(--text-muted); margin:0;">⚠️ ديمو: الباسورد بيتخزن كنص عادي محلياً للتجربة بس. في النظام الحقيقي هيتعمل عن طريق دالة سيرفر محمية بتشفير حقيقي.</p>
+      <p class="hint" style="margin-top:10px" id="staffNote"></p>
     </div>
-    <div class="k-card" style="padding:18px;">
-      <h3 style="margin-top:0;">الحسابات الحالية</h3>
-      <div id="baristasBox"></div>
+    <div class="card card-pad">
+      <h3 style="font-size:1rem;margin-bottom:6px">Bar accounts</h3>
+      <div id="staffBox"></div>
     </div>
+  </div>
+
+  <div class="panel" id="p-stock">
+    <div class="card card-pad">
+      <div class="spread" style="margin-bottom:12px">
+        <h3 style="font-size:1rem">Inventory</h3>
+        <span class="hint">edit a number and press Enter to save</span>
+      </div>
+      <div style="overflow-x:auto"><table id="stockTable"></table></div>
+    </div>
+  </div>
+
+  <div class="panel" id="p-qr">
+    <div class="card card-pad no-print" style="margin-bottom:16px">
+      <h3 style="font-size:1rem;margin-bottom:6px">Print QR codes for your tables</h3>
+      <p class="hint" style="margin-bottom:12px">Each code opens the menu with that table already selected. Site URL is set in <b>assets/supabase-config.js</b>.</p>
+      <div class="row" style="flex-wrap:wrap;gap:10px">
+        <input id="qrCount" class="input" type="number" min="1" max="60" value="12" style="width:100px">
+        <button class="btn btn-primary" onclick="makeQR()">Generate</button>
+        <button class="btn btn-ghost" onclick="window.print()">Print</button>
+      </div>
+      <p class="hint" style="margin-top:10px" id="qrBase"></p>
+    </div>
+    <div class="qr-grid" id="qrGrid"></div>
   </div>
 
 </div>
 
-<script src="assets/korra-data.js"></script>
-<script src="assets/korra-store.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/ui.js"></script>
 <script>
-(function(){
+(function () {
   'use strict';
+  const $ = id => document.getElementById(id);
+  const money = KoraAPI.money;
+  const C = KoraAPI.catalog;
 
-  const sess = KorraStore.getSession();
-  if (!sess || sess.role !== 'admin') { location.href = 'admin-login.html'; return; }
-  document.getElementById('whoName').textContent = '👋 ' + (sess.data.name || 'أدمن');
+  KoraAPI.ready().then(async () => {
+    const s = await KoraAPI.adminSession();
+    if (!s) { location.replace('admin-login.html'); return; }
+    $('brandSlot').innerHTML = KoraUI.brandMark({ size: 26, tagline: false, onDark: true, color: '#fff' });
+    $('who').textContent = s.name || 'Admin';
+    $('modePill').textContent = KoraAPI.mode === 'supabase' ? 'Live' : 'Demo mode';
+    $('staffNote').textContent = KoraAPI.mode === 'supabase'
+      ? 'Passcodes are hashed in the database — nobody can read them back, including you.'
+      : 'Demo mode stores passcodes in this browser only. Connect Supabase for real hashing.';
+    $('qrBase').textContent = 'Base URL: ' + (window.KORA_SITE_URL || location.origin);
+    loadAll();
+    setInterval(loadAll, 15000);
+  }).catch(e => KoraUI.toast(e.message, 'err'));
 
-  window.doLogout = function(){ KorraStore.clearSession(); location.href = 'admin-login.html'; };
+  window.signOut = async () => { await KoraAPI.logout(); location.href = 'admin-login.html'; };
 
-  window.switchTab = function(name){
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
-    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-    document.getElementById('tab-'+name).classList.add('active');
-  };
+  $('tabs').querySelectorAll('button').forEach(b => {
+    b.onclick = () => {
+      $('tabs').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+      $('p-' + b.dataset.t).classList.add('on');
+    };
+  });
 
-  function money(n){ return Math.round(n) + ' جنيه'; }
-  function typeLabel(o){
-    if (o.type==='table') return '🪑 طاولة ' + o.table;
-    if (o.type==='delivery') return '🛵 ديليفري';
-    return '🏬 استلام من الفرع';
+  async function loadAll() {
+    try {
+      const [stats, orders, staff, inv] = await Promise.all([
+        KoraAPI.adminStats(), KoraAPI.adminOrders(200), KoraAPI.adminStaff(), KoraAPI.adminInventory()
+      ]);
+      paintStats(stats);
+      paintOrders(orders);
+      paintCreations(orders);
+      paintStaff(staff);
+      paintStock(inv);
+    } catch (e) { KoraUI.toast(e.message, 'err'); }
   }
-  const STATUS_LABELS = { received:'استلام', preparing:'قيد التحضير', ready:'جاهز', delivered:'تم التسليم' };
 
-  function renderStats(){
-    const orders = KorraStore.getOrders();
-    const revenue = orders.reduce((s,o)=>s+o.totalPrice,0);
-    const active = orders.filter(o=>o.status!=='delivered').length;
-    const invented = orders.reduce((s,o)=> s + (o.items||[]).filter(i=>i.kind==='custom').length, 0);
-    document.getElementById('statOrders').textContent = orders.length;
-    document.getElementById('statRevenue').textContent = money(revenue);
-    document.getElementById('statActive').textContent = active;
-    document.getElementById('statInvented').textContent = invented;
+  function paintStats(s) {
+    $('sOrders').textContent = s.orders_today;
+    $('sOrdersAll').textContent = s.orders_total + ' all time';
+    $('sRev').textContent = money(s.revenue_today);
+    $('sRevAll').textContent = money(s.revenue_total) + ' all time';
+    $('sActive').textContent = s.active;
+    $('sNew').textContent = s.invented;
   }
 
-  function renderOrders(){
-    const orders = KorraStore.getOrders();
-    const box = document.getElementById('ordersBox');
-    if (!orders.length) { box.innerHTML = '<div class="k-card empty-state">مفيش طلبات لسه</div>'; return; }
-    box.innerHTML = orders.map(o=>`
-      <div class="k-card order-row">
-        <div class="l">
-          <b>#${o.id.slice(-6)} — ${o.customer.name||'بدون اسم'}</b>
-          <small>${typeLabel(o)} · ${(o.items||[]).length} صنف · ${new Date(o.createdAt).toLocaleTimeString('ar-EG')}</small>
+  const STLABEL = { received: 'New', preparing: 'Making', ready: 'Ready', completed: 'Done', cancelled: 'Cancelled' };
+  const STPILL = { received: 'pill-amber', preparing: 'pill-wine', ready: 'pill-green', completed: 'pill-gray', cancelled: 'pill-red' };
+
+  function typeText(o) {
+    if (o.order_type === 'table') return 'Table ' + (o.table_number || '?');
+    return o.order_type === 'delivery' ? 'Delivery' : 'Pickup';
+  }
+
+  function paintOrders(orders) {
+    if (!orders.length) { $('ordersBox').innerHTML = '<div class="card empty"><div class="empty-icon">🧾</div>No orders yet.</div>'; return; }
+    $('ordersBox').innerHTML = orders.map(o => `
+      <div class="card row-card">
+        <div>
+          <div class="t">${o.order_number} · ${o.customer_name}</div>
+          <div class="s">${typeText(o)} · ${(o.items || []).length} item(s) · ${new Date(o.created_at).toLocaleString()}</div>
         </div>
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span class="k-badge k-badge-green">${STATUS_LABELS[o.status]||o.status}</span>
-          <span class="k-badge k-badge-gold">${money(o.totalPrice)}</span>
+        <div class="row">
+          <span class="pill ${STPILL[o.status] || 'pill-gray'}">${STLABEL[o.status] || o.status}</span>
+          <b>${money(o.total_price)}</b>
         </div>
-      </div>
-    `).join('');
+      </div>`).join('');
   }
 
-  function renderInvented(){
-    const orders = KorraStore.getOrders();
-    const box = document.getElementById('inventedBox');
+  function paintCreations(orders) {
     const rows = [];
-    orders.forEach(o=>{
-      (o.items||[]).filter(i=>i.kind==='custom').forEach(i=> rows.push({order:o, item:i}));
-    });
-    if (!rows.length) { box.innerHTML = '<div class="k-card empty-state">لسه محدش ابتكر مشروب</div>'; return; }
-    box.innerHTML = rows.map(r=>{
-      const log = r.item.customStepsLog || {};
-      return `<div class="k-card invented-card">
-        <b>🎨 ${r.item.name}</b>
-        <small style="color:var(--text-muted);"> — طلب #${r.order.id.slice(-6)} بواسطة ${r.order.customer.name||'-'}</small>
-        <div class="steps">
-          الكوب: ${log.cup||'-'} | القاعدة: ${log.base_ml||'-'} مل | الحليب: ${log.milk_ml||'-'} مل | السيرب: ${log.syrup_ml||'-'} مل | التلج: ${log.ice_g||'-'} جم
-          ${log.topping && log.topping.length ? '<br>توبينج: '+log.topping.join('، ') : ''}
+    orders.forEach(o => (o.items || []).forEach(i => { if (i.kind === 'custom') rows.push({ o, i }); }));
+    if (!rows.length) { $('creationsBox').innerHTML = '<div class="card empty"><div class="empty-icon">🎨</div>No customer creations yet.</div>'; return; }
+    $('creationsBox').innerHTML = rows.map(({ o, i }) => {
+      const k = i.kitchen || {}, L = i.labels || {};
+      return `<div class="card creation">
+        <div class="spread">
+          <div class="t" style="font-weight:600">${i.name}</div>
+          <span class="hint">${o.order_number} · ${o.customer_name}</span>
+        </div>
+        <div class="recipe">
+          ${L.base ? `<b>Base:</b> ${L.base} — ${k.brew} ml<br>` : ''}
+          ${L.creamer ? `<b>Creamer:</b> ${L.creamer} — ${k.creamer} ml<br>` : ''}
+          ${L.flavor && L.flavor.length ? `<b>Flavours:</b> ${L.flavor.join(', ')} — ${k.sweet} ml<br>` : ''}
+          <b>Ice:</b> ${k.ice} g · <b>Cup:</b> ${k.cup || '—'}
+          ${k.toppings && k.toppings.length ? `<br><b>Toppings:</b> ${k.toppings.join(', ')}` : ''}
         </div>
       </div>`;
     }).join('');
   }
 
-  window.addBarista = function(){
-    const name = document.getElementById('newBName').value.trim();
-    const pass = document.getElementById('newBPass').value.trim();
-    if (!name || !pass) { alert('اكتب الاسم والباسورد'); return; }
-    KorraStore.addBarista(name, pass);
-    document.getElementById('newBName').value = '';
-    document.getElementById('newBPass').value = '';
-    renderBaristas();
-  };
-  window.toggleBarista = function(id, active){ KorraStore.setBaristaActive(id, active); renderBaristas(); };
-  window.deleteBarista = function(id){ if (confirm('متأكد إنك عايز تشيل الحساب ده؟')) { KorraStore.removeBarista(id); renderBaristas(); } };
-
-  function renderBaristas(){
-    const list = KorraStore.getBaristas();
-    const box = document.getElementById('baristasBox');
-    if (!list.length) { box.innerHTML = '<p style="color:var(--text-muted);">مفيش حسابات باريستا لسه</p>'; return; }
-    box.innerHTML = list.map(b=>`
-      <div class="barista-row">
+  function paintStaff(list) {
+    if (!list.length) { $('staffBox').innerHTML = '<p class="hint">No bar accounts yet.</p>'; return; }
+    $('staffBox').innerHTML = list.map(s => `
+      <div class="spread" style="padding:12px 0;border-bottom:1px solid var(--border)">
         <div>
-          <b>${b.name}</b>
-          <span class="k-badge ${b.active?'k-badge-green':'k-badge-red'}" style="margin-right:8px;">${b.active?'مفعّل':'موقوف'}</span>
+          <b style="font-size:.93rem">${s.name}</b>
+          <span class="pill ${s.is_active ? 'pill-green' : 'pill-red'}" style="margin-left:8px">${s.is_active ? 'Active' : 'Disabled'}</span>
         </div>
-        <div style="display:flex; gap:8px;">
-          <button class="k-btn k-btn-outline" style="padding:6px 12px;" onclick="toggleBarista('${b.id}', ${!b.active})">${b.active?'إيقاف':'تفعيل'}</button>
-          <button class="k-btn k-btn-danger" style="padding:6px 12px;" onclick="deleteBarista('${b.id}')">حذف</button>
+        <div class="row">
+          <button class="btn btn-ghost btn-sm" onclick="toggleStaff('${s.id}', ${!s.is_active})">${s.is_active ? 'Disable' : 'Enable'}</button>
+          <button class="btn btn-quiet btn-sm" onclick="delStaff('${s.id}')">Remove</button>
         </div>
-      </div>
-    `).join('');
+      </div>`).join('');
   }
 
-  function renderAll(){ renderStats(); renderOrders(); renderInvented(); renderBaristas(); }
-  renderAll();
-  KorraStore.onUpdate(renderAll);
-  setInterval(renderAll, 15000);
+  window.addStaff = async () => {
+    const n = $('stName').value.trim(), p = $('stPass').value.trim();
+    if (!n || p.length < 4) { KoraUI.toast('Name plus a passcode of at least 4 characters', 'err'); return; }
+    try {
+      const r = await KoraAPI.adminCreateStaff(n, p);
+      if (r && r.ok === false) { KoraUI.toast(r.error, 'err'); return; }
+      $('stName').value = ''; $('stPass').value = '';
+      KoraUI.toast('Account created', 'ok'); loadAll();
+    } catch (e) { KoraUI.toast(e.message, 'err'); }
+  };
+  window.toggleStaff = async (id, a) => { await KoraAPI.adminSetStaffActive(id, a); loadAll(); };
+  window.delStaff = async (id) => {
+    if (!confirm('Remove this bar account?')) return;
+    await KoraAPI.adminDeleteStaff(id); loadAll();
+  };
+
+  function paintStock(inv) {
+    $('stockTable').innerHTML =
+      `<thead><tr><th>Ingredient</th><th>In stock</th><th>Low at</th><th></th></tr></thead><tbody>` +
+      inv.map(i => `<tr>
+          <td>${i.name}</td>
+          <td class="num"><input class="input" style="width:110px;padding:7px 10px" type="number"
+              value="${Math.round(i.qty)}" onchange="setStock('${i.key}', this.value)"> ${i.unit}</td>
+          <td class="num">${Math.round(i.low_threshold)} ${i.unit}</td>
+          <td>${Number(i.qty) <= Number(i.low_threshold) ? '<span class="pill pill-red">Low</span>' : ''}</td>
+        </tr>`).join('') + `</tbody>`;
+  }
+  window.setStock = async (key, v) => {
+    try { await KoraAPI.adminSetInventory(key, Number(v)); KoraUI.toast('Stock updated', 'ok'); loadAll(); }
+    catch (e) { KoraUI.toast(e.message, 'err'); }
+  };
+
+  window.makeQR = function () {
+    const n = Math.max(1, Math.min(60, Number($('qrCount').value) || 12));
+    const base = (window.KORA_SITE_URL || location.origin.replace(/\/$/, '')) + '/guest.html?mode=table&table=';
+    const grid = $('qrGrid');
+    grid.innerHTML = '';
+    if (typeof qrcode !== 'function') {
+      grid.innerHTML = '<p class="hint">QR library failed to load — check your internet connection and reload.</p>';
+      return;
+    }
+    for (let i = 1; i <= n; i++) {
+      const url = base + i;
+      const q = qrcode(0, 'M');
+      q.addData(url);
+      q.make();
+      const card = document.createElement('div');
+      card.className = 'card qr-card';
+      card.innerHTML = `<div class="qr-img">${q.createSvgTag({ cellSize: 5, margin: 2 })}</div>
+        <div class="lbl">Table ${i}</div><div class="url">${url}</div>`;
+      grid.appendChild(card);
+    }
+  };
 })();
 </script>
 </body>
