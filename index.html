@@ -1,104 +1,212 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>كورة ☕ — الصفحة الرئيسية (ديمو)</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/korra-theme.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kora — Bubble Tea Bar</title>
+<meta name="description" content="Kora is a bubble tea bar. Order from your table, build your own drink gram by gram, and watch it come together.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/theme.css">
 <style>
   .hero {
-    background: radial-gradient(circle at 20% 10%, rgba(244,185,66,0.25), transparent 50%),
-                linear-gradient(160deg, var(--coffee-dark), var(--coffee) 70%);
-    color: #fff; padding: 54px 0 70px; text-align: center; position: relative; overflow: hidden;
+    position: relative; overflow: hidden;
+    background: linear-gradient(150deg, var(--gray-950) 0%, var(--gray-900) 42%, var(--wine-900) 100%);
+    color: #fff;
+    padding: 84px 0 96px;
   }
-  .hero::after {
-    content: '⚽'; position: absolute; font-size: 14rem; opacity: 0.06;
-    right: -40px; bottom: -60px; transform: rotate(-12deg);
+  .hero::before, .hero::after {
+    content: ''; position: absolute; border-radius: 50%; filter: blur(90px);
   }
-  .hero h1 { font-size: 2.4rem; font-weight: 900; margin: 14px 0 8px; }
-  .hero p { color: rgba(255,255,255,0.8); font-size: 1rem; max-width: 520px; margin: 0 auto; line-height: 1.8; }
-  .logo-mark { font-size: 3rem; }
-  .demo-note {
+  .hero::before { width: 460px; height: 460px; background: rgba(174,49,96,.34); top: -160px; right: -120px; }
+  .hero::after  { width: 380px; height: 380px; background: rgba(123,30,62,.30); bottom: -200px; left: -120px; }
+  .hero-inner { position: relative; z-index: 1; display: grid; grid-template-columns: 1.15fr .85fr; gap: 48px; align-items: center; }
+  @media (max-width: 860px) { .hero { padding: 60px 0 68px; } .hero-inner { grid-template-columns: 1fr; gap: 34px; } }
+
+  .hero h1 { font-size: clamp(2.3rem, 5.4vw, 3.5rem); font-weight: 800; letter-spacing: -.035em; }
+  .hero h1 em { font-style: normal; color: var(--wine-300); }
+  .hero p.lede { color: rgba(255,255,255,.72); font-size: 1.05rem; margin: 16px 0 30px; max-width: 480px; }
+  .hero-badge {
     display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(244,185,66,0.15); border: 1px solid rgba(244,185,66,0.5);
-    color: var(--gold); padding: 8px 16px; border-radius: 30px;
-    font-weight: 800; font-size: 0.82rem; margin-top: 18px;
+    background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.16);
+    color: rgba(255,255,255,.85);
+    padding: 6px 14px; border-radius: 999px; font-size: .78rem; font-weight: 600;
+    margin-bottom: 22px;
   }
-  .section { padding: 40px 0; }
-  .section h2 { font-size: 1.3rem; font-weight: 900; margin-bottom: 6px; }
-  .section .hint { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 20px; }
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-  @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
-  .path-card { padding: 24px; display: flex; flex-direction: column; gap: 12px; }
-  .path-card .icon { font-size: 2.2rem; }
-  .path-card h3 { margin: 0; font-size: 1.1rem; }
-  .path-card p { margin: 0; color: var(--text-muted); font-size: 0.86rem; line-height: 1.7; flex: 1; }
-  .table-row { display: flex; gap: 10px; align-items: center; }
-  .table-row input { width: 90px; text-align: center; font-weight: 800; }
-  .staff-links { display: flex; gap: 12px; flex-wrap: wrap; }
-  .staff-links a { flex: 1; min-width: 160px; text-align: center; text-decoration: none; }
-  footer { text-align: center; padding: 30px 0 50px; color: var(--text-muted); font-size: 0.8rem; }
+  .hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--wine-300); }
+  .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn-light { background: #fff; color: var(--wine-800); }
+  .btn-light:hover { background: var(--gray-100); }
+  .btn-outline-light { background: transparent; color: #fff; border-color: rgba(255,255,255,.28); }
+  .btn-outline-light:hover { background: rgba(255,255,255,.08); }
+
+  .hero-art { display: flex; justify-content: center; }
+  .cup-stack { display: flex; align-items: flex-end; gap: -10px; }
+  .cup-stack > * { margin-left: -14px; filter: drop-shadow(0 18px 30px rgba(0,0,0,.34)); }
+  .cup-stack > *:first-child { margin-left: 0; }
+  .cup-stack .c2 { transform: translateY(-16px) scale(1.14); z-index: 2; }
+
+  .stats { display: flex; gap: 36px; margin-top: 38px; flex-wrap: wrap; }
+  .stats .s .n { font-family: var(--ff-display); font-size: 1.5rem; font-weight: 700; }
+  .stats .s .l { font-size: .78rem; color: rgba(255,255,255,.55); letter-spacing: .04em; }
+
+  section { padding: 68px 0; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 820px) { .grid-3 { grid-template-columns: 1fr; } section { padding: 48px 0; } }
+
+  .step-card { padding: 26px 24px; }
+  .step-num {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: var(--wine-100); color: var(--wine-700);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--ff-display); font-weight: 700; font-size: .95rem;
+    margin-bottom: 14px;
+  }
+  .step-card h3 { font-size: 1.05rem; margin-bottom: 6px; }
+  .step-card p { color: var(--text-soft); font-size: .9rem; margin: 0; }
+
+  .entry { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .entry-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 780px) { .entry-grid { grid-template-columns: 1fr; } }
+  .entry-card { padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+  .entry-card h3 { font-size: 1.15rem; }
+  .entry-card p { color: var(--text-soft); font-size: .9rem; margin: 0; flex: 1; }
+  .table-input { display: flex; align-items: center; gap: 10px; }
+  .table-input .input { width: 92px; text-align: center; font-weight: 700; }
+
+  footer { padding: 40px 0 60px; }
+  .foot-links { display: flex; gap: 10px; flex-wrap: wrap; }
+  .foot-note { color: var(--text-faint); font-size: .8rem; margin-top: 22px; }
+  .mode-chip { font-size: .72rem; }
 </style>
 </head>
 <body>
 
-  <div class="hero">
-    <div class="k-container">
-      <div class="logo-mark">☕⚽</div>
-      <h1>كافيه كورة</h1>
-      <p>اطلب مشروبك بالظبط زي ما نفسك فيه — اختار من المنيو أو ابتكر مشروبك الخاص، وشوف طلبك بيتحضر لحظة بلحظة.</p>
-      <div class="demo-note">
-        <span>⚠️ نسخة ديمو — المنيو والأسعار تجريبية لحد ما يوصل المنيو الحقيقي</span>
+<div class="hero">
+  <div class="container hero-inner">
+    <div>
+      <span class="hero-badge"><span class="dot"></span> <span id="modeText">Loading…</span></span>
+      <h1>Bubble tea, built <em>exactly</em> the way you want it.</h1>
+      <p class="lede">
+        Pick a drink and dial in the sugar, ice and toppings — or step behind the counter
+        and build something that isn't on the menu yet. The bar gets your numbers to the gram.
+      </p>
+      <div class="hero-cta">
+        <a href="guest.html?mode=general" class="btn btn-light btn-lg">Order online</a>
+        <a href="#entry" class="btn btn-outline-light btn-lg">I'm at a table</a>
+      </div>
+      <div class="stats">
+        <div class="s"><div class="n" id="stMenu">—</div><div class="l">DRINKS ON THE MENU</div></div>
+        <div class="s"><div class="n" id="stTop">—</div><div class="l">TOPPINGS</div></div>
+        <div class="s"><div class="n">∞</div><div class="l">COMBINATIONS</div></div>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="cup-stack">
+        <div id="c1"></div>
+        <div class="c2" id="c2"></div>
+        <div id="c3"></div>
       </div>
     </div>
   </div>
+</div>
 
-  <div class="k-container section">
-    <h2>جرّب دخول العميل</h2>
-    <p class="hint">في الحقيقة العميل هيدخل من QR فوق الطاولة أو من اللينك العام مباشرة — هنا بنحاكي الاختيارين للتجربة.</p>
+<section>
+  <div class="container">
+    <div class="section-head center">
+      <div class="eyebrow">How it works</div>
+      <h2>Three steps, no queue</h2>
+    </div>
+    <div class="grid-3">
+      <div class="card step-card">
+        <div class="step-num">1</div>
+        <h3>Scan or open</h3>
+        <p>Every table has its own QR code. Scan it and your table number is already filled in — or order online for pickup and delivery.</p>
+      </div>
+      <div class="card step-card">
+        <div class="step-num">2</div>
+        <h3>Make it yours</h3>
+        <p>Sugar level, ice level, milk, size, toppings — the price updates as you go. Want something new? Build it from scratch in the kitchen.</p>
+      </div>
+      <div class="card step-card">
+        <div class="step-num">3</div>
+        <h3>Track it live</h3>
+        <p>The bar sees your exact measurements, sets a prep time, and your screen counts down until it's ready.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <div class="grid-2">
-      <div class="k-card path-card">
-        <div class="icon">🪑</div>
-        <h3>الدخول من QR طاولة</h3>
-        <p>رقم الطاولة بيتحدد أوتوماتيك من الرابط، والعميل بيدخل على المنيو على طول من غير أي اختيارات إضافية.</p>
-        <div class="table-row">
-          <span>رقم الطاولة:</span>
-          <input type="number" id="tableNum" class="k-input" value="5" min="1" max="99">
+<section class="entry" id="entry">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">Start an order</div>
+      <h2>Where are you?</h2>
+      <p>In the cafe the table QR does this for you — this page just lets you try both paths.</p>
+    </div>
+    <div class="entry-grid">
+      <div class="card card-hover entry-card">
+        <h3>At a table</h3>
+        <p>Your table number comes straight from the QR code, so the bar knows exactly where to bring it.</p>
+        <div class="table-input">
+          <label class="label" style="margin:0">Table</label>
+          <input type="number" id="tableNo" class="input" value="5" min="1" max="99">
         </div>
-        <button class="k-btn k-btn-primary" onclick="goTable()">امسح QR الطاولة دي (ديمو) ⚽</button>
+        <button class="btn btn-primary" onclick="goTable()">Open table menu</button>
       </div>
-
-      <div class="k-card path-card">
-        <div class="icon">🌍</div>
-        <h3>الدخول من اللينك العام</h3>
-        <p>لعميل بره الكافيه — هيختار الأول ديليفري وللا استلام من الفرع، وبعدها يكمل لنفس المنيو.</p>
-        <div style="flex:1"></div>
-        <button class="k-btn k-btn-gold" onclick="goGeneral()">افتح كورة أونلاين ☕</button>
+      <div class="card card-hover entry-card">
+        <h3>Somewhere else</h3>
+        <p>Order for pickup at the counter, or have it delivered — we'll ask for your location so the rider finds you fast.</p>
+        <a href="guest.html?mode=general" class="btn btn-dark">Order for pickup or delivery</a>
       </div>
     </div>
   </div>
+</section>
 
-  <div class="k-container section">
-    <h2>لوحات فريق العمل (ديمو)</h2>
-    <p class="hint">في النظام الحقيقي دي مش هتتحط كلينكات على الصفحة الرئيسية — هنا بس للتجربة السريعة.</p>
-    <div class="staff-links">
-      <a href="barista.html" class="k-btn k-btn-outline">👨‍🍳 واجهة الباريستا</a>
-      <a href="admin-login.html" class="k-btn k-btn-outline">🛡️ لوحة الإدارة</a>
+<footer>
+  <div class="container">
+    <div class="spread" style="flex-wrap:wrap; gap:18px;">
+      <div id="footBrand"></div>
+      <div class="foot-links">
+        <a href="barista.html" class="btn btn-ghost btn-sm">Barista station</a>
+        <a href="admin-login.html" class="btn btn-ghost btn-sm">Admin</a>
+      </div>
     </div>
+    <p class="foot-note" id="footNote"></p>
   </div>
+</footer>
 
-  <footer>كورة ☕⚽ — نسخة ديمو لعرض الفلو، مش النظام النهائي</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/ui.js"></script>
+<script>
+  document.getElementById('c1').innerHTML = KoraUI.cupArt('#7B1E3E', 92);
+  document.getElementById('c2').innerHTML = KoraUI.cupArt('#C4762A', 108);
+  document.getElementById('c3').innerHTML = KoraUI.cupArt('#5C8A4A', 92);
+  document.getElementById('footBrand').innerHTML = KoraUI.brandMark({ size: 30 });
 
-  <script>
-    function goTable() {
-      const t = document.getElementById('tableNum').value || '1';
-      location.href = 'guest.html?mode=table&table=' + encodeURIComponent(t);
-    }
-    function goGeneral() {
-      location.href = 'guest.html?mode=general';
-    }
-  </script>
+  function goTable() {
+    const t = document.getElementById('tableNo').value || '1';
+    location.href = 'guest.html?mode=table&table=' + encodeURIComponent(t);
+  }
+
+  KoraAPI.ready().then(() => {
+    document.getElementById('stMenu').textContent = KoraAPI.catalog.menu.length;
+    document.getElementById('stTop').textContent = KoraAPI.catalog.toppings.length;
+    const live = KoraAPI.mode === 'supabase';
+    document.getElementById('modeText').textContent = live
+      ? 'Live · connected to Supabase'
+      : 'Demo mode · placeholder menu';
+    document.getElementById('footNote').textContent = live
+      ? 'Kora — orders, stock and staff accounts run on Supabase.'
+      : 'Kora — running in local demo mode with a placeholder menu. Add your Supabase keys in assets/supabase-config.js to go live.';
+  }).catch(err => {
+    document.getElementById('modeText').textContent = 'Connection problem';
+    document.getElementById('footNote').textContent = 'Could not reach the database: ' + err.message;
+  });
+</script>
 </body>
 </html>
