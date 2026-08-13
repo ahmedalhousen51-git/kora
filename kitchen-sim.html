@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/theme.css">
+<link rel="stylesheet" href="assets/scene3d.css">
 <style>
   body { background: var(--bg); overflow-x: hidden; }
 
@@ -24,9 +25,13 @@
     position: relative; max-width: 580px; margin: 14px auto 0;
     border-radius: var(--r-xl) var(--r-xl) 0 0; overflow: hidden;
     box-shadow: var(--sh-3); touch-action: none; user-select: none;
+    perspective: 1000px; perspective-origin: 50% 38%;
   }
+  .kitchen-3d { position: relative; transform-style: preserve-3d;
+    transition: transform .3s cubic-bezier(.2,.8,.3,1); will-change: transform; }
   .wall {
-    position: relative; height: 300px;
+    position: relative; height: 300px; transform-style: preserve-3d;
+    transform: translateZ(-120px) scale(1.14);
     background:
       repeating-linear-gradient(0deg,  rgba(0,0,0,.045) 0 1px, transparent 1px 34px),
       repeating-linear-gradient(90deg, rgba(0,0,0,.045) 0 1px, transparent 1px 34px),
@@ -39,18 +44,23 @@
 
   /* machines are scenery now — the tool in your hand does the work */
   .rail { position: absolute; left: 50%; top: 52px; width: 120px; height: 130px; }
+  .rail { transform-style: preserve-3d; }
   .rail .machine { position: absolute; top: 0; width: 120px; height: 130px;
     transition: transform .5s cubic-bezier(.3,.9,.35,1), opacity .4s ease;
-    opacity: .3; transform-origin: 60px 120px; }
+    opacity: .3; transform-origin: 60px 120px; transform-style: preserve-3d; }
   .rail .machine svg { width: 100%; height: 100%; display: block; }
   .rail .machine.on { opacity: .92; }
 
   .spot { position: absolute; left: 50%; top: -30px; width: 340px; height: 320px; margin-left: -170px;
     background: radial-gradient(circle, rgba(255,236,190,.5), rgba(255,236,190,0) 62%); pointer-events: none; z-index: 1; }
 
-  .counter { position: relative; z-index: 3; height: 96px; background: linear-gradient(180deg, #B87F45, #9A652F); }
-  .counter .top { position: absolute; top: 0; left: 0; right: 0; height: 30px;
-    background: linear-gradient(180deg, #F0CB96, #D9A96B); box-shadow: inset 0 -6px 10px rgba(0,0,0,.14); }
+  .counter { position: relative; z-index: 3; height: 96px; transform-style: preserve-3d;
+    background: linear-gradient(180deg, #B87F45, #9A652F); }
+  /* the worktop is a real plane laid down into the room */
+  .counter .top { position: absolute; top: -34px; left: -4%; width: 108%; height: 64px;
+    transform: rotateX(64deg); transform-origin: bottom center;
+    background: linear-gradient(180deg, #F6D6A6, #D9A96B);
+    box-shadow: 0 12px 20px rgba(38,22,28,.25); }
   .counter .lip { position: absolute; top: 30px; left: 0; right: 0; height: 7px; background: #8B5A28; }
   .counter .grain { position: absolute; top: 37px; left: 0; right: 0; bottom: 0;
     background: repeating-linear-gradient(90deg, rgba(0,0,0,.07) 0 2px, transparent 2px 46px); }
@@ -72,30 +82,34 @@
   .chef-bubble::after { content: ''; position: absolute; left: 18px; bottom: -6px;
     width: 12px; height: 12px; background: var(--gray-900); transform: rotate(45deg); border-radius: 2px; }
 
-  /* ---- the cup you are filling ---- */
-  .cup-stage { position: absolute; left: 50%; margin-left: -68px; bottom: 26px;
-    width: 136px; height: 172px; z-index: 4; }
-  .cup-stage svg { width: 100%; height: 100%; overflow: visible; }
+  /* ---- the cup you are filling: a real 3D cylinder ---- */
+  .cup-stage { position: absolute; left: 50%; margin-left: -58px; bottom: 58px;
+    width: 116px; height: 156px; z-index: 6; transform-style: preserve-3d;
+    transform: translateZ(50px); }
   .cup-stage.grabbable { cursor: grab; }
   .cup-stage.grabbing { cursor: grabbing; }
-  .wc-lid { opacity: 0; transition: opacity .3s ease, transform .3s ease; transform: translateY(-16px); }
-  .cup-stage.sealed .wc-lid { opacity: 1; transform: translateY(0); }
-  .wc-syrup, .wc-tea, .wc-milk { transition: y .25s linear; }
-  .cup-stage.wobble { animation: wob .4s ease-in-out; }
-  @keyframes wob { 0%,100%{transform:rotate(0)} 30%{transform:rotate(-3deg)} 70%{transform:rotate(3deg)} }
+  .cup-stage.wobble { animation: wob3d .45s ease-in-out; }
+  @keyframes wob3d {
+    0%,100% { transform: translateZ(50px) rotateZ(0) rotateY(0); }
+    30%     { transform: translateZ(50px) rotateZ(-4deg) rotateY(-9deg); }
+    70%     { transform: translateZ(50px) rotateZ(4deg) rotateY(9deg); }
+  }
 
   /* ---- the tool you pick up ---- */
   /* Parked on the right of the counter by default. Grabbing it switches to
      explicit left/top; dropping it clears them so it springs back here. */
   .tool {
-    position: absolute; z-index: 7; cursor: grab; touch-action: none;
-    right: 18px; bottom: 76px;
+    position: absolute; z-index: 8; cursor: grab; touch-action: none;
+    right: 18px; bottom: 76px; transform-style: preserve-3d;
     filter: drop-shadow(0 10px 16px rgba(38,22,28,.3));
-    transition: transform .3s cubic-bezier(.3,.9,.4,1.3);
+    transition: transform .3s cubic-bezier(.3,.9,.4,1.3), filter .2s ease;
+    transform: translateZ(40px) rotateY(-10deg);
   }
+  /* picking it up brings it out of the scene toward you */
+  .tool.held { filter: drop-shadow(0 26px 30px rgba(38,22,28,.45)); }
   .tool.homing { transition: transform .3s ease, left .32s ease, top .32s ease; }
   .tool svg { width: 100%; height: auto; display: block; pointer-events: none; }
-  .tool.held { cursor: grabbing; transition: transform .12s ease; z-index: 9; }
+  .tool.held { cursor: grabbing; transition: transform .12s ease; z-index: 11; }
   .tool-hint {
     position: absolute; left: 50%; transform: translateX(-50%); bottom: -24px;
     background: var(--wine-700); color: #fff; padding: 3px 11px; border-radius: 999px;
@@ -194,6 +208,7 @@
 <div class="progress" id="prog"></div>
 
 <div class="kitchen" id="kitchen">
+ <div class="kitchen-3d" id="kitchen3d">
   <div class="wall">
     <div class="shelf">
       <div class="board"></div>
@@ -220,6 +235,7 @@
   <div class="perfect" id="perfect">PERFECT!</div>
   <div id="toolLayer"></div>
   <div id="choiceLayer"></div>
+ </div>
 </div>
 
 <div class="panel" id="panel"></div>
@@ -230,6 +246,7 @@
 <script src="assets/character.js"></script>
 <script src="assets/ui.js"></script>
 <script src="assets/kitchen-art.js"></script>
+<script src="assets/scene3d.js"></script>
 <script src="assets/kitchen-tools.js"></script>
 <script>
 (function () {
@@ -287,39 +304,24 @@
   };
   const pick = a => a[Math.floor(Math.random() * a.length)];
 
-  /* ---------------- the cup ---------------- */
-  $('cupStage').innerHTML = KoraKitchen.workCup();
+  /* ---------------- the cup (CSS 3D cylinder) ---------------- */
+  $('cupStage').innerHTML = Kora3D.cup({ w: 116, h: 156, fill: 0 });
   const cupEl = $('cupStage');
-  const CUP_TOP = 44, CUP_BOTTOM = 174, CUP_H = CUP_BOTTOM - CUP_TOP;
+  const cup3d = cupEl.querySelector('.cup3d');
   const capacity = () => (V.cup.indexOf('Large') === 0 ? 600 : 480);
 
   function paintCup() {
     const cap = capacity();
-    let acc = 0;
-    const layer = (cls, amount) => {
-      acc += Math.min(1, amount / cap);
-      cupEl.querySelector(cls).setAttribute('y', (CUP_BOTTOM - Math.min(1, acc) * CUP_H).toFixed(1));
-    };
-    layer('.wc-syrup', V.sweet);
-    layer('.wc-tea', V.brew);
-    layer('.wc-milk', V.creamer);
-
-    let ice = '';
-    for (let i = 0; i < Math.round(V.ice / 34); i++) {
-      const x = 36 + (i % 4) * 22, y = 58 + Math.floor(i / 4) * 20;
-      ice += `<rect x="${x}" y="${y}" width="17" height="17" rx="4" fill="#fff" opacity=".72"
-              transform="rotate(${(i * 37) % 40 - 20} ${x + 8} ${y + 8})"/>`;
-    }
-    cupEl.querySelector('.wc-ice').innerHTML = ice;
-
-    let pearls = '';
-    for (let i = 0; i < Math.min(12, V.toppings.length * 3); i++) {
-      const row = Math.floor(i / 4);
-      pearls += `<circle cx="${44 + (i % 4) * 22 + (row % 2 ? 9 : 0)}" cy="${162 - row * 17}" r="8"
-                 fill="#2A1017" opacity=".85"/>`;
-    }
-    cupEl.querySelector('.wc-pearls').innerHTML = pearls;
-    cupEl.classList.toggle('sealed', V.sealed);
+    Kora3D.setCup(cup3d, {
+      layers: [
+        { amount: Math.min(1, V.sweet / cap),   color: '#7A3F14' },
+        { amount: Math.min(1, V.brew / cap),    color: '#B4763C' },
+        { amount: Math.min(1, V.creamer / cap), color: '#F3E3CB' }
+      ],
+      ice: Math.min(1, V.ice / 220),
+      pearls: Math.min(12, V.toppings.length * 3),
+      sealed: V.sealed
+    });
   }
 
   /* ---------------- scenery machines ---------------- */
@@ -587,6 +589,7 @@
         if (onCup()) {
           V.sealed = true; paintCup();
           api.el.style.display = 'none';
+          cup3d.classList.remove('spin'); void cup3d.offsetWidth; cup3d.classList.add('spin');
           celebrate(); say('اتقفلت! تحفة 🎉', 4200, 'happy');
           refresh(station);
         } else api.goHome();
@@ -620,7 +623,7 @@
       }
       S.dir = d;
       S.lastX = e.clientX;
-      cupEl.style.transform = 'rotate(' + (d * 9) + 'deg) translateX(' + (d * 8) + 'px)';
+      cupEl.style.transform = 'translateZ(50px) rotateZ(' + (d * 9) + 'deg) rotateY(' + (d * 16) + 'deg) translateX(' + (d * 8) + 'px)';
     }
     function up(e) {
       if (!S.held) return;
@@ -824,6 +827,20 @@
   }
 
   KoraAPI.ready().then(render).catch(render);
+
+  // the whole room leans toward wherever you are pointing
+  (function () {
+    const stage = $('kitchen'), inner = $('kitchen3d');
+    let raf = 0, rx = 0, ry = 0;
+    const apply = () => { raf = 0; inner.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`; };
+    stage.addEventListener('pointermove', e => {
+      const r = stage.getBoundingClientRect();
+      ry = ((e.clientX - r.left) / r.width - .5) * 9;
+      rx = -((e.clientY - r.top) / r.height - .5) * 7;
+      if (!raf) raf = requestAnimationFrame(apply);
+    });
+    stage.addEventListener('pointerleave', () => { rx = 0; ry = 0; if (!raf) raf = requestAnimationFrame(apply); });
+  })();
 })();
 </script>
 </body>

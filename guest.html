@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="assets/theme.css">
+<link rel="stylesheet" href="assets/scene3d.css">
 <style>
   body { padding-bottom: 96px; }
   .step { display: none; padding: 30px 0 40px; }
@@ -117,36 +118,14 @@
   .rail .node span { font-size: .74rem; font-weight: 600; color: var(--text-soft); }
   .countdown { font-family: var(--ff-display); font-size: 3rem; font-weight: 700; letter-spacing: -.03em; }
 
-  /* live cup that fills as the order moves along */
-  .track-cup { position: relative; width: 84px; height: 124px; margin: 48px auto 16px; }
-  .track-cup .glass {
-    position: absolute; inset: 0; border: 3px solid var(--gray-300); border-top: none;
-    border-radius: 5px 5px 22px 22px; overflow: hidden; background: var(--gray-50);
+  /* the live 3D cup on the tracking screen */
+  .track-cup-3d { display: flex; justify-content: center; margin: 26px auto 18px;
+    perspective: 800px; }
+  .track-cup-3d .cup3d { animation: track-turn 9s ease-in-out infinite; }
+  @keyframes track-turn {
+    0%,100% { transform: rotateY(-11deg) rotateX(3deg); }
+    50%     { transform: rotateY(11deg) rotateX(-2deg); }
   }
-  .track-cup .fill {
-    position: absolute; left: 0; right: 0; bottom: 0; height: 12%;
-    background: linear-gradient(180deg, #C4762A, #8A5525);
-    transition: height 1.2s cubic-bezier(.3,.9,.4,1);
-  }
-  .track-cup .fill::before {   /* wobbling surface */
-    content: ''; position: absolute; top: -6px; left: -50%; width: 200%; height: 12px;
-    background: #C4762A; border-radius: 50%;
-    animation: wobble 3s ease-in-out infinite;
-  }
-  @keyframes wobble { 0%,100% { transform: translateX(-6px) rotate(-1deg); } 50% { transform: translateX(6px) rotate(1deg); } }
-  .track-cup .bub {
-    position: absolute; bottom: 6px; border-radius: 50%;
-    background: rgba(42,26,34,.55); animation: bub-up 3.4s ease-in infinite;
-  }
-  @keyframes bub-up {
-    0%   { transform: translateY(0) scale(.6); opacity: 0; }
-    20%  { opacity: .9; }
-    100% { transform: translateY(-72px) scale(1); opacity: 0; }
-  }
-  .track-cup .lid { position: absolute; top: -10px; left: -7px; right: -7px; height: 11px; border-radius: 6px; background: var(--gray-300); }
-  .track-cup .straw { position: absolute; top: -40px; right: 18px; width: 9px; height: 58px; border-radius: 5px; background: var(--wine-500); transform: rotate(12deg); }
-  .track-cup.done .glass { border-color: var(--wine-500); }
-  @media (prefers-reduced-motion: reduce) { .track-cup .bub, .track-cup .fill::before { animation: none; } }
 </style>
 </head>
 <body>
@@ -253,16 +232,7 @@
       <div class="track-head">
         <p class="muted" style="margin:0;font-size:.85rem">Order</p>
         <div class="order-no" id="tOrderNo">—</div>
-        <div class="track-cup" id="tCup">
-          <div class="lid"></div><div class="straw"></div>
-          <div class="glass">
-            <div class="fill" id="tFill"></div>
-            <span class="bub" style="left:16px;width:11px;height:11px;animation-delay:0s"></span>
-            <span class="bub" style="left:36px;width:9px;height:9px;animation-delay:.9s"></span>
-            <span class="bub" style="left:54px;width:12px;height:12px;animation-delay:1.7s"></span>
-            <span class="bub" style="left:28px;width:8px;height:8px;animation-delay:2.5s"></span>
-          </div>
-        </div>
+        <div class="track-cup-3d" id="tCup"></div>
       </div>
       <div class="rail">
         <div class="node" id="n-received"><div class="dot">1</div><span>Received</span></div>
@@ -340,6 +310,7 @@
 <script src="assets/data.js"></script>
 <script src="assets/api.js"></script>
 <script src="assets/character.js"></script>
+<script src="assets/scene3d.js"></script>
 <script src="assets/ui.js"></script>
 <script>
 (function () {
@@ -508,6 +479,7 @@
     });
     $('buildBtn').onclick = openBuild;
     KoraUI.stagger($('grid'), 40);
+    Kora3D.tiltCards($('grid'), '.drink');
   }
 
   /* ------------------------------------------------------ customise ---- */
@@ -776,6 +748,7 @@
 
   function trackOrder(token, number) {
     $('tOrderNo').textContent = number;
+    $('tCup').innerHTML = Kora3D.cup({ w: 118, h: 158, fill: .12, pearls: 4 });
     show('track');
     const poll = async () => {
       try {
@@ -799,10 +772,17 @@
     window._track.eta = st.eta_minutes;
     window._track.setAt = st.eta_set_at ? new Date(st.eta_set_at).getTime() : null;
 
-    // cup fills up as the order moves along
-    const FILL = { received: 18, preparing: 62, ready: 92 };
-    $('tFill').style.height = (FILL[st.status] || 12) + '%';
-    $('tCup').classList.toggle('done', st.status === 'ready');
+    // the 3D cup fills up as the order moves along
+    const FILL = { received: .2, preparing: .62, ready: .9 };
+    const c3 = $('tCup').querySelector('.cup3d');
+    Kora3D.setCup(c3, {
+      fill: FILL[st.status] || .12,
+      pearls: st.status === 'received' ? 4 : 8,
+      sealed: st.status === 'ready'
+    });
+    if (st.status === 'ready' && lastStatus !== 'ready') {
+      c3.classList.remove('spin'); void c3.offsetWidth; c3.classList.add('spin');
+    }
 
     if (st.status === 'ready' && lastStatus !== 'ready') {
       KoraUI.toast('Your drink is ready!', 'ok');

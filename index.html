@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/theme.css">
+<link rel="stylesheet" href="assets/scene3d.css">
 <style>
   .hero {
     position: relative; overflow: hidden;
@@ -46,11 +47,12 @@
   .btn-outline-light { background: transparent; color: #fff; border-color: rgba(255,255,255,.28); }
   .btn-outline-light:hover { background: rgba(255,255,255,.08); }
 
-  .hero-art { display: flex; justify-content: center; }
-  .cup-stack { display: flex; align-items: flex-end; gap: -10px; }
-  .cup-stack > * { margin-left: -14px; filter: drop-shadow(0 18px 30px rgba(0,0,0,.34)); }
-  .cup-stack > *:first-child { margin-left: 0; }
-  .cup-stack .c2 { transform: translateY(-16px) scale(1.14); z-index: 2; }
+  .hero-art { display: flex; justify-content: center; perspective: 1000px; }
+  .cup-stack { display: flex; align-items: flex-end; gap: 8px; transform-style: preserve-3d; }
+  .cup-stack > * { filter: drop-shadow(0 20px 30px rgba(0,0,0,.4)); transform-style: preserve-3d; }
+  .cup-stack .c1 { animation-delay: -1.4s; }
+  .cup-stack .c2 { transform: translateY(-18px); z-index: 2; animation-delay: -3s; }
+  .cup-stack .c3 { animation-delay: -4.6s; }
 
   /* ---------- the pour: drink falls out of the hero, Captain Kora catches it ----- */
   .pour-strip {
@@ -169,9 +171,9 @@
     </div>
     <div class="hero-art">
       <div class="cup-stack">
-        <div id="c1"></div>
-        <div class="c2" id="c2"></div>
-        <div id="c3"></div>
+        <div class="c1 float3d" id="c1"></div>
+        <div class="c2 float3d" id="c2"></div>
+        <div class="c3 float3d" id="c3"></div>
       </div>
     </div>
   </div>
@@ -289,11 +291,12 @@
 <script src="assets/data.js"></script>
 <script src="assets/api.js"></script>
 <script src="assets/character.js"></script>
+<script src="assets/scene3d.js"></script>
 <script src="assets/ui.js"></script>
 <script>
-  document.getElementById('c1').innerHTML = KoraUI.cupArt('#7B1E3E', 92);
-  document.getElementById('c2').innerHTML = KoraUI.cupArt('#C4762A', 108);
-  document.getElementById('c3').innerHTML = KoraUI.cupArt('#5C8A4A', 92);
+  document.getElementById('c1').innerHTML = Kora3D.cup({ w: 84,  h: 114, liquid: '#7B1E3E', fill: .68, pearls: 5 });
+  document.getElementById('c2').innerHTML = Kora3D.cup({ w: 100, h: 136, liquid: '#C4762A', fill: .74, pearls: 7, sealed: true });
+  document.getElementById('c3').innerHTML = Kora3D.cup({ w: 84,  h: 114, liquid: '#5C8A4A', fill: .6,  pearls: 5 });
   document.getElementById('footBrand').innerHTML = KoraUI.brandMark({ size: 30 });
 
   // drifting pearls behind the hero
@@ -314,6 +317,7 @@
       .replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '')}</g>`;
 
   KoraUI.initReveal();
+  Kora3D.tiltCards(document, '.step-card, .entry-card');
 
   function goTable() {
     const t = document.getElementById('tableNo').value || '1';

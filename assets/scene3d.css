@@ -1,0 +1,163 @@
+/* ==========================================================================
+   Kora — 3D layer
+   Real perspective, real depth, real rotation — all with CSS transforms so
+   it stays light enough for a phone on cafe wifi.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- scene -- */
+.scene3d {
+  perspective: 900px;
+  perspective-origin: 50% 42%;
+  transform-style: preserve-3d;
+}
+.scene3d-inner {
+  transform-style: preserve-3d;
+  transition: transform .28s cubic-bezier(.2,.8,.3,1);
+  will-change: transform;
+}
+/* depth planes */
+.z-far   { transform: translateZ(-140px) scale(1.18); }
+.z-mid   { transform: translateZ(-60px)  scale(1.07); }
+.z-near  { transform: translateZ(40px); }
+.z-front { transform: translateZ(90px); }
+
+/* ============================================================ the cup ==== */
+/* A boba cup built as a tapered cylinder: shaded wall + elliptical rim and
+   base. It sits inside a preserve-3d scene, so it tilts and parallaxes with
+   everything else instead of looking like a sticker. */
+.cup3d {
+  position: relative;
+  width: var(--cw, 130px);
+  height: var(--ch, 176px);
+  transform-style: preserve-3d;
+  --fill: 0%;               /* how full, 0–100 */
+  --liquid: #B4763C;
+  --liquid-dark: #8A5525;
+}
+
+.cup3d .cup-shadow {
+  position: absolute; left: 6%; bottom: -6px; width: 88%; height: 22px;
+  background: radial-gradient(ellipse at center, rgba(38,22,28,.34), rgba(38,22,28,0) 70%);
+  transform: translateZ(-8px);
+}
+
+/* the far half of the rim, drawn behind the liquid */
+.cup3d .cup-rim-back {
+  position: absolute; top: 0; left: 0; width: 100%; height: 17%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #9E9098, #C8BCC3);
+}
+
+/* the tapered wall */
+.cup3d .cup-wall {
+  position: absolute; inset: 8% 0 0 0;
+  clip-path: polygon(0% 0%, 100% 0%, 88% 92%, 12% 92%);
+  overflow: hidden;
+  background:
+    linear-gradient(90deg,
+      rgba(70,50,60,.34) 0%,
+      rgba(255,255,255,.30) 22%,
+      rgba(255,255,255,.55) 38%,
+      rgba(255,255,255,.18) 62%,
+      rgba(70,50,60,.30) 100%),
+    linear-gradient(180deg, #F3EEF1, #DCD3D8);
+}
+
+/* what's in it */
+.cup3d .cup-liquid {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: var(--fill);
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.28) 0%, rgba(255,255,255,.24) 34%,
+                    rgba(255,255,255,.10) 60%, rgba(0,0,0,.26) 100%),
+    linear-gradient(180deg, var(--liquid), var(--liquid-dark));
+  transition: height .3s cubic-bezier(.3,.9,.4,1);
+}
+/* the elliptical surface of the drink — this is what sells the depth */
+.cup3d .cup-liquid::before {
+  content: ''; position: absolute; top: -7px; left: 0; right: 0; height: 15px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--liquid) 78%, #fff);
+  box-shadow: inset 0 2px 4px rgba(255,255,255,.5);
+}
+.cup3d .cup-layer {
+  position: absolute; left: 0; right: 0;
+  transition: height .3s cubic-bezier(.3,.9,.4,1), bottom .3s cubic-bezier(.3,.9,.4,1);
+}
+.cup3d .cup-layer::before {
+  content: ''; position: absolute; top: -6px; left: 0; right: 0; height: 13px;
+  border-radius: 50%; background: inherit; filter: brightness(1.16);
+}
+
+.cup3d .cup-ice { position: absolute; left: 8%; right: 8%; top: 14%; }
+.cup3d .cup-ice i {
+  position: absolute; width: 20px; height: 20px; border-radius: 5px;
+  background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(215,235,250,.75));
+  box-shadow: inset -2px -2px 4px rgba(255,255,255,.9), 0 2px 4px rgba(0,0,0,.18);
+}
+.cup3d .cup-pearls { position: absolute; left: 0; right: 0; bottom: 0; height: 46%; }
+.cup3d .cup-pearls i {
+  position: absolute; width: 17px; height: 17px; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #57303C, #1A0A11 72%);
+  box-shadow: 0 2px 3px rgba(0,0,0,.4);
+}
+
+/* the near half of the rim sits on top of everything */
+.cup3d .cup-rim {
+  position: absolute; top: 4%; left: -2%; width: 104%; height: 15%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #FBF8FA, #C6BAC1);
+  box-shadow: 0 3px 6px rgba(38,22,28,.22);
+}
+.cup3d .cup-rim::after {
+  content: ''; position: absolute; inset: 22% 6%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(40,25,32,.34), rgba(40,25,32,.08));
+}
+
+/* sealed lid + straw */
+.cup3d .cup-lid {
+  position: absolute; top: 0; left: -4%; width: 108%; height: 19%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #EDE7EA, #B9AEB5);
+  box-shadow: 0 4px 8px rgba(38,22,28,.26);
+  opacity: 0; transform: translateY(-16px) translateZ(6px);
+  transition: opacity .3s ease, transform .35s cubic-bezier(.2,.9,.3,1.5);
+}
+.cup3d .cup-straw {
+  position: absolute; top: -34%; left: 62%; width: 13%; height: 56%;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #8E2447, var(--wine-500, #AE3160), #8E2447);
+  transform: rotate(11deg) translateZ(14px);
+  opacity: 0; transition: opacity .3s ease;
+}
+.cup3d.sealed .cup-lid { opacity: 1; transform: translateY(0) translateZ(6px); }
+.cup3d.sealed .cup-straw { opacity: 1; }
+
+/* little idle life */
+.cup3d.spin { animation: cup-spin 1.1s cubic-bezier(.3,.9,.4,1); }
+@keyframes cup-spin {
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(360deg); }
+}
+.cup3d.shake3d { animation: cup-shake3d .34s ease-in-out infinite; }
+@keyframes cup-shake3d {
+  0%,100% { transform: rotateZ(0) rotateY(0) translateX(0); }
+  25%     { transform: rotateZ(-8deg) rotateY(-14deg) translateX(-10px); }
+  75%     { transform: rotateZ(8deg)  rotateY(14deg)  translateX(10px); }
+}
+
+/* ==================================================== 3D card tilting ==== */
+.tilt3d { transform-style: preserve-3d; transition: transform .18s ease, box-shadow .18s ease; }
+.tilt3d > * { transform: translateZ(18px); }
+
+/* floating objects that gently turn in space */
+.float3d { animation: float3d 7s ease-in-out infinite; transform-style: preserve-3d; }
+@keyframes float3d {
+  0%,100% { transform: translateY(0) rotateY(-12deg) rotateX(4deg); }
+  50%     { transform: translateY(-14px) rotateY(12deg) rotateX(-3deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene3d-inner, .float3d, .cup3d.spin, .cup3d.shake3d, .tilt3d { animation: none !important; transform: none !important; }
+}
