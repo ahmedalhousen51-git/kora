@@ -21,6 +21,7 @@
   .progress i.now  { background: var(--wine-700); box-shadow: 0 0 0 3px rgba(123,30,62,.16); }
 
   /* ================= THE KITCHEN ================= */
+  .panel, .k-top .container, .progress { direction: rtl; }
   .kitchen {
     position: relative; max-width: 580px; margin: 14px auto 0;
     border-radius: var(--r-xl) var(--r-xl) 0 0; overflow: hidden;
@@ -187,6 +188,46 @@
     border-radius: var(--r-md); padding: 13px 16px; margin-bottom: 12px; font-size: .84rem; line-height: 1.85; }
   .recap b { color: var(--text); } .recap span { color: var(--text-soft); }
 
+
+  /* drink style picker */
+  .style-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .style-pick {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    min-width: 84px; padding: 12px 14px; cursor: pointer; font-family: inherit;
+    font-size: .84rem; font-weight: 600; color: var(--text);
+    border: 2px solid var(--gray-300); border-radius: var(--r-md);
+    background: var(--surface); transition: all .16s ease;
+  }
+  .style-pick .sp-ic { font-size: 1.5rem; }
+  .style-pick:hover { transform: translateY(-3px); border-color: var(--wine-300); }
+  .style-pick.on { background: var(--wine-700); border-color: var(--wine-700); color: #fff; }
+
+  /* scoop counter */
+  .scoop-row { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 12px; }
+  .scoop-btn {
+    width: 46px; height: 46px; border-radius: 14px; border: 1px solid var(--border);
+    background: var(--surface); font-size: 1.4rem; cursor: pointer; color: var(--text);
+    box-shadow: var(--sh-1); font-family: inherit;
+  }
+  .scoop-btn:hover { background: var(--gray-50); }
+  .scoop-dots { display: flex; gap: 8px; }
+  .scoop-dots i {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--gray-200); border: 2px solid var(--gray-300);
+    transition: all .2s cubic-bezier(.2,.9,.3,1.5);
+  }
+  .scoop-dots i.on {
+    background: radial-gradient(circle at 34% 30%, #F3E3CB, #C9A97C);
+    border-color: #B08F62; transform: scale(1.12);
+  }
+
+  /* sound toggle in the header */
+  .sfx-toggle {
+    background: rgba(255,255,255,.14); color: #fff; border: none;
+    padding: 6px 10px; font-size: 1rem; line-height: 1; margin-inline-start: 10px;
+  }
+  .sfx-toggle:hover { background: rgba(255,255,255,.24); }
+
   @media (max-width: 580px) {
     .kitchen, .panel { border-radius: 0; }
     .wall { height: 268px; }
@@ -232,7 +273,7 @@
   <div class="stream" id="stream"></div>
   <div class="lump" id="lump"></div>
   <div class="burst" id="burst"></div>
-  <div class="perfect" id="perfect">PERFECT!</div>
+  <div class="perfect" id="perfect">تحفة!</div>
   <div id="toolLayer"></div>
   <div id="choiceLayer"></div>
  </div>
@@ -246,6 +287,7 @@
 <script src="assets/character.js"></script>
 <script src="assets/ui.js"></script>
 <script src="assets/kitchen-art.js"></script>
+<script src="assets/sfx.js"></script>
 <script src="assets/scene3d.js"></script>
 <script src="assets/kitchen-tools.js"></script>
 <script>
@@ -264,11 +306,11 @@
   const ST = C.stations || [];
   let idx = 0;
 
-  const V = { cup: 'Regular 500ml', brew: 0, creamer: 0, sweet: 0, ice: 0,
+  const V = { style: 'آيس', cup: 'عادي 500 مل', scoops: 1, brew: 0, creamer: 0, sweet: 0, ice: 0,
               toppings: [], shakes: 0, shaken: false, sealed: false, name: spec.customer || '' };
 
   $('brandSlot').innerHTML = KoraUI.brandMark({ size: 26, tagline: false, onDark: true, color: '#fff' });
-  $('modeTag').textContent = OPTIONAL ? 'Play mode · skippable' : 'Every step counts';
+  $('modeTag').textContent = OPTIONAL ? 'وضع اللعب · تقدر تتخطى' : 'كل خطوة ليها حساب';
 
   /* ---------------- the barista does the talking ---------------- */
   $('chef').innerHTML = KoraChar.chef({ mouth: 'smile' });
@@ -288,27 +330,92 @@
 
   /* Egyptian coaching, one line per station */
   const GUIDE = {
-    cup:      'اختار الكوباية الأول — كبيرة ولا عادية؟',
+    style:    'الأول قوللي، ده هيبقى آيس ولا سموزي ولا ميلك شيك؟',
+    cup:      'اختار الكوباية — كبيرة ولا عادية؟',
     brew:     'امسك الكتلة واقلبها فوق الكوباية.. براحة على إيدك!',
-    creamer:  'دلوقتي الحليب. صبّه بالراحة عشان الشكل يطلع حلو',
+    creamer:  'دلوقتي اللبن. صبّه بالراحة عشان الشكل يطلع حلو',
     sweet:    'شيل المضخة فوق الكوباية ودوس عليها.. كل ضغطة شوية سيرب',
+    scoops:   'كام سكوب يا معلم؟ خد بالك، كل سكوب بيتقّلها',
     toppings: 'اغرف البوبا بالمغرفة واقلبها فوق الكوباية',
     ice:      'التلج آخر حاجة.. متغرقهاش يا معلم',
     shake:    'امسك الكوباية نفسها ورجّها يمين وشمال!',
     seal:     'حط الغطا على الكوباية واقفلها، وخلاص كده'
   };
+
   const NAG = {
     much:   ['بس بقى! كده كتير أوي 😅', 'ياعم وقّف، هتطفح!', 'الكوباية بتقولك خلاص 🙈'],
     little: ['ده رشة يا معلم، زوّد شوية', 'كده مش هتحس بيه خالص'],
     nice:   ['جامد! كده مظبوط', 'إيدك حلوة والله 👌', 'كده تمام يا وحش']
   };
+
+  /* --------------------------------------------------------------------
+     The barista actually watches what you are doing and comments on it.
+     -------------------------------------------------------------------- */
+  const SMART = {
+    tooMuchBoba: [
+      'يا عم إنت هتخلّصنا من البوبة ولا إيه؟! 😅',
+      'البوبا دي كلها؟ ده مشروب مش طبق كشري',
+      'خفف بوبا شوية، الشاليموه مش هيقدر عليها'
+    ],
+    longShake: [
+      'ارحم الخلاط يا فنان.. هتتحرق الموتور! 🔥',
+      'كفاية رج بقى، المشروب دايخ',
+      'لو رجيتها أكتر هتطلع زبدة'
+    ],
+    weirdMix: [
+      'إنت متأكد من العجن ده؟ على ضمانتك! 🤨',
+      'التركيبة دي غريبة.. بس ماشي، إنت الزبون',
+      'أنا هعملها بس متقولش محدش قالك'
+    ],
+    tooMuchIce: [
+      'تلج كتير أوي! هتشرب مشروب ولا هتعمل مقلب؟',
+      'كده هتشرب مية بعد ما يسيح'
+    ],
+    idle: [
+      'واقف ليه؟ الكوباية مستنية',
+      'خد وقتك.. بس مش أوي كده 😄',
+      'محتاج مساعدة ولا نكمل؟'
+    ],
+    heavy: [
+      'المشروب بقى تقيل.. سكوبات كتير',
+      'كده هتاكل مش هتشرب 😄'
+    ]
+  };
   const pick = a => a[Math.floor(Math.random() * a.length)];
+
+  /* Flavour pairs that genuinely fight each other. */
+  function isWeirdMix() {
+    const f = (spec.selections && spec.selections.flavor) || [];
+    const base = (spec.selections && spec.selections.base) || '';
+    const clash =
+      (f.includes('matcha') && (f.includes('strawberry_puree') || f.includes('mango_puree'))) ||
+      (base === 'espresso' && (f.includes('strawberry_puree') || f.includes('lychee_syrup'))) ||
+      (base === 'thai_tea' && f.includes('matcha')) ||
+      f.length >= 3;
+    return clash;
+  }
+
+  let saidWeird = false;
+  function maybeWeirdMix() {
+    if (saidWeird || !isWeirdMix()) return;
+    saidWeird = true;
+    setTimeout(() => { say(pick(SMART.weirdMix), 5000, 'shock'); KoraSFX.ohNo(); }, 900);
+  }
+
+  /* Nudge the customer if they just stand there. */
+  let idleT;
+  function touchIdle() {
+    clearTimeout(idleT);
+    idleT = setTimeout(() => say(pick(SMART.idle), 4000), 14000);
+  }
+  ['pointerdown', 'pointermove'].forEach(ev =>
+    document.addEventListener(ev, touchIdle, { passive: true }));
 
   /* ---------------- the cup (CSS 3D cylinder) ---------------- */
   $('cupStage').innerHTML = Kora3D.cup({ w: 116, h: 156, fill: 0 });
   const cupEl = $('cupStage');
   const cup3d = cupEl.querySelector('.cup3d');
-  const capacity = () => (V.cup.indexOf('Large') === 0 ? 600 : 480);
+  const capacity = () => (V.cup.indexOf('كبير') === 0 ? 600 : 480);
 
   function paintCup() {
     const cap = capacity();
@@ -480,6 +587,7 @@
       api.el.style.transform = 'rotate(' + cfg.tilt + 'deg)';
       $('chef').classList.add('busy');
       chefFace({ mouth: 'grin', eyes: 'happy' });
+      if (!opts.solid) KoraSFX.pourStart();
       // A timer rather than requestAnimationFrame: rAF stops when the page
       // isn't painting, which would silently freeze the pour mid-stream.
       P.raf = setInterval(() => {
@@ -495,6 +603,8 @@
           stream(true, cfg.color, sp.x, sp.y);
         }
         cup3d.classList.add('rippling');
+        if (opts.solid) { if (Math.random() < .22) KoraSFX.ice(); }
+        else KoraSFX.pourLevel((V[opts.field] - station.min) / (station.max - station.min));
         refresh(station);
       }, 16);
     }
@@ -503,6 +613,7 @@
       P.on = false;
       clearInterval(P.raf);
       stream(false);
+      KoraSFX.pourStop();
       cup3d.classList.remove('rippling');
       api.el.style.transform = '';
       $('chef').classList.remove('busy');
@@ -529,6 +640,7 @@
       const head = api.el.querySelector('.pump-head');
       if (head) { head.style.transform = 'translateY(7px)'; setTimeout(() => { head.style.transform = ''; }, 130); }
       const sp = api.spout();
+      KoraSFX.pump();
       V.sweet = Math.min(station.max, V.sweet + 5);
       stream(true, cfg.color, sp.x, sp.y);
       setTimeout(() => stream(false), 200);
@@ -568,9 +680,10 @@
         const next = (station.options || []).find(o => !V.toppings.includes(o));
         if (!next) { say('خلاص حطينا كل حاجة يا كبير 😄', 3200); return; }
         V.toppings.push(next);
+        KoraSFX.plop();
         paintCup(); refresh(station);
         cupEl.classList.remove('wobble'); void cupEl.offsetWidth; cupEl.classList.add('wobble');
-        if (V.toppings.length > 4) say(pick(NAG.much), 3600, 'shock');
+        if (V.toppings.length > 3) { say(pick(SMART.tooMuchBoba), 4600, 'shock'); KoraSFX.ohNo(); }
         else say('زوّدنا ' + next + ' 👌', 2800, 'happy');
       }
     });
@@ -592,7 +705,9 @@
           V.sealed = true; paintCup();
           api.el.style.display = 'none';
           cup3d.classList.remove('spin'); void cup3d.offsetWidth; cup3d.classList.add('spin');
-          celebrate(); KoraUI.confetti(60); say('اتقفلت! تحفة 🎉', 4200, 'happy');
+          celebrate(); KoraUI.confetti(60); KoraSFX.seal();
+          setTimeout(() => KoraSFX.giggle(), 320);
+          say('اتقفلت! تحفة 🎉', 4200, 'happy');
           refresh(station);
         } else api.goHome();
       }
@@ -605,7 +720,8 @@
     cupEl.classList.add('grabbable');
     const S = { held: false, lastX: 0, dir: 0 };
     function down(e) {
-      S.held = true; S.lastX = e.clientX; S.dir = 0;
+      S.held = true; S.lastX = e.clientX; S.dir = 0; S.t0 = Date.now(); S.warned = false;
+      KoraSFX.shakeStart();
       cupEl.classList.add('grabbing');
       try { cupEl.setPointerCapture(e.pointerId); } catch (err) {}
       e.preventDefault();
@@ -617,11 +733,20 @@
       const d = dx > 0 ? 1 : -1;
       if (S.dir && d !== S.dir && !V.shaken) {      // each change of direction is one shake
         V.shakes = Math.min(12, V.shakes + 1);
+        KoraSFX.rattle();
         refresh(station);
-        if (V.shakes >= 12) {
-          V.shaken = true; celebrate();
+        if (V.shakes >= 12 && !V.shaken) {
+          V.shaken = true;
+          refresh(station);          // re-paint so the Next button unlocks
+          celebrate(); KoraSFX.success();
           say('كده اتخلطت صح! 🎉', 4200, 'happy');
         }
+      }
+      // shaking well past the point it is mixed
+      if (V.shaken && !S.warned && Date.now() - S.t0 > 3500) {
+        S.warned = true;
+        say(pick(SMART.longShake), 5000, 'shock');
+        KoraSFX.ohNo();
       }
       S.dir = d;
       S.lastX = e.clientX;
@@ -630,6 +755,7 @@
     function up(e) {
       if (!S.held) return;
       S.held = false;
+      KoraSFX.shakeStop();
       cupEl.classList.remove('grabbing');
       cupEl.style.transform = '';
       try { cupEl.releasePointerCapture(e.pointerId); } catch (err) {}
@@ -645,6 +771,7 @@
       cupEl.removeEventListener('pointermove', move);
       cupEl.removeEventListener('pointerup', up);
       cupEl.removeEventListener('pointercancel', up);
+      KoraSFX.shakeStop();
     } };
   }
 
@@ -653,7 +780,7 @@
     const layer = $('choiceLayer');
     layer.innerHTML = '';
     (station.options || []).forEach((o, i) => {
-      const big = o.indexOf('Large') === 0;
+      const big = o.indexOf('كبير') === 0;
       const d = document.createElement('div');
       d.className = 'cup-choice' + (V.cup === o ? ' on' : '');
       // percentages, so this works before the scene has been measured
@@ -665,7 +792,7 @@
       d.onclick = () => {
         V.cup = o; paintCup();
         layer.querySelectorAll('.cup-choice').forEach(x => x.classList.toggle('on', x === d));
-        say(big ? 'كبيرة! واحد جدع 😄' : 'عادية وحلوة', 2600, 'happy');
+        say(big ? 'كبيرة! واحد جدع 😄' : 'عادية وحلوة', 2600, 'happy'); KoraSFX.pop();
       };
       layer.appendChild(d);
     });
@@ -680,9 +807,10 @@
     const v = V[s.id], z = zoneOf(s), now = Date.now();
     if (now - lastNag < 1600) return;
     lastNag = now;
-    if (v >= s.max * .96) say(pick(NAG.much), 3600, 'shock');
+    if (s.id === 'ice' && v >= s.max * .8) { say(pick(SMART.tooMuchIce), 4200, 'shock'); KoraSFX.ohNo(); }
+    else if (v >= s.max * .96) { say(pick(NAG.much), 3600, 'shock'); KoraSFX.ohNo(); }
     else if (v <= s.max * .08) say(pick(NAG.little), 3400);
-    else if (v >= z.lo && v <= z.hi) { celebrate(); say(pick(NAG.nice), 3200, 'happy'); }
+    else if (v >= z.lo && v <= z.hi) { celebrate(); KoraSFX.success(); say(pick(NAG.nice), 3200, 'happy'); }
   }
 
   function refresh(s) {
@@ -697,13 +825,21 @@
       if (t) {
         const good = v >= z.lo && v <= z.hi;
         t.className = 'target' + (good ? ' good' : '');
-        t.textContent = good ? '✓ right in the sweet spot' : 'aim for ' + z.lo + '–' + z.hi + s.unit;
+        t.textContent = good ? '✓ مظبوطة كده' : 'صوّب على ' + z.lo + '–' + z.hi + ' ' + s.unit;
       }
     } else if (s.type === 'shake') {
       const bar = $('bar'); if (bar) bar.style.width = (V.shakes / 12 * 100) + '%';
-      const ro = $('ro'); if (ro) ro.textContent = V.shaken ? 'Mixed!' : V.shakes + '/12';
+      const ro = $('ro'); if (ro) ro.textContent = V.shaken ? 'اتخلطت!' : V.shakes + '/12';
     } else if (s.type === 'multi') {
-      const ro = $('ro'); if (ro) ro.textContent = V.toppings.length ? V.toppings.join(' · ') : 'none yet';
+      const ro = $('ro'); if (ro) ro.textContent = V.toppings.length ? V.toppings.join(' · ') : 'لسه مفيش';
+    } else if (s.type === 'scoops') {
+      const ro = $('ro'); if (ro) ro.innerHTML = V.scoops + '<small>' + s.unit + '</small>';
+      const dots = $('scoopDots');
+      if (dots) {
+        let h = '';
+        for (let i = 0; i < s.max; i++) h += `<i class="${i < V.scoops ? 'on' : ''}"></i>`;
+        dots.innerHTML = h;
+      }
     }
     const nx = $('nextBtn');
     if (nx) nx.disabled = !canAdvance(s);
@@ -711,6 +847,7 @@
 
   function canAdvance(s) {
     if (OPTIONAL) return true;
+    if (s.type === 'scoops' || s.id === 'style') return true;
     if (s.type === 'range') return V[s.id] > s.min + (s.max - s.min) * .05;
     if (s.type === 'shake') return V.shaken;
     return true;
@@ -732,41 +869,55 @@
     paintCup();
 
     let html = `<h2>${s.title}</h2><p class="hint-txt">${s.hint}</p>`;
-    if (s.type === 'range') {
+    if (s.id === 'style') {
+      html += `<div class="style-row">` + s.options.map(o =>
+        `<button class="style-pick ${V.style === o ? 'on' : ''}" data-style="${o}">
+           <span class="sp-ic">${({'آيس':'🧊','سموزي':'🥤','ميلك شيك':'🍦','ساخن':'☕'})[o] || '🧋'}</span>
+           <span>${o}</span></button>`).join('') + `</div>`;
+    } else if (s.type === 'scoops') {
+      html += `<div class="readout" id="ro">${V.scoops}<small>${s.unit}</small></div>
+        <div class="scoop-row">
+          <button class="scoop-btn" data-scoop="-1">−</button>
+          <div class="scoop-dots" id="scoopDots"></div>
+          <button class="scoop-btn" data-scoop="1">+</button>
+        </div>`;
+    } else if (s.type === 'range') {
       const z = zoneOf(s);
       html += `<div class="readout" id="ro">${Math.round(V[s.id])}<small>${s.unit}</small></div>
-        <div class="target" id="tgt">aim for ${z.lo}–${z.hi}${s.unit}</div>
+        <div class="target" id="tgt">صوّب على ${z.lo}–${z.hi} ${s.unit}</div>
         <div class="gauge"><div class="zone-bar"></div><div class="bar" id="bar"></div></div>`;
     } else if (s.type === 'shake') {
-      html += `<div class="readout" id="ro">${V.shaken ? 'Mixed!' : V.shakes + '/12'}</div>
-        <div class="target">grab the cup and swing it side to side</div>
+      html += `<div class="readout" id="ro">${V.shaken ? 'اتخلطت!' : V.shakes + '/12'}</div>
+        <div class="target">امسك الكوباية ورجّها يمين وشمال</div>
         <div class="gauge shake-meter"><div class="bar" id="bar"></div></div>`;
     } else if (s.type === 'multi') {
-      html += `<div class="readout" id="ro" style="font-size:1.05rem">none yet</div>
-        <div class="target">tip the scoop over the cup to add one</div>`;
+      html += `<div class="readout" id="ro" style="font-size:1.05rem">لسه مفيش</div>
+        <div class="target">اقلب المغرفة فوق الكوباية عشان تضيف</div>`;
     } else if (s.type === 'final') {
       html += `<div class="recap">
-          <b>Cup</b> <span>${V.cup}</span><br>
-          <b>Base</b> <span>${Math.round(V.brew)} ml${spec.labels ? ' · ' + spec.labels.base : ''}</span><br>
-          <b>Creamer</b> <span>${Math.round(V.creamer)} ml${spec.labels ? ' · ' + spec.labels.creamer : ''}</span><br>
-          <b>Syrup</b> <span>${Math.round(V.sweet)} ml${spec.labels && spec.labels.flavor.length ? ' · ' + spec.labels.flavor.join(', ') : ''}</span><br>
-          <b>Ice</b> <span>${Math.round(V.ice)} g</span><br>
-          <b>Toppings</b> <span>${V.toppings.length ? V.toppings.join(', ') : 'none'}</span>
+          <b>الشكل</b> <span>${V.style || '—'}</span><br>
+          <b>الكوباية</b> <span>${V.cup}</span><br>
+          <b>الأساس</b> <span>${Math.round(V.brew)} مل${spec.labels ? ' · ' + spec.labels.base : ''}</span><br>
+          <b>اللبن</b> <span>${Math.round(V.creamer)} مل${spec.labels ? ' · ' + spec.labels.creamer : ''}</span><br>
+          <b>السيرب</b> <span>${Math.round(V.sweet)} مل${spec.labels && spec.labels.flavor.length ? ' · ' + spec.labels.flavor.join(', ') : ''}</span><br>
+          <b>سكوب</b> <span>${V.scoops}</span><br>
+          <b>التلج</b> <span>${Math.round(V.ice)} جم</span><br>
+          <b>الإضافات</b> <span>${V.toppings.length ? V.toppings.join(', ') : 'مفيش'}</span>
         </div>
-        <input class="input" id="drinkName" placeholder="Name your creation"
+        <input class="input" id="drinkName" placeholder="سمّي اختراعك"
                value="${V.name ? V.name + '’s blend' : ''}">`;
     }
 
     html += `<div class="acts">`;
     if (s.type === 'final') {
-      html += `<button class="btn btn-primary" id="finishBtn">${OPTIONAL ? 'Done' : 'Send to the bar'}</button>`;
+      html += `<button class="btn btn-primary" id="finishBtn">${OPTIONAL ? 'خلصت' : 'ابعتها للبار'}</button>`;
     } else {
-      html += `<button class="btn btn-primary" id="nextBtn">Next</button>`;
-      if (idx > 0) html += `<button class="btn btn-ghost" id="backBtn">Back</button>`;
-      if (OPTIONAL) html += `<button class="btn btn-quiet" id="skipBtn">Skip all</button>`;
+      html += `<button class="btn btn-primary" id="nextBtn">يلا للي بعده</button>`;
+      if (idx > 0) html += `<button class="btn btn-ghost" id="backBtn">رجوع</button>`;
+      if (OPTIONAL) html += `<button class="btn btn-quiet" id="skipBtn">تخطي الكل</button>`;
     }
     html += `</div>`;
-    if (!OPTIONAL && s.type !== 'final') html += `<p class="lock-note">Brand-new drink — the bar makes it exactly as you set it here.</p>`;
+    if (!OPTIONAL && s.type !== 'final') html += `<p class="lock-note">ده مشروب جديد — البار هيعمله بالظبط زي ما ظبطته هنا.</p>`;
     $('panel').innerHTML = html;
     $('panel').classList.remove('enter'); void $('panel').offsetWidth; $('panel').classList.add('enter');
 
@@ -786,10 +937,50 @@
   }
 
   function wire(s) {
+    /* --- drink style --- */
+    $('panel').querySelectorAll('[data-style]').forEach(b => {
+      b.onclick = () => {
+        V.style = b.dataset.style;
+        $('panel').querySelectorAll('[data-style]').forEach(x => x.classList.toggle('on', x === b));
+        KoraSFX.pop();
+        say('تمام، ' + V.style + ' 👌', 2600, 'happy');
+      };
+    });
+
+    /* --- scoops --- */
+    $('panel').querySelectorAll('[data-scoop]').forEach(b => {
+      b.onclick = () => {
+        const next = Math.max(s.min, Math.min(s.max, V.scoops + Number(b.dataset.scoop)));
+        if (next === V.scoops) return;
+        const up = next > V.scoops;
+        V.scoops = next;
+        if (up) KoraSFX.plop(); else KoraSFX.pop();
+        if (V.scoops >= 4) { say(pick(SMART.heavy), 4000, 'shock'); KoraSFX.ohNo(); }
+        refresh(s);
+      };
+    });
+
+    /* --- cup size --- */
+    $('panel').querySelectorAll('[data-cup]').forEach(b => {
+      b.onclick = () => { V.cup = b.dataset.cup; paintCup(); render(); };
+    });
+
+    /* --- toppings picked straight off the list --- */
+    $('panel').querySelectorAll('[data-top]').forEach(b => {
+      b.onclick = () => {
+        const t = b.dataset.top, i = V.toppings.indexOf(t);
+        if (i > -1) { V.toppings.splice(i, 1); KoraSFX.pop(); }
+        else { V.toppings.push(t); KoraSFX.plop(); }
+        if (V.toppings.length > 3) { say(pick(SMART.tooMuchBoba), 4600, 'shock'); KoraSFX.ohNo(); }
+        render();
+      };
+    });
+
     const n = $('nextBtn');
     if (n) n.onclick = () => {
-      if (!canAdvance(s)) { say('لسه مخلصناش الخطوة دي يا معلم', 3400, 'shock'); return; }
+      if (!canAdvance(s)) { say('لسه مخلصناش الخطوة دي يا معلم', 3400, 'shock'); KoraSFX.ohNo(); return; }
       idx = Math.min(ST.length - 1, idx + 1);
+      KoraSFX.pop();
       render();
     };
     const b = $('backBtn');
@@ -803,7 +994,8 @@
   function finish() {
     localStorage.removeItem('kora_kitchen_spec');
     const madeByHand = {
-      cup: V.cup, brew: Math.round(V.brew), creamer: Math.round(V.creamer),
+      style: V.style, cup: V.cup, scoops: V.scoops,
+      brew: Math.round(V.brew), creamer: Math.round(V.creamer),
       sweet: Math.round(V.sweet), ice: Math.round(V.ice),
       toppings: V.toppings, shaken: V.shaken
     };
@@ -831,7 +1023,8 @@
     location.href = 'guest.html';
   }
 
-  KoraAPI.ready().then(render).catch(render);
+  KoraSFX.mountToggle($('brandSlot').parentElement);
+  KoraAPI.ready().then(() => { render(); maybeWeirdMix(); touchIdle(); }).catch(render);
 
   // the whole room leans toward wherever you are pointing
   (function () {

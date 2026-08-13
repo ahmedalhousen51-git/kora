@@ -738,6 +738,16 @@
           kitchen: i.kitchen, handmade: i.handmade
         }))
       });
+      // file every brand-new invention so it can be rated and, one day,
+      // earn a place on the real menu under its inventor's name
+      S.cart.filter(i => i.kind === 'custom').forEach(i => {
+        KoraAPI.recordCreation({
+          order_id: res.id, name: i.name, customer_name: S.customer.name,
+          recipe: i.kitchen || {}, build: i.labels || {},
+          price: KoraAPI.priceItem(i)
+        }).catch(() => {});
+      });
+
       S.cart = []; paintCart(); persist();
       localStorage.removeItem('kora_guest_state');
       KoraUI.mascot.submitted();

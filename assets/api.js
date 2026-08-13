@@ -17,6 +17,8 @@
     inventory: 'kora_inventory',
     staff: 'kora_staff',
     session: 'kora_session',
+    creations: 'kora_creations',
+    challenges: 'kora_challenges',
     myOrder: 'kora_my_order'
   };
 
@@ -380,6 +382,110 @@
     if (i > -1) { inv[i].qty = Math.max(0, qty); write(LS.inventory, inv); }
   }
 
+
+  /* ------------------------------------------------- creations & fame --- */
+  /** A finished custom drink is filed so it can be rated and, one day, promoted. */
+  async function recordCreation(c) {
+    if (LIVE) {
+      const { error } = await sb.from('creations').insert({
+        order_id: c.order_id || null, name: c.name, customer_name: c.customer_name || null,
+        recipe: c.recipe || {}, build: c.build || {}, price: c.price || 0
+      });
+      if (error) throw new Error(error.message);
+      return;
+    }
+    const list = read(LS.creations, []);
+    list.push(Object.assign({ id: uid('cr'), rating_sum: 0, rating_count: 0,
+                              promoted: false, created_at: new Date().toISOString() }, c));
+    write(LS.creations, list);
+  }
+
+  async function listCreations() {
+    if (LIVE) {
+      const { data, error } = await sb.from('creations').select('*')
+        .order('rating_count', { ascending: false }).limit(100);
+      if (error) throw new Error(error.message);
+      return data || [];
+    }
+    return read(LS.creations, []).slice().reverse();
+  }
+
+  async function rateCreation(id, stars) {
+    if (LIVE) {
+      const { data, error } = await sb.rpc('rate_creation', { p_id: id, p_stars: stars });
+      if (error) throw new Error(error.message);
+      return data;
+    }
+    const list = read(LS.creations, []);
+    const i = list.findIndex(c => c.id === id);
+    if (i === -1) return null;
+    list[i].rating_sum += stars; list[i].rating_count += 1;
+    write(LS.creations, list);
+    return { avg: +(list[i].rating_sum / list[i].rating_count).toFixed(2), count: list[i].rating_count };
+  }
+
+  async function promoteCreation(id, menuName, price) {
+    if (LIVE) {
+      const { data, error } = await sb.rpc('admin_promote_creation',
+        { p_id: id, p_menu_name: menuName, p_price: price });
+      if (error) throw new Error(error.message);
+      await loadCatalogFromSupabase();
+      return data;
+    }
+    const list = read(LS.creations, []);
+    const c = list.find(x => x.id === id);
+    if (!c) return null;
+    c.promoted = true;
+    write(LS.creations, list);
+    catalog.menu.push({
+      id: 'signature_' + id, name: menuName, category: 'Signature',
+      tagline: 'ابتكار ' + (c.customer_name || 'أحد عملائنا') + ' — دلوقتي على المنيو',
+      price: price || c.price || 0, art: '#7B1E3E', recipe: c.recipe || {}
+    });
+    write('kora_menu_extra', catalog.menu.filter(m => m.category === 'Signature'));
+    return { ok: true };
+  }
+
+  /* ---------------------------------------------------- challenges ----- */
+  async function listChallenges(all) {
+    if (LIVE) {
+      let q = sb.from('challenges').select('*').order('created_at', { ascending: false });
+      if (!all) q = q.eq('is_active', true);
+      const { data, error } = await q;
+      if (error) throw new Error(error.message);
+      return data || [];
+    }
+    const list = read(LS.challenges, []);
+    return all ? list : list.filter(c => c.is_active);
+  }
+
+  async function saveChallenge(c) {
+    if (LIVE) {
+      const { error } = c.id
+        ? await sb.from('challenges').update(c).eq('id', c.id)
+        : await sb.from('challenges').insert(c);
+      if (error) throw new Error(error.message);
+      return;
+    }
+    const list = read(LS.challenges, []);
+    if (c.id) {
+      const i = list.findIndex(x => x.id === c.id);
+      if (i > -1) list[i] = Object.assign(list[i], c);
+    } else {
+      list.push(Object.assign({ id: uid('ch'), is_active: true, created_at: new Date().toISOString() }, c));
+    }
+    write(LS.challenges, list);
+  }
+
+  async function deleteChallenge(id) {
+    if (LIVE) {
+      const { error } = await sb.from('challenges').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+      return;
+    }
+    write(LS.challenges, read(LS.challenges, []).filter(c => c.id !== id));
+  }
+
   /* ----------------------------------------------------------- boot ------ */
   let readyPromise = null;
   function ready() {
@@ -393,6 +499,8 @@
         await loadCatalogFromSupabase();
       } else {
         seedLocal();
+        const extra = read('kora_menu_extra', []);
+        extra.forEach(m => { if (!catalog.menu.some(x => x.id === m.id)) catalog.menu.push(m); });
       }
       return true;
     })();
@@ -409,6 +517,8 @@
     adminLogin, adminSession, adminStats, adminOrders, adminStaff,
     adminCreateStaff, adminSetStaffActive, adminDeleteStaff,
     adminInventory, adminSetInventory,
+    recordCreation, listCreations, rateCreation, promoteCreation,
+    listChallenges, saveChallenge, deleteChallenge,
     logout,
     session: () => read(LS.session, null),
     myOrder: () => read(LS.myOrder, null),

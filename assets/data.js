@@ -107,15 +107,28 @@ window.KORA_SEED = {
 
   /* ---------------- Kitchen simulation stations ---------------- */
   stations: [
-    { id:'cup',      title:'Pick your cup',   hint:'Bigger cup, bigger commitment.',              type:'choice', options:['Regular 500ml','Large 700ml'] },
-    { id:'brew',     title:'Brew the base',   hint:'Steep it right — this is the backbone.',      type:'range',  unit:'ml', min:80,  max:280, def:180 },
-    { id:'creamer',  title:'Add the creamer', hint:'Pour slowly for that marbled look.',          type:'range',  unit:'ml', min:0,   max:250, def:150 },
-    { id:'sweet',    title:'Sweeten it',      hint:'Careful — syrup adds up fast.',               type:'range',  unit:'ml', min:0,   max:60,  def:25 },
-    { id:'toppings', title:'Drop the toppings', hint:'Boba first, always.',                     type:'multi',  options:['Boba Pearls','Popping Boba','Grass Jelly','Egg Pudding','Aloe Vera','Cheese Foam'] },
-    { id:'ice',      title:'Ice it down',     hint:'Too much ice waters down the flavour.',       type:'range',  unit:'g',  min:0,   max:220, def:90 },
-    { id:'shake',    title:'Shake it',        hint:'Give it a proper shake to mix everything.',   type:'shake' },
-    { id:'seal',     title:'Seal & name it',  hint:'Name your creation and send it to the bar.',  type:'final' }
+    { id:'style',    title:'المشروب ده هيبقى إيه؟', hint:'اختار الشكل الأول عشان نعرف نشتغل إزاي.',
+      type:'choice', options:['آيس','سموزي','ميلك شيك','ساخن'] },
+    { id:'cup',      title:'اختار الكوباية',  hint:'كوباية أكبر يعني التزام أكبر 😄',
+      type:'choice', options:['عادي 500 مل','كبير 700 مل'] },
+    { id:'brew',     title:'اسقي الأساس',     hint:'اقلب الكتلة فوق الكوباية.. براحة على إيدك!',
+      type:'range',  unit:'مل', min:80,  max:280, def:180 },
+    { id:'creamer',  title:'حط اللبن',        hint:'صبّه بالراحة عشان الشكل يطلع حلو.',
+      type:'range',  unit:'مل', min:0,   max:250, def:150 },
+    { id:'sweet',    title:'حلّيها',           hint:'براحة على السيرب.. بيتجمّع بسرعة!',
+      type:'range',  unit:'مل', min:0,   max:60,  def:25 },
+    { id:'scoops',   title:'كام سكوب؟',        hint:'كل سكوب بيتقل المشروب.. متزوّدش.',
+      type:'scoops', unit:'سكوب', min:0, max:5,   def:1 },
+    { id:'toppings', title:'كبّ البوبا',        hint:'البوبا الأول، دايماً.',
+      type:'multi',  options:['بوبا','بوبا بوبينج','جيلي عشب','بودينج','ألوفيرا','رغوة جبنة'] },
+    { id:'ice',      title:'ثلّجها',           hint:'تلج كتير بيميّع الطعم.. متغرقهاش.',
+      type:'range',  unit:'جم', min:0,   max:220, def:90 },
+    { id:'shake',    title:'رجّها',            hint:'امسك الكوباية ورجّها يمين وشمال!',
+      type:'shake' },
+    { id:'seal',     title:'اقفلها وسمّيها',    hint:'سمّي اختراعك وابعته للبار.',
+      type:'final' }
   ],
+
 
   /* ---------------- Inventory (starting stock) ---------------- */
   inventory: {

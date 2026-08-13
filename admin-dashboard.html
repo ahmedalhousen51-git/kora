@@ -29,6 +29,13 @@
   td.num { font-variant-numeric: tabular-nums; }
 
   .creation { padding: 16px 18px; margin-bottom: 10px; }
+  .fame-card { padding: 16px 18px; margin-bottom: 10px; }
+  .fame-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .stars { color: #E0A62C; font-size: .95rem; letter-spacing: 2px; }
+  .promote-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .promote-row .input { flex: 1; min-width: 140px; }
+  .ch-card { padding: 14px 18px; margin-bottom: 10px; display: flex;
+             justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
   .creation .recipe { background: var(--gray-50); border-radius: var(--r-sm); padding: 10px 12px; margin-top: 8px; font-size: .82rem; color: var(--text-soft); line-height: 1.8; }
 
   .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
@@ -69,6 +76,8 @@
   <div class="segment tabs" id="tabs">
     <button class="on" data-t="orders">Orders</button>
     <button data-t="creations">Creations</button>
+    <button data-t="fame">Hall of fame</button>
+    <button data-t="challenges">Challenges</button>
     <button data-t="staff">Staff</button>
     <button data-t="stock">Stock</button>
     <button data-t="qr">Table QR codes</button>
@@ -77,6 +86,31 @@
   <div class="panel on" id="p-orders"><div id="ordersBox"></div></div>
 
   <div class="panel" id="p-creations"><div id="creationsBox"></div></div>
+
+  <div class="panel" id="p-fame">
+    <div class="card card-pad" style="margin-bottom:14px">
+      <h3 style="font-size:1rem;margin-bottom:4px">Customer creations</h3>
+      <p class="hint" style="margin:0">Promote a favourite and it joins the real menu under its inventor's name.</p>
+    </div>
+    <div id="fameBox"></div>
+  </div>
+
+  <div class="panel" id="p-challenges">
+    <div class="card card-pad" style="margin-bottom:16px">
+      <h3 style="font-size:1rem;margin-bottom:12px">Run a challenge</h3>
+      <div class="stack">
+        <input id="chTitle" class="input" placeholder="Title — e.g. مشروب الصيف">
+        <input id="chBrief" class="input" placeholder="What should customers make?">
+        <div class="row" style="flex-wrap:wrap;gap:10px">
+          <input id="chPrize" class="input" placeholder="Prize" style="flex:1;min-width:150px">
+          <input id="chFrom" class="input" type="date" style="flex:1;min-width:140px">
+          <input id="chTo" class="input" type="date" style="flex:1;min-width:140px">
+        </div>
+        <button class="btn btn-primary" onclick="addChallenge()">Publish challenge</button>
+      </div>
+    </div>
+    <div id="challengeBox"></div>
+  </div>
 
   <div class="panel" id="p-staff">
     <div class="card card-pad" style="margin-bottom:16px">
@@ -160,14 +194,17 @@
 
   async function loadAll() {
     try {
-      const [stats, orders, staff, inv] = await Promise.all([
-        KoraAPI.adminStats(), KoraAPI.adminOrders(200), KoraAPI.adminStaff(), KoraAPI.adminInventory()
+      const [stats, orders, staff, inv, fame, chals] = await Promise.all([
+        KoraAPI.adminStats(), KoraAPI.adminOrders(200), KoraAPI.adminStaff(), KoraAPI.adminInventory(),
+        KoraAPI.listCreations().catch(() => []), KoraAPI.listChallenges(true).catch(() => [])
       ]);
       paintStats(stats);
       paintOrders(orders);
       paintCreations(orders);
       paintStaff(staff);
       paintStock(inv);
+      paintFame(fame);
+      paintChallenges(chals);
     } catch (e) { KoraUI.toast(e.message, 'err'); }
   }
 
@@ -239,6 +276,108 @@
         </div>
       </div>`).join('');
   }
+
+  /* ------------------------------- hall of fame ------------------------- */
+  function stars(avg) {
+    const full = Math.round(avg || 0);
+    return '★'.repeat(full) + '☆'.repeat(Math.max(0, 5 - full));
+  }
+
+  function paintFame(list) {
+    if (!list.length) {
+      $('fameBox').innerHTML = '<div class="card empty"><div class="empty-icon">🏆</div>No customer creations yet.</div>';
+      return;
+    }
+    $('fameBox').innerHTML = list.map(c => {
+      const avg = c.rating_count ? (c.rating_sum / c.rating_count) : 0;
+      const k = c.recipe || {};
+      return `<div class="card fame-card">
+        <div class="fame-head">
+          <div>
+            <b style="font-size:.98rem">${c.name}</b>
+            ${c.promoted ? '<span class="pill pill-green" style="margin-left:8px">On the menu</span>' : ''}
+            <div class="s" style="font-size:.8rem;color:var(--text-soft)">
+              by ${c.customer_name || '—'} · ${new Date(c.created_at).toLocaleDateString()}
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div class="stars">${stars(avg)}</div>
+            <div class="hint">${c.rating_count} rating(s)${c.rating_count ? ' · ' + avg.toFixed(1) : ''}</div>
+          </div>
+        </div>
+        <div class="recipe" style="background:var(--gray-50);border-radius:var(--r-sm);padding:10px 12px;margin-top:8px;font-size:.82rem;color:var(--text-soft);line-height:1.8">
+          ${k.style ? '<b>الشكل:</b> ' + k.style + ' · ' : ''}${k.cup || ''}
+          ${k.brew ? '<br><b>الأساس:</b> ' + k.brew + ' مل' : ''}
+          ${k.creamer ? ' · <b>اللبن:</b> ' + k.creamer + ' مل' : ''}
+          ${k.sweet ? ' · <b>السيرب:</b> ' + k.sweet + ' مل' : ''}
+          ${k.scoops ? ' · <b>سكوب:</b> ' + k.scoops : ''}
+          ${k.ice ? ' · <b>التلج:</b> ' + k.ice + ' جم' : ''}
+          ${(k.toppings || []).length ? '<br><b>الإضافات:</b> ' + k.toppings.join('، ') : ''}
+        </div>
+        ${c.promoted ? '' : `<div class="promote-row">
+          <input class="input" id="pn_${c.id}" placeholder="Menu name — e.g. سموزي ${(c.customer_name || 'العميل').split(' ')[0]} الجبار"
+                 value="${(c.name || '').replace(/"/g, '&quot;')}">
+          <input class="input" id="pp_${c.id}" type="number" style="max-width:110px" placeholder="Price" value="${Math.round(c.price || 0)}">
+          <button class="btn btn-primary btn-sm" onclick="promote('${c.id}')">Put on the menu</button>
+        </div>`}
+      </div>`;
+    }).join('');
+  }
+
+  window.promote = async (id) => {
+    const name = ($('pn_' + id) || {}).value;
+    const price = Number(($('pp_' + id) || {}).value || 0);
+    if (!name || !name.trim()) { KoraUI.toast('Give it a menu name first', 'err'); return; }
+    try {
+      await KoraAPI.promoteCreation(id, name.trim(), price);
+      KoraUI.toast('It is on the menu now 🎉', 'ok');
+      KoraUI.confetti(50);
+      loadAll();
+    } catch (e) { KoraUI.toast(e.message, 'err'); }
+  };
+
+  /* -------------------------------- challenges -------------------------- */
+  function paintChallenges(list) {
+    if (!list.length) {
+      $('challengeBox').innerHTML = '<div class="card empty"><div class="empty-icon">🎯</div>No challenges running.</div>';
+      return;
+    }
+    $('challengeBox').innerHTML = list.map(c => `
+      <div class="card ch-card">
+        <div>
+          <b>${c.title}</b>
+          ${c.is_active ? '<span class="pill pill-green" style="margin-left:8px">Live</span>'
+                        : '<span class="pill pill-gray" style="margin-left:8px">Ended</span>'}
+          <div class="s" style="font-size:.82rem;color:var(--text-soft);margin-top:3px">${c.brief || ''}</div>
+          <div class="hint">${c.prize ? '🏅 ' + c.prize : ''}${c.starts_at ? ' · ' + c.starts_at : ''}${c.ends_at ? ' → ' + c.ends_at : ''}</div>
+        </div>
+        <div class="row">
+          <button class="btn btn-ghost btn-sm" onclick="toggleChallenge('${c.id}', ${!c.is_active})">${c.is_active ? 'End' : 'Reopen'}</button>
+          <button class="btn btn-quiet btn-sm" onclick="delChallenge('${c.id}')">Remove</button>
+        </div>
+      </div>`).join('');
+  }
+
+  window.addChallenge = async () => {
+    const title = $('chTitle').value.trim();
+    if (!title) { KoraUI.toast('The challenge needs a title', 'err'); return; }
+    try {
+      await KoraAPI.saveChallenge({
+        title, brief: $('chBrief').value.trim(), prize: $('chPrize').value.trim(),
+        starts_at: $('chFrom').value || null, ends_at: $('chTo').value || null, is_active: true
+      });
+      ['chTitle', 'chBrief', 'chPrize', 'chFrom', 'chTo'].forEach(i => { $(i).value = ''; });
+      KoraUI.toast('Challenge published', 'ok');
+      loadAll();
+    } catch (e) { KoraUI.toast(e.message, 'err'); }
+  };
+  window.toggleChallenge = async (id, active) => {
+    await KoraAPI.saveChallenge({ id, is_active: active }); loadAll();
+  };
+  window.delChallenge = async (id) => {
+    if (!confirm('Remove this challenge?')) return;
+    await KoraAPI.deleteChallenge(id); loadAll();
+  };
 
   window.addStaff = async () => {
     const n = $('stName').value.trim(), p = $('stPass').value.trim();
