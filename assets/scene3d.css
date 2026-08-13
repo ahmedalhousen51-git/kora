@@ -45,7 +45,7 @@
 .cup3d .cup-rim-back {
   position: absolute; top: 0; left: 0; width: 100%; height: 17%;
   border-radius: 50%;
-  background: linear-gradient(180deg, #9E9098, #C8BCC3);
+  background: linear-gradient(180deg, #98A2AD, #C4CCD5);
 }
 
 /* the tapered wall */
@@ -60,7 +60,7 @@
       rgba(255,255,255,.55) 38%,
       rgba(255,255,255,.18) 62%,
       rgba(70,50,60,.30) 100%),
-    linear-gradient(180deg, #F3EEF1, #DCD3D8);
+    linear-gradient(180deg, #EFF3F7, #D2D9E1);
 }
 
 /* what's in it */
@@ -106,7 +106,7 @@
 .cup3d .cup-rim {
   position: absolute; top: 4%; left: -2%; width: 104%; height: 15%;
   border-radius: 50%;
-  background: linear-gradient(180deg, #FBF8FA, #C6BAC1);
+  background: linear-gradient(180deg, #F7FAFC, #BEC7D1);
   box-shadow: 0 3px 6px rgba(38,22,28,.22);
 }
 .cup3d .cup-rim::after {
@@ -119,7 +119,7 @@
 .cup3d .cup-lid {
   position: absolute; top: 0; left: -4%; width: 108%; height: 19%;
   border-radius: 50%;
-  background: linear-gradient(180deg, #EDE7EA, #B9AEB5);
+  background: linear-gradient(180deg, #E9EEF3, #AEB8C3);
   box-shadow: 0 4px 8px rgba(38,22,28,.26);
   opacity: 0; transform: translateY(-16px) translateZ(6px);
   transition: opacity .3s ease, transform .35s cubic-bezier(.2,.9,.3,1.5);

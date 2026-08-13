@@ -15,29 +15,29 @@
   --wine-100: #F6E7EE;
   --wine-50:  #FCF4F7;
 
-  /* Grays, warmed with a burgundy undertone so the whole page sits in the
-     same family as the brand colour instead of reading cold and neutral. */
-  --gray-950: #161013;
-  --gray-900: #211820;
-  --gray-800: #2E2129;
-  --gray-700: #443039;
-  --gray-600: #5E4551;
-  --gray-500: #806270;
-  --gray-400: #A68E99;
-  --gray-300: #CDBAC3;
-  --gray-200: #E7DAE0;
-  --gray-100: #EADEE4;
-  --gray-50:  #F3EAEF;
+  /* Silver — a cool metallic neutral scale. The burgundy stays as the brand
+     accent on top of it. */
+  --gray-950: #14171A;
+  --gray-900: #1E2227;
+  --gray-800: #2A2F35;
+  --gray-700: #3D444C;
+  --gray-600: #58606A;
+  --gray-500: #7A838E;
+  --gray-400: #A2ABB5;
+  --gray-300: #C0C8D1;
+  --gray-200: #D7DDE4;
+  --gray-100: #E4E9EE;
+  --gray-50:  #EEF2F5;
 
-  /* Nothing on the page is white. The page sits on a mid warm gray and the
-     cards are a lighter gray on top of it — gray-in-burgundy throughout. */
-  --bg: #D9CCD3;
-  --surface: #ECE2E7;
-  --surface-2: #E3D6DD;
-  --text: #211820;
-  --text-soft: #5E4551;
-  --text-faint: #A68E99;
-  --border: #E7DAE0;
+  /* Nothing on the page is white: it sits on brushed silver, with panels a
+     shade lighter on top. */
+  --bg: #C7CED6;
+  --surface: #DFE5EB;
+  --surface-2: #D3DAE1;
+  --text: #1E2227;
+  --text-soft: #58606A;
+  --text-faint: #A2ABB5;
+  --border: #C6CED7;
 
   --success: #1F7A4D;
   --warn: #B4761B;
@@ -48,9 +48,9 @@
   --r-lg: 20px;
   --r-xl: 28px;
 
-  --sh-1: 0 1px 2px rgba(18,18,20,.06), 0 1px 3px rgba(18,18,20,.04);
-  --sh-2: 0 4px 12px rgba(18,18,20,.07), 0 2px 4px rgba(18,18,20,.04);
-  --sh-3: 0 12px 32px rgba(18,18,20,.10), 0 4px 10px rgba(18,18,20,.05);
+  --sh-1: 0 1px 2px rgba(30,34,39,.07), 0 1px 3px rgba(30,34,39,.05);
+  --sh-2: 0 4px 12px rgba(30,34,39,.09), 0 2px 4px rgba(30,34,39,.05);
+  --sh-3: 0 12px 32px rgba(30,34,39,.13), 0 4px 10px rgba(30,34,39,.07);
   --sh-wine: 0 10px 26px rgba(123,30,62,.28);
 
   --ff-display: 'Outfit', system-ui, sans-serif;
@@ -62,7 +62,9 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   font-family: var(--ff-body);
-  background: var(--bg);
+  /* brushed-silver sheen rather than one flat grey */
+  background:
+    linear-gradient(160deg, #D5DBE2 0%, var(--bg) 42%, #BEC6CF 100%) fixed;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   line-height: 1.6;
@@ -134,7 +136,7 @@ a { color: inherit; }
 
 /* ---------- Card ---------- */
 .card {
-  background: var(--surface);
+  background: linear-gradient(180deg, #E7ECF1, var(--surface));
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   box-shadow: var(--sh-1);
