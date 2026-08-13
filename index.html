@@ -10,195 +10,103 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/theme.css">
 <link rel="stylesheet" href="assets/scene3d.css">
+<link rel="stylesheet" href="assets/landing.css">
 <style>
-  .hero {
-    position: relative; overflow: hidden;
-    background: linear-gradient(150deg, var(--gray-950) 0%, var(--gray-900) 42%, var(--wine-900) 100%);
-    color: #fff;
-    padding: 84px 0 96px;
-  }
-  .hero::before, .hero::after {
-    content: ''; position: absolute; border-radius: 50%; filter: blur(90px);
-  }
-  .hero::before { width: 460px; height: 460px; background: rgba(174,49,96,.34); top: -160px; right: -120px; animation: blob 18s ease-in-out infinite; }
-  .hero::after  { width: 380px; height: 380px; background: rgba(123,30,62,.30); bottom: -200px; left: -120px; animation: blob 22s ease-in-out infinite reverse; }
-  @keyframes blob {
-    0%,100% { transform: translate(0,0) scale(1); }
-    33%     { transform: translate(40px,30px) scale(1.12); }
-    66%     { transform: translate(-30px,45px) scale(.94); }
-  }
-  .hero-inner { position: relative; z-index: 1; display: grid; grid-template-columns: 1.15fr .85fr; gap: 48px; align-items: center; }
-  @media (max-width: 860px) { .hero { padding: 60px 0 68px; } .hero-inner { grid-template-columns: 1fr; gap: 34px; } }
-
-  .hero h1 { font-size: clamp(2.3rem, 5.4vw, 3.5rem); font-weight: 800; letter-spacing: -.035em; }
-  .hero h1 em { font-style: normal; color: var(--wine-300); }
-  .hero p.lede { color: rgba(255,255,255,.72); font-size: 1.05rem; margin: 16px 0 30px; max-width: 480px; }
-  .hero-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.16);
-    color: rgba(255,255,255,.85);
-    padding: 6px 14px; border-radius: 999px; font-size: .78rem; font-weight: 600;
-    margin-bottom: 22px;
-  }
-  .hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--wine-300); }
-  .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
-  .btn-light { background: #fff; color: var(--wine-800); }
-  .btn-light:hover { background: var(--gray-100); }
-  .btn-outline-light { background: transparent; color: #fff; border-color: rgba(255,255,255,.28); }
-  .btn-outline-light:hover { background: rgba(255,255,255,.08); }
-
-  .hero-art { display: flex; justify-content: center; perspective: 1000px; }
-  .cup-stack { display: flex; align-items: flex-end; gap: 8px; transform-style: preserve-3d; }
-  .cup-stack > * { filter: drop-shadow(0 20px 30px rgba(0,0,0,.4)); transform-style: preserve-3d; }
-  .cup-stack .c1 { animation-delay: -1.4s; }
-  .cup-stack .c2 { transform: translateY(-18px); z-index: 2; animation-delay: -3s; }
-  .cup-stack .c3 { animation-delay: -4.6s; }
-
-  /* ---------- the pour: drink falls out of the hero, Captain Kora catches it ----- */
-  .pour-strip {
-    position: relative; margin-top: -92px; z-index: 3;
-    pointer-events: none; display: flex; justify-content: center;
-  }
+  /* the pour: a cup tips out of the hero and Captain Kora catches it */
+  .pour-strip { position: relative; margin-top: -70px; z-index: 3; pointer-events: none;
+    display: flex; justify-content: center; background: var(--bg); }
   .pour-strip svg { width: min(430px, 94vw); height: auto; overflow: visible; }
-
   .p-cup { filter: drop-shadow(0 14px 22px rgba(0,0,0,.34)); animation: cup-tip 4.6s ease-in-out infinite; transform-origin: 250px 60px; }
-  @keyframes cup-tip {
-    0%, 6%   { transform: rotate(-8deg); }
-    16%, 66% { transform: rotate(0deg); }
-    78%,100% { transform: rotate(-8deg); }
-  }
-
+  @keyframes cup-tip { 0%,6% { transform: rotate(-8deg); } 16%,66% { transform: rotate(0); } 78%,100% { transform: rotate(-8deg); } }
   .p-stream { transform-origin: 176px 62px; animation: stream 4.6s cubic-bezier(.4,0,.5,1) infinite; }
-  @keyframes stream {
-    0%       { transform: scaleY(0);   opacity: 0; }
-    9%       { transform: scaleY(.28); opacity: 1; }
-    22%, 62% { transform: scaleY(1);   opacity: 1; }
-    72%      { transform: scaleY(.12); opacity: 1; }
-    78%,100% { transform: scaleY(0);   opacity: 0; }
-  }
-
+  @keyframes stream { 0% { transform: scaleY(0); opacity: 0; } 9% { transform: scaleY(.28); opacity: 1; }
+    22%,62% { transform: scaleY(1); opacity: 1; } 72% { transform: scaleY(.12); opacity: 1; } 78%,100% { transform: scaleY(0); opacity: 0; } }
   .p-drop { animation: drop 4.6s cubic-bezier(.45,0,.8,.2) infinite; opacity: 0; }
-  @keyframes drop {
-    0%, 62%  { transform: translateY(0);   opacity: 0; }
-    66%      { transform: translateY(0);   opacity: 1; }
-    80%      { transform: translateY(20px); opacity: 1; }
-    84%,100% { transform: translateY(26px); opacity: 0; }
-  }
-
+  @keyframes drop { 0%,62% { transform: translateY(0); opacity: 0; } 66% { transform: translateY(0); opacity: 1; }
+    80% { transform: translateY(20px); opacity: 1; } 84%,100% { transform: translateY(26px); opacity: 0; } }
   .p-body .c-gulp { animation: gulp 4.6s ease-in-out infinite; transform-origin: 60px 66px; }
-  @keyframes gulp {
-    0%, 80%  { transform: scale(1); }
-    86%      { transform: scale(1.25, .5); }
-    92%      { transform: scale(.9, 1.15); }
-    100%     { transform: scale(1); }
-  }
-
+  @keyframes gulp { 0%,80% { transform: scale(1); } 86% { transform: scale(1.25,.5); } 92% { transform: scale(.9,1.15); } 100% { transform: scale(1); } }
   .p-body { animation: catch-bob 4.6s ease-in-out infinite; transform-origin: 176px 220px; }
-  @keyframes catch-bob {
-    0%, 62%  { transform: translateY(0) rotate(0); }
-    82%      { transform: translateY(0) rotate(-1.6deg); }
-    90%      { transform: translateY(3px) rotate(1.2deg); }
-    100%     { transform: translateY(0) rotate(0); }
-  }
-
+  @keyframes catch-bob { 0%,62% { transform: translateY(0) rotate(0); } 82% { transform: translateY(0) rotate(-1.6deg); }
+    90% { transform: translateY(3px) rotate(1.2deg); } 100% { transform: translateY(0) rotate(0); } }
   .p-splash { opacity: 0; animation: splash 4.6s ease-out infinite; transform-origin: 176px 182px; }
-  @keyframes splash {
-    0%, 82% { transform: scale(.2); opacity: 0; }
-    87%     { transform: scale(1);  opacity: .85; }
-    100%    { transform: scale(1.8); opacity: 0; }
-  }
-
-  @media (max-width: 640px) { .pour-strip { margin-top: -66px; } }
+  @keyframes splash { 0%,82% { transform: scale(.2); opacity: 0; } 87% { transform: scale(1); opacity: .85; } 100% { transform: scale(1.8); opacity: 0; } }
+  @media (max-width: 640px) { .pour-strip { margin-top: -48px; } }
   @media (prefers-reduced-motion: reduce) {
-    .p-cup, .p-stream, .p-drop, .p-mouth, .p-body, .p-splash { animation: none; }
+    .p-cup, .p-stream, .p-drop, .p-body, .p-splash, .p-body .c-gulp { animation: none; }
     .p-stream { transform: scaleY(1); opacity: 1; }
   }
-
-  .stats { display: flex; gap: 36px; margin-top: 38px; flex-wrap: wrap; }
-  .stats .s .n { font-family: var(--ff-display); font-size: 1.5rem; font-weight: 700; }
-  .stats .s .l { font-size: .78rem; color: rgba(255,255,255,.55); letter-spacing: .04em; }
-
-  section { padding: 68px 0; }
-  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-  @media (max-width: 820px) { .grid-3 { grid-template-columns: 1fr; } section { padding: 48px 0; } }
-
-  .step-card { padding: 26px 24px; }
-  .step-num {
-    width: 34px; height: 34px; border-radius: 10px;
-    background: var(--wine-100); color: var(--wine-700);
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--ff-display); font-weight: 700; font-size: .95rem;
-    margin-bottom: 14px;
-  }
-  .step-card h3 { font-size: 1.05rem; margin-bottom: 6px; }
-  .step-card p { color: var(--text-soft); font-size: .9rem; margin: 0; }
-
-  .entry { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-  .entry-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  @media (max-width: 780px) { .entry-grid { grid-template-columns: 1fr; } }
-  .entry-card { padding: 28px; display: flex; flex-direction: column; gap: 14px; }
-  .entry-card h3 { font-size: 1.15rem; }
-  .entry-card p { color: var(--text-soft); font-size: .9rem; margin: 0; flex: 1; }
-  .table-input { display: flex; align-items: center; gap: 10px; }
-  .table-input .input { width: 92px; text-align: center; font-weight: 700; }
-
-  footer { padding: 40px 0 60px; }
-  .foot-links { display: flex; gap: 10px; flex-wrap: wrap; }
-  .foot-note { color: var(--text-faint); font-size: .8rem; margin-top: 22px; }
-  .mode-chip { font-size: .72rem; }
+  section { padding: 84px 0; }
+  @media (max-width: 820px) { section { padding: 58px 0; } }
 </style>
 </head>
 <body>
 
-<div class="hero">
+<!-- ---------------------------------------------------------- preloader -- -->
+<div id="preload">
+  <div class="pl-cup" id="plCup"></div>
+  <div class="pl-word">KORA</div>
+  <div class="pl-bar"><i></i></div>
+</div>
+
+<div id="scrollbar"></div>
+<div id="cursor"></div>
+
+<!-- ------------------------------------------------------------- hero ---- -->
+<header class="hero" id="hero">
+  <div class="mesh"><i></i><i></i><i></i><i></i></div>
+  <div class="pearl-field" id="pearls"></div>
+
   <div class="container hero-inner">
-    <div class="enter">
-      <span class="hero-badge"><span class="dot"></span> <span id="modeText">Loading…</span></span>
-      <h1>Bubble tea, built <em>exactly</em> the way you want it.</h1>
-      <p class="lede">
-        Pick a drink and dial in the sugar, ice and toppings — or step behind the counter
-        and build something that isn't on the menu yet. The bar gets your numbers to the gram.
+    <div>
+      <span class="hero-badge fade-up" style="animation-delay:.05s">
+        <span class="dot"></span> <span id="modeText">Loading…</span>
+      </span>
+
+      <h1 class="kinetic">
+        <span class="ln"><span>Bubble tea,</span></span>
+        <span class="ln"><span>built <em>exactly</em></span></span>
+        <span class="ln"><span>the way you want it.</span></span>
+      </h1>
+
+      <p class="lede fade-up" style="animation-delay:.5s">
+        Pick a drink and dial in the sugar, ice and toppings — or step behind the
+        counter and build something that isn't on the menu yet. The bar gets your
+        numbers to the gram.
       </p>
-      <div class="hero-cta">
-        <a href="guest.html?mode=general" class="btn btn-light btn-lg">Order online</a>
-        <a href="#entry" class="btn btn-outline-light btn-lg">I'm at a table</a>
-      </div>
-      <div class="stats">
-        <div class="s"><div class="n" id="stMenu">—</div><div class="l">DRINKS ON THE MENU</div></div>
-        <div class="s"><div class="n" id="stTop">—</div><div class="l">TOPPINGS</div></div>
-        <div class="s"><div class="n">∞</div><div class="l">COMBINATIONS</div></div>
+
+      <div class="hero-cta fade-up" style="animation-delay:.62s">
+        <a href="guest.html?mode=general" class="btn btn-light btn-lg magnetic">Order online</a>
+        <a href="#entry" class="btn btn-outline-light btn-lg magnetic">I'm at a table</a>
       </div>
     </div>
-    <div class="hero-art">
-      <div class="cup-stack">
-        <div class="c1 float3d" id="c1"></div>
-        <div class="c2 float3d" id="c2"></div>
-        <div class="c3 float3d" id="c3"></div>
+
+    <div class="hero-art fade-up" style="animation-delay:.4s">
+      <div class="hero-cups" id="heroCups">
+        <div class="hc1 float3d" id="hc1"></div>
+        <div class="hc2 float3d" id="hc2"></div>
+        <div class="hc3 float3d" id="hc3"></div>
       </div>
     </div>
   </div>
-  <div class="pearl-field" id="pearls"></div>
-</div>
 
-<!-- the pour: a cup tips over the edge of the hero and Captain Kora catches it -->
+  <div class="scroll-cue"><span>scroll</span><i></i></div>
+</header>
+
+<!-- --------------------------------------------------- the pour scene ---- -->
 <div class="pour-strip" aria-hidden="true">
   <svg viewBox="0 0 352 250">
-
-    <!-- ---- the tipped cup ---- -->
     <g class="p-cup">
       <g transform="translate(232,10) rotate(126) scale(1.25)">
-        <path d="M11 19h38l-3.6 44a7 7 0 0 1-7 6.4H21.6a7 7 0 0 1-7-6.4L11 19Z" fill="#F1F1F3"/>
+        <path d="M11 19h38l-3.6 44a7 7 0 0 1-7 6.4H21.6a7 7 0 0 1-7-6.4L11 19Z" fill="#EFF3F7"/>
         <path d="M13 34h34l-2.4 29a7 7 0 0 1-7 6.4H22.4a7 7 0 0 1-7-6.4L13 34Z" fill="#C4762A"/>
         <circle cx="22" cy="58" r="3.2" fill="#2A1A22" opacity=".6"/>
         <circle cx="31" cy="63" r="3.2" fill="#2A1A22" opacity=".6"/>
         <circle cx="39" cy="57" r="2.8" fill="#2A1A22" opacity=".5"/>
-        <path d="M11 19h38l-3.6 44a7 7 0 0 1-7 6.4H21.6a7 7 0 0 1-7-6.4L11 19Z"
-              fill="none" stroke="#D8D8DE" stroke-width="1.6"/>
-        <rect x="7.5" y="13" width="45" height="7.5" rx="3.7" fill="#B9B9C0"/>
+        <path d="M11 19h38l-3.6 44a7 7 0 0 1-7 6.4H21.6a7 7 0 0 1-7-6.4L11 19Z" fill="none" stroke="#C4CCD5" stroke-width="1.6"/>
+        <rect x="7.5" y="13" width="45" height="7.5" rx="3.7" fill="#AEB8C3"/>
       </g>
     </g>
-
-    <!-- ---- the falling stream ---- -->
     <g class="p-stream">
       <path d="M169 62h14v104a7 7 0 0 1-14 0V62Z" fill="url(#pourGrad)"/>
       <ellipse cx="176" cy="168" rx="10" ry="8" fill="#8A5525"/>
@@ -208,37 +116,62 @@
         <stop offset="0" stop-color="#C4762A"/><stop offset="1" stop-color="#8A5525"/>
       </linearGradient>
     </defs>
-
-    <!-- ---- the droplet that lands ---- -->
     <g class="p-drop">
       <path d="M176 152c6 7 9 11 9 15a9 9 0 0 1-18 0c0-4 3-8 9-15Z" fill="#8A5525"/>
     </g>
-
-    <ellipse class="p-splash" cx="176" cy="182" rx="20" ry="6" fill="#8A5525" opacity=".35"/>
-
-    <!-- ---- Captain Kora, lying back, catching it ---- -->
     <g class="p-body" id="catcher"></g>
   </svg>
 </div>
 
+<!-- ----------------------------------------------------------- ticker ---- -->
+<div class="marquee" aria-hidden="true">
+  <div class="track" id="ticker"></div>
+</div>
+
+<!-- ------------------------------------------- the drink builds itself --- -->
+<section class="story" id="story" style="padding:0">
+  <div class="story-rail">
+    <div class="story-stage">
+      <div class="story-copy">
+        <div class="story-count"><b id="stNum">01</b><span id="stTotal">/ 06</span></div>
+        <div class="eyebrow">Made in front of you</div>
+        <h2 id="stTitle">Start with the cup</h2>
+        <p id="stBody">Every drink begins empty. What happens next is entirely yours.</p>
+        <div class="story-chips" id="stChips"></div>
+        <div class="story-steps" id="stDots"></div>
+      </div>
+      <div class="story-cup">
+        <div class="stage-light"></div>
+        <div class="podium"><i></i></div>
+        <div class="cup-holder" id="storyCup"></div>
+        <div class="gauge" aria-hidden="true">
+          <div class="gauge-track"><div class="gauge-fill" id="stFill"></div></div>
+          <b id="stMl">0 ml</b>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- -------------------------------------------------------- how it works - -->
 <section>
   <div class="container">
     <div class="section-head center">
       <div class="eyebrow">How it works</div>
       <h2>Three steps, no queue</h2>
     </div>
-    <div class="grid-3">
+    <div class="steps-grid">
       <div class="card step-card reveal">
         <div class="step-num">1</div>
         <h3>Scan or open</h3>
         <p>Every table has its own QR code. Scan it and your table number is already filled in — or order online for pickup and delivery.</p>
       </div>
-      <div class="card step-card reveal">
+      <div class="card step-card reveal" style="--d:110ms">
         <div class="step-num">2</div>
         <h3>Make it yours</h3>
-        <p>Sugar level, ice level, milk, size, toppings — the price updates as you go. Want something new? Build it from scratch in the kitchen.</p>
+        <p>Sugar, ice, milk, size, toppings — the price updates as you go. Want something new? Build it from scratch in the kitchen.</p>
       </div>
-      <div class="card step-card reveal">
+      <div class="card step-card reveal" style="--d:220ms">
         <div class="step-num">3</div>
         <h3>Track it live</h3>
         <p>The bar sees your exact measurements, sets a prep time, and your screen counts down until it's ready.</p>
@@ -247,7 +180,65 @@
   </div>
 </section>
 
-<section class="entry" id="entry">
+<!-- --------------------------------------------------------- showcase ---- -->
+<section class="showcase">
+  <div class="container">
+    <div class="section-head center">
+      <div class="eyebrow" style="color:var(--wine-300)">On the menu</div>
+      <h2>Pick a lane</h2>
+      <p>Milk teas, fruit teas and a specials shelf that keeps changing.</p>
+    </div>
+  </div>
+  <div class="shelf-row" id="shelf"></div>
+</section>
+
+<!-- ---------------------------------------------------------- kitchen ---- -->
+<section class="kx">
+  <div class="container kx-grid">
+    <div class="kx-art" id="kxArt">
+      <div class="kx-glow"></div>
+      <div class="kx-counter">
+        <div class="kx-chef" id="kxChef"></div>
+        <div class="kx-front"></div>
+        <div class="kx-top"></div>
+        <div class="kx-cup" id="kxCup"></div>
+        <div class="kx-tools">
+          <span class="kx-tool t1"><i style="--c:#B4763C"></i>Kettle</span>
+          <span class="kx-tool t2"><i style="--c:#F3E3CB"></i>Milk jug</span>
+          <span class="kx-tool t3"><i style="--c:#7B1E3E"></i>Syrup pump</span>
+          <span class="kx-tool t4"><i style="--c:#3B2318"></i>Boba scoop</span>
+        </div>
+      </div>
+      <div class="kx-bubble" id="kxBubble">هات الإيد يا وحش 👋</div>
+    </div>
+    <div class="kx-copy">
+      <div class="eyebrow">Not on the menu</div>
+      <h2>Then go make it yourself.</h2>
+      <p>Step behind the counter and build a drink that doesn't exist yet. Grab the kettle
+        and tip it. Squeeze the syrup pump. Scoop the boba in by hand and shake it until
+        it's ready — every gram is recorded and handed to the bar exactly as you made it.</p>
+      <ul class="kx-list">
+        <li><b>Real pouring</b> — drag a bottle over the cup and hold. Stop when the level looks right.</li>
+        <li><b>Every gram counts</b> — the bar gets your numbers, not a guess.</li>
+        <li><b>Name it</b> — if people love it, we put it on the menu under your name.</li>
+      </ul>
+      <button class="btn btn-primary btn-lg magnetic" onclick="goKitchen()">Step into the kitchen</button>
+    </div>
+  </div>
+</section>
+
+<!-- ------------------------------------------------------------ stats ---- -->
+<div class="band">
+  <div class="container band-grid">
+    <div class="reveal"><div class="n" id="stMenu">0</div><div class="l">Drinks</div></div>
+    <div class="reveal" style="--d:90ms"><div class="n" id="stTop">0</div><div class="l">Toppings</div></div>
+    <div class="reveal" style="--d:180ms"><div class="n" id="stGram">1</div><div class="l">Gram precision</div></div>
+    <div class="reveal" style="--d:270ms"><div class="n">∞</div><div class="l">Combinations</div></div>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------------ entry ---- -->
+<section id="entry">
   <div class="container">
     <div class="section-head">
       <div class="eyebrow">Start an order</div>
@@ -262,12 +253,12 @@
           <label class="label" style="margin:0">Table</label>
           <input type="number" id="tableNo" class="input" value="5" min="1" max="99">
         </div>
-        <button class="btn btn-primary" onclick="goTable()">Open table menu</button>
+        <button class="btn btn-primary magnetic" onclick="goTable()">Open table menu</button>
       </div>
-      <div class="card card-hover entry-card reveal">
+      <div class="card card-hover entry-card reveal" style="--d:120ms">
         <h3>Somewhere else</h3>
         <p>Order for pickup at the counter, or have it delivered — we'll ask for your location so the rider finds you fast.</p>
-        <a href="guest.html?mode=general" class="btn btn-dark">Order for pickup or delivery</a>
+        <a href="guest.html?mode=general" class="btn btn-dark magnetic">Order for pickup or delivery</a>
       </div>
     </div>
   </div>
@@ -291,53 +282,282 @@
 <script src="assets/data.js"></script>
 <script src="assets/api.js"></script>
 <script src="assets/character.js"></script>
+<script src="assets/sfx.js"></script>
 <script src="assets/scene3d.js"></script>
 <script src="assets/ui.js"></script>
 <script>
-  document.getElementById('c1').innerHTML = Kora3D.cup({ w: 84,  h: 114, liquid: '#7B1E3E', fill: .68, pearls: 5 });
-  document.getElementById('c2').innerHTML = Kora3D.cup({ w: 100, h: 136, liquid: '#C4762A', fill: .74, pearls: 7, sealed: true });
-  document.getElementById('c3').innerHTML = Kora3D.cup({ w: 84,  h: 114, liquid: '#5C8A4A', fill: .6,  pearls: 5 });
-  document.getElementById('footBrand').innerHTML = KoraUI.brandMark({ size: 30 });
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------------------------------------------------------- preloader -- */
+  $('plCup').innerHTML = Kora3D.cup({ w: 74, h: 100, fill: .1, pearls: 3 });
+  const plFill = $('plCup').querySelector('.cup3d');
+  let plStep = 0;
+  const plTimer = setInterval(() => {
+    plStep += .22;
+    Kora3D.setCup(plFill, { fill: Math.min(.8, plStep), pearls: 3 + Math.round(plStep * 5) });
+    if (plStep >= .8) clearInterval(plTimer);
+  }, 180);
+  const hidePreload = () => $('preload').classList.add('gone');
+  window.addEventListener('load', () => setTimeout(hidePreload, reduced ? 0 : 900));
+  setTimeout(hidePreload, 2600);          // never let it trap anyone
+
+  /* ------------------------------------------------------ scroll bar ----- */
+  const bar = $('scrollbar');
+  const onScroll = () => {
+    const h = document.documentElement.scrollHeight - innerHeight;
+    bar.style.width = (h > 0 ? (scrollY / h) * 100 : 0) + '%';
+  };
+  addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  /* ------------------------------------------------------- cursor dot ---- */
+  if (matchMedia('(pointer: fine)').matches && !reduced) {
+    const dot = $('cursor');
+    let x = innerWidth / 2, y = innerHeight / 2, tx = x, ty = y, raf = 0;
+    const loop = () => {
+      x += (tx - x) * .22; y += (ty - y) * .22;
+      dot.style.transform = `translate(${x}px, ${y}px) translate(-50%,-50%)`;
+      raf = requestAnimationFrame(loop);
+    };
+    addEventListener('pointermove', e => { tx = e.clientX; ty = e.clientY; });
+    loop();
+    addEventListener('pointerover', e => {
+      const hot = e.target.closest('a, button, .card-hover, .shelf-item, input');
+      dot.classList.toggle('hot', !!hot);
+      const dark = e.target.closest('.hero, .showcase, .marquee');
+      dot.classList.toggle('dark', !!dark);
+    });
+  } else { $('cursor').style.display = 'none'; }
+
+  /* --------------------------------------------------- magnetic buttons -- */
+  if (!reduced) {
+    document.querySelectorAll('.magnetic').forEach(el => {
+      el.addEventListener('pointermove', e => {
+        const r = el.getBoundingClientRect();
+        const dx = (e.clientX - (r.left + r.width / 2)) / r.width;
+        const dy = (e.clientY - (r.top + r.height / 2)) / r.height;
+        el.style.transform = `translate(${dx * 12}px, ${dy * 9}px)`;
+      });
+      el.addEventListener('pointerleave', () => { el.style.transform = ''; });
+    });
+  }
+
+  /* --------------------------------------------------------- hero art ---- */
+  $('hc1').innerHTML = Kora3D.cup({ w: 86,  h: 116, liquid: '#7B1E3E', fill: .68, pearls: 5 });
+  $('hc2').innerHTML = Kora3D.cup({ w: 104, h: 140, liquid: '#C4762A', fill: .74, pearls: 7, sealed: true });
+  $('hc3').innerHTML = Kora3D.cup({ w: 86,  h: 116, liquid: '#5C8A4A', fill: .6,  pearls: 5 });
+  $('footBrand').innerHTML = KoraUI.brandMark({ size: 30, onDark: true });
+  $('catcher').innerHTML =
+    `<g transform="translate(68,101) scale(.72)">${KoraChar.catcher().replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '')}</g>`;
 
   // drifting pearls behind the hero
   (function () {
-    const field = document.getElementById('pearls');
     let html = '';
-    for (let i = 0; i < 14; i++) {
-      const size = 6 + Math.random() * 16;
-      html += `<i style="left:${Math.random() * 100}%;width:${size}px;height:${size}px;
+    for (let i = 0; i < 16; i++) {
+      const s = 6 + Math.random() * 16;
+      html += `<i style="left:${Math.random() * 100}%;width:${s}px;height:${s}px;
         animation-duration:${13 + Math.random() * 14}s;animation-delay:${-Math.random() * 20}s"></i>`;
     }
-    field.innerHTML = html;
+    $('pearls').innerHTML = html;
   })();
 
-  // drop the character into the pour scene, scaled + placed under the stream
-  document.getElementById('catcher').innerHTML =
-    `<g transform="translate(68,101) scale(.72)">${KoraChar.catcher()
-      .replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '')}</g>`;
+  // the hero cups lean with the pointer
+  if (!reduced) {
+    const cups = $('heroCups');
+    $('hero').addEventListener('pointermove', e => {
+      const r = $('hero').getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - .5;
+      const py = (e.clientY - r.top) / r.height - .5;
+      cups.style.transform = `rotateY(${px * 16}deg) rotateX(${-py * 10}deg)`;
+    });
+    $('hero').addEventListener('pointerleave', () => { cups.style.transform = ''; });
+  }
+
+  /* ==========================================================================
+     The scroll-built drink: as you scroll this section the cup is made.
+     ========================================================================== */
+  const TEA = { amount: .42, color: '#B4763C' }, MILK = { amount: .3, color: '#F3E3CB' };
+  const CHAPTERS = [
+    { at: .00, title: 'Start with the cup',  body: 'Every drink begins empty. What happens next is entirely yours.',
+      chips: [['Large · 700 ml', '#8B949E']],
+      cup: { layers: [], ice: 0, pearls: 0, sealed: false } },
+    { at: .18, title: 'Brew the base',       body: 'Black, jasmine green, oolong or a double espresso — steeped, then poured.',
+      chips: [['Black tea', '#7A4A22'], ['180 ml', '#B4763C']],
+      cup: { layers: [TEA], ice: 0, pearls: 0, sealed: false } },
+    { at: .38, title: 'Pour the milk',       body: 'Whole, oat, almond or coconut, poured slowly so it marbles as it settles.',
+      chips: [['Oat milk', '#F3E3CB'], ['120 ml', '#D8C3A2']],
+      cup: { layers: [TEA, MILK], ice: 0, pearls: 0, sealed: false } },
+    { at: .56, title: 'Drop the boba',       body: 'Warm tapioca at the bottom, popping boba if you like a surprise.',
+      chips: [['Tapioca boba', '#3B2318'], ['60 g', '#5C3A26'], ['Popping mango', '#E2A33C']],
+      cup: { layers: [TEA, MILK], ice: 0, pearls: 9, sealed: false } },
+    { at: .74, title: 'Ice it down',         body: 'Just enough to chill it without watering down what you just built.',
+      chips: [['Ice', '#BFD6E4'], ['Sugar 50%', '#C08A4A']],
+      cup: { layers: [TEA, MILK], ice: .8, pearls: 9, sealed: false } },
+    { at: .90, title: 'Sealed and yours',    body: 'Lid on, straw in, and the bar makes it to the exact numbers you set.',
+      chips: [['Sealed', '#7B1E3E'], ['Table 5', '#4A525B'], ['4 min', '#5C8A4A']],
+      cup: { layers: [TEA, MILK], ice: .8, pearls: 9, sealed: true } }
+  ];
+
+  $('storyCup').innerHTML = Kora3D.cup({ w: 236, h: 318, fill: 0 });
+  const storyCup = $('storyCup').querySelector('.cup3d');
+  $('stDots').innerHTML = CHAPTERS.map(() => '<i></i>').join('');
+  $('stTotal').textContent = '/ ' + String(CHAPTERS.length).padStart(2, '0');
+  const dots = $('stDots').querySelectorAll('i');
+  let lastChapter = -1;
+
+  function paintStory() {
+    const rail = document.querySelector('.story-rail');
+    const r = rail.getBoundingClientRect();
+    const total = r.height - innerHeight;
+    const p = Math.max(0, Math.min(1, -r.top / (total || 1)));
+
+    let idx = 0;
+    for (let i = 0; i < CHAPTERS.length; i++) if (p >= CHAPTERS[i].at) idx = i;
+    if (idx !== lastChapter) {
+      lastChapter = idx;
+      const c = CHAPTERS[idx];
+      $('stNum').textContent = String(idx + 1).padStart(2, '0');
+      $('stTitle').textContent = c.title;
+      $('stBody').textContent = c.body;
+      $('stChips').innerHTML = c.chips
+        .map(([t, col], i) => `<b style="--d:${i * 110}ms"><i style="--c:${col}"></i>${t}</b>`).join('');
+      KoraUI.pop($('stTitle'));
+      dots.forEach((d, i) => d.classList.toggle('on', i <= idx));
+      Kora3D.setCup(storyCup, c.cup);
+
+      // the gauge tracks what is actually in the cup, in ml
+      const liquid = c.cup.layers.reduce((s, l) => s + l.amount, 0);
+      const level = Math.min(1, liquid + (c.cup.ice ? .12 : 0) + (c.cup.pearls ? .06 : 0));
+      $('stFill').style.height = (level * 100).toFixed(0) + '%';
+      $('stMl').textContent = Math.round(liquid * 700 / 10) * 10 + ' ml';
+      if (c.cup.sealed) {
+        storyCup.classList.remove('spin'); void storyCup.offsetWidth; storyCup.classList.add('spin');
+      }
+    }
+    // the cup turns gently through the whole section
+    storyCup.style.transform = `rotateY(${-14 + p * 28}deg) rotateX(3deg)`;
+  }
+  addEventListener('scroll', paintStory, { passive: true });
+  paintStory();
+
+  /* ------------------------------------------------- the kitchen teaser -- */
+  (function kitchenTeaser() {
+    $('kxChef').innerHTML = KoraChar.chef({ mouth: 'grin' });
+    $('kxCup').innerHTML = Kora3D.cup({ w: 92, h: 124, liquid: '#B4763C', fill: .3, pearls: 5 });
+    const cup = $('kxCup').querySelector('.cup3d');
+    const art = $('kxArt');
+    const counter = art.querySelector('.kx-counter');
+    const bubble = $('kxBubble');
+
+    // the drink fills itself over and over, the way it would under your hands
+    const STEPS = [
+      { fill: .30, pearls: 5,  say: 'هات الإيد يا وحش 👋' },
+      { fill: .52, pearls: 5,  say: 'صب براحة… كده تمام' },
+      { fill: .74, pearls: 9,  say: 'بوبا زيادة؟ عيونيا' },
+      { fill: .86, pearls: 9,  say: 'رجّه كده… جاهز!' }
+    ];
+    let s = 0;
+    setInterval(() => {
+      s = (s + 1) % STEPS.length;
+      const st = STEPS[s];
+      Kora3D.setCup(cup, { layers: [{ amount: st.fill, color: '#B4763C' }], pearls: st.pearls, ice: s === 3 ? .6 : 0 });
+      bubble.textContent = st.say;
+      bubble.style.animation = 'none'; void bubble.offsetWidth; bubble.style.animation = '';
+      if (s === 3) { cup.classList.remove('shake3d'); void cup.offsetWidth; cup.classList.add('shake3d'); }
+      else cup.classList.remove('shake3d');
+    }, 2600);
+
+    // the counter turns a little toward the pointer
+    art.addEventListener('pointermove', e => {
+      const r = art.getBoundingClientRect();
+      counter.style.setProperty('--ry', (((e.clientX - r.left) / r.width) - .5) * -18 + 'deg');
+    });
+    art.addEventListener('pointerleave', () => counter.style.setProperty('--ry', '-6deg'));
+  })();
+
+  /* --------------------------------------------------- ticker + shelf ---- */
+  function fillTicker(names) {
+    const line = names.map(n => `<span>${n}<b>◆</b></span>`).join('');
+    $('ticker').innerHTML = `<span>${line}</span><span>${line}</span>`;
+  }
+
+  function fillShelf(menu) {
+    $('shelf').innerHTML = menu.slice(0, 9).map(m => `
+      <div class="shelf-item">
+        ${Kora3D.cup({ w: 120, h: 162, liquid: m.art || '#7B1E3E', fill: .66, pearls: 6 })}
+        <div class="nm">${m.name}</div>
+        <div class="pr">${KoraAPI.money(m.price)}</div>
+      </div>`).join('');
+  }
+
+  /* ------------------------------------------------------------ boot ----- */
+  window.goTable = function () {
+    const t = $('tableNo').value || '1';
+    location.href = 'guest.html?mode=table&table=' + encodeURIComponent(t);
+  };
+
+  // The kitchen refuses to open without a drink to work on, so coming straight
+  // from the landing page we hand it a sensible starting build. Whatever they
+  // make in there lands in the cart and the order flow picks up from step 1.
+  window.goKitchen = function () {
+    const BC = (KoraAPI.catalog && KoraAPI.catalog.buildCatalog) || {};
+    const pick = (g, key) => (BC[g] || []).find(o => o.key === key) || (BC[g] || [])[0] || null;
+    const base = pick('base', 'black_tea');
+    const creamer = pick('creamer', 'oat');
+    if (!base || !creamer) { location.href = 'guest.html?mode=general'; return; }
+
+    localStorage.setItem('kora_kitchen_spec', JSON.stringify({
+      mode: 'build',
+      selections: { base: base.key, creamer: creamer.key, flavor: [] },
+      build_price: (base.price || 0) + (creamer.price || 0),
+      labels: { base: base.name, creamer: creamer.name, flavor: [] },
+      customer: ''
+    }));
+    location.href = 'kitchen-sim.html';
+  };
 
   KoraUI.initReveal();
   Kora3D.tiltCards(document, '.step-card, .entry-card');
 
-  function goTable() {
-    const t = document.getElementById('tableNo').value || '1';
-    location.href = 'guest.html?mode=table&table=' + encodeURIComponent(t);
-  }
+  // the glow on the step cards follows the pointer
+  document.querySelectorAll('.step-card').forEach(c => {
+    c.addEventListener('pointermove', e => {
+      const r = c.getBoundingClientRect();
+      c.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      c.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    });
+  });
 
   KoraAPI.ready().then(() => {
-    KoraUI.countTo(document.getElementById('stMenu'), KoraAPI.catalog.menu.length, { dur: 900 });
-    KoraUI.countTo(document.getElementById('stTop'), KoraAPI.catalog.toppings.length, { dur: 900 });
+    const C = KoraAPI.catalog;
+    fillTicker(C.menu.map(m => m.name));
+    fillShelf(C.menu);
+
+    // the stats climb once they scroll into view
+    const band = document.querySelector('.band');
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (!en.isIntersecting) return;
+        KoraUI.countTo($('stMenu'), C.menu.length, { dur: 1100 });
+        KoraUI.countTo($('stTop'), C.toppings.length, { dur: 1100 });
+        io.disconnect();
+      });
+    }, { threshold: .4 });
+    io.observe(band);
+
     const live = KoraAPI.mode === 'supabase';
-    document.getElementById('modeText').textContent = live
-      ? 'Live · connected to Supabase'
-      : 'Demo mode · placeholder menu';
-    document.getElementById('footNote').textContent = live
+    $('modeText').textContent = live ? 'Live · connected to Supabase' : 'Demo mode · placeholder menu';
+    $('footNote').textContent = live
       ? 'Kora — orders, stock and staff accounts run on Supabase.'
       : 'Kora — running in local demo mode with a placeholder menu. Add your Supabase keys in assets/supabase-config.js to go live.';
   }).catch(err => {
-    document.getElementById('modeText').textContent = 'Connection problem';
-    document.getElementById('footNote').textContent = 'Could not reach the database: ' + err.message;
+    $('modeText').textContent = 'Connection problem';
+    $('footNote').textContent = 'Could not reach the database: ' + err.message;
   });
+})();
 </script>
 </body>
 </html>

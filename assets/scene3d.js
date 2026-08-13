@@ -21,17 +21,21 @@
     let ice = '';
     const iceN = Math.round((o.ice || 0) * 7);
     for (let i = 0; i < iceN; i++) {
-      ice += `<i style="left:${(i % 4) * 26}%;top:${Math.floor(i / 4) * 26}px;
+      ice += `<i style="left:${(i % 4) * 26}%;top:calc(var(--ice-sz) * 1.32 * ${Math.floor(i / 4)});
               transform:rotate(${(i * 41) % 44 - 22}deg)"></i>`;
     }
     let pearls = '';
     for (let i = 0; i < (o.pearls || 0); i++) {
       const row = Math.floor(i / 4);
-      pearls += `<i style="left:${10 + (i % 4) * 22 + (row % 2 ? 8 : 0)}%;bottom:${4 + row * 15}px"></i>`;
+      pearls += `<i style="left:${10 + (i % 4) * 22 + (row % 2 ? 8 : 0)}%;bottom:calc(3px + var(--pearl-sz) * .9 * ${row})"></i>`;
     }
 
+    // --level is where the surface actually is, whether the drink was set with
+    // a single fill or with stacked layers; the ice floats there.
+    const level = o.layers ? o.layers.reduce((t, L) => t + (L.amount || 0), 0) : (o.fill || 0);
+
     return `<div class="cup3d${o.sealed ? ' sealed' : ''}"
-      style="--cw:${w}px;--ch:${h}px;--liquid:${liquid};--fill:${Math.round((o.fill || 0) * 100)}%">
+      style="--cw:${w}px;--ch:${h}px;--liquid:${liquid};--fill:${Math.round((o.fill || 0) * 100)}%;--level:${Math.round(level * 100)}%">
       <div class="cup-shadow"></div>
       <div class="cup-rim-back"></div>
       <div class="cup-wall">
@@ -49,7 +53,14 @@
   /** Update a rendered cup without rebuilding it. */
   function setCup(el, o) {
     if (!el) return;
-    if (o.fill !== undefined) el.style.setProperty('--fill', Math.round(o.fill * 100) + '%');
+    if (o.fill !== undefined) {
+      el.style.setProperty('--fill', Math.round(o.fill * 100) + '%');
+      el.style.setProperty('--level', Math.round(o.fill * 100) + '%');
+    }
+    if (o.layers) {
+      const lv = o.layers.reduce((t, L) => t + (L.amount || 0), 0);
+      el.style.setProperty('--level', Math.round(Math.min(1, lv) * 100) + '%');
+    }
     if (o.liquid) el.style.setProperty('--liquid', o.liquid);
     if (o.sealed !== undefined) el.classList.toggle('sealed', !!o.sealed);
 
@@ -57,7 +68,7 @@
       const box = el.querySelector('.cup-ice');
       let html = '';
       for (let i = 0; i < Math.round(o.ice * 7); i++) {
-        html += `<i style="left:${(i % 4) * 26}%;top:${Math.floor(i / 4) * 26}px;
+        html += `<i style="left:${(i % 4) * 26}%;top:calc(var(--ice-sz) * 1.32 * ${Math.floor(i / 4)});
                  transform:rotate(${(i * 41) % 44 - 22}deg)"></i>`;
       }
       box.innerHTML = html;
@@ -67,7 +78,7 @@
       let html = '';
       for (let i = 0; i < o.pearls; i++) {
         const row = Math.floor(i / 4);
-        html += `<i style="left:${10 + (i % 4) * 22 + (row % 2 ? 8 : 0)}%;bottom:${4 + row * 15}px"></i>`;
+        html += `<i style="left:${10 + (i % 4) * 22 + (row % 2 ? 8 : 0)}%;bottom:calc(3px + var(--pearl-sz) * .9 * ${row})"></i>`;
       }
       box.innerHTML = html;
     }
