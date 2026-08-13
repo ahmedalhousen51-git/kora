@@ -121,48 +121,10 @@
   };
   const pick = a => a[Math.floor(Math.random() * a.length)];
 
-  /* --- the character: burgundy line-art, sitting, cup in hand --- */
-  function mascotArt(id) {
-    const u = id || 'm' + Math.random().toString(36).slice(2, 7);
-    return `<svg viewBox="0 0 120 130" class="kora-mascot-svg" data-m="${u}" aria-hidden="true">
-      <g fill="none" stroke="var(--wine-700)" stroke-width="4.4"
-         stroke-linecap="round" stroke-linejoin="round">
-
-        <!-- legs (crossed, relaxed) -->
-        <path d="M44 108c-9 4-17 3-22-2" class="m-leg"/>
-        <path d="M64 108c8 6 18 6 25 1"/>
-        <!-- body -->
-        <path d="M44 108c-3-14-2-26 3-35" class="m-body"/>
-        <path d="M64 108c4-13 4-25 0-34"/>
-        <!-- arm holding the cup up -->
-        <path d="M66 82c9-2 15-9 16-18" class="m-arm"/>
-        <!-- resting arm -->
-        <path d="M45 84c-8 1-13 6-14 13"/>
-        <!-- head -->
-        <ellipse cx="55" cy="52" rx="24" ry="22" class="m-head"/>
-        <!-- ear / hair curl -->
-        <path d="M74 38c6-4 11-2 12 4s-4 10-9 8"/>
-      </g>
-
-      <!-- face -->
-      <g class="m-face">
-        <ellipse class="m-eye" cx="47" cy="49" rx="3.1" ry="3.6" fill="var(--wine-800)"/>
-        <ellipse class="m-eye" cx="63" cy="49" rx="3.1" ry="3.6" fill="var(--wine-800)"/>
-        <path class="m-mouth" d="M48 60c3.4 4 12 4 15.4 0" fill="none"
-              stroke="var(--wine-700)" stroke-width="3.4" stroke-linecap="round"/>
-        <circle cx="37" cy="58" r="4" fill="var(--wine-300)" opacity=".5"/>
-        <circle cx="73" cy="58" r="4" fill="var(--wine-300)" opacity=".5"/>
-      </g>
-
-      <!-- the cup he's holding up -->
-      <g class="m-cup">
-        <path d="M76 44h18l-1.7 20a3.4 3.4 0 0 1-3.4 3.1h-7.8a3.4 3.4 0 0 1-3.4-3.1L76 44Z"
-              fill="var(--wine-700)"/>
-        <rect x="74.5" y="41" width="21" height="4" rx="2" fill="var(--wine-800)"/>
-        <circle cx="82" cy="60" r="2" fill="#fff" opacity=".9"/>
-        <circle cx="88" cy="62" r="2" fill="#fff" opacity=".9"/>
-      </g>
-    </svg>`;
+  /* --- the character (see assets/character.js) --- */
+  function mascotArt() {
+    return (global.KoraChar ? global.KoraChar.bust({}) : '')
+      .replace('class="kora-char"', 'class="kora-char kora-mascot-svg"');
   }
 
   /* --- floating corner mascot with speech bubble --- */
@@ -175,13 +137,16 @@
       const st = document.createElement('style');
       st.id = 'kora-mascot-css';
       st.textContent = `
-        #koraMascot { position:fixed; left:16px; bottom:16px; z-index:420;
+        #koraMascot { position:fixed; left:16px; bottom:0; z-index:420;
           display:flex; align-items:flex-end; gap:8px; pointer-events:none; }
-        #koraMascot .kora-mascot-svg { width:86px; height:auto; flex-shrink:0;
-          filter: drop-shadow(0 8px 18px rgba(123,30,62,.26));
-          animation: kora-bob 3.4s ease-in-out infinite; transform-origin:60px 118px; }
+        #koraMascot .kora-mascot-svg { width:96px; height:auto; flex-shrink:0;
+          filter: drop-shadow(0 8px 18px rgba(38,22,28,.24));
+          animation: kora-bob 3.4s ease-in-out infinite; transform-origin:60px 130px; }
         @keyframes kora-bob { 0%,100%{transform:translateY(0) rotate(0)}
           50%{transform:translateY(-5px) rotate(-1.4deg)} }
+        /* the raised arm gives a little wave now and then */
+        #koraMascot .c-arm { transform-origin:86px 116px; animation: kora-wave 6s ease-in-out infinite; }
+        @keyframes kora-wave { 0%,86%,100%{transform:rotate(0)} 90%{transform:rotate(-16deg)} 95%{transform:rotate(6deg)} }
         #koraMascot .m-bubble { position:relative; max-width:216px;
           background:var(--gray-900); color:#fff;
           padding:10px 14px; border-radius:14px 14px 4px 14px;
@@ -192,18 +157,20 @@
         #koraMascot .m-bubble::after { content:''; position:absolute; right:14px; bottom:-6px;
           width:12px; height:12px; background:var(--gray-900); transform:rotate(45deg); border-radius:2px; }
         /* blinking */
-        .kora-mascot-svg .m-eye { animation: kora-blink 4.6s infinite; transform-origin:center; }
-        @keyframes kora-blink { 0%,92%,100%{transform:scaleY(1)} 95%{transform:scaleY(.12)} }
+        .kora-mascot-svg .c-eyes { animation: kora-blink 5.2s infinite; transform-origin:60px 51px; }
+        @keyframes kora-blink { 0%,93%,100%{transform:scaleY(1)} 96%{transform:scaleY(.1)} }
         /* reaction states */
-        .kora-mascot-svg .m-mouth { transition: d .18s ease; }
-        .kora-mascot-svg.react-shock { animation: kora-jolt .42s ease-out; }
+        .kora-mascot-svg .c-head { transition: transform .22s cubic-bezier(.3,.9,.4,1.4); transform-origin:60px 80px; }
+        .kora-mascot-svg.react-happy .c-head { transform: rotate(-5deg) translateY(-2px); }
+        .kora-mascot-svg.react-shock { animation: kora-jolt .45s ease-out; }
+        .kora-mascot-svg.react-shock .c-head { transform: translateY(-4px) scale(1.06); }
         @keyframes kora-jolt { 0%{transform:translateY(0) rotate(0)}
-          30%{transform:translateY(-9px) rotate(5deg)} 60%{transform:translateY(2px) rotate(-3deg)}
+          30%{transform:translateY(-10px) rotate(5deg)} 60%{transform:translateY(2px) rotate(-3deg)}
           100%{transform:translateY(0) rotate(0)} }
-        .kora-mascot-svg.react-sip .m-cup { animation: kora-sip 1.1s ease-in-out; transform-origin:85px 66px; }
-        @keyframes kora-sip { 0%,100%{transform:rotate(0)} 45%{transform:rotate(-26deg) translate(-7px,4px)} }
-        @media (max-width:560px){ #koraMascot{ left:10px; bottom:10px; }
-          #koraMascot .kora-mascot-svg{ width:62px; }
+        .kora-mascot-svg.react-sip .c-arm { animation: kora-sip 1.2s ease-in-out; transform-origin:86px 116px; }
+        @keyframes kora-sip { 0%,100%{transform:rotate(0)} 45%{transform:rotate(-30deg)} }
+        @media (max-width:560px){ #koraMascot{ left:10px; }
+          #koraMascot .kora-mascot-svg{ width:68px; }
           #koraMascot .m-bubble{ max-width:158px; font-size:.78rem; margin-bottom:8px; } }
         @media (prefers-reduced-motion: reduce) {
           #koraMascot .kora-mascot-svg, .kora-mascot-svg .m-eye { animation:none !important; }
@@ -219,23 +186,20 @@
     return el;
   }
 
-  // Mouth shapes, swapped by attribute so this works in every browser
-  // (CSS `d: path()` is not supported everywhere).
-  const MOUTH = {
-    neutral: 'M48 60c3.4 4 12 4 15.4 0',
-    happy:   'M46 58c4.5 8.5 16 8.5 20.5 0',
-    shock:   'M51.5 59.5c0-3.4 8-3.4 8 0s-8 3.4-8 0'
-  };
-
+  // Redraw the whole face per reaction — the simplest way to get a real
+  // expression change that behaves the same in every browser.
   function react(kind) {
     const svg = document.querySelector('#koraMascot .kora-mascot-svg');
-    if (!svg) return;
+    if (!svg || !global.KoraChar) return;
     svg.classList.remove('react-happy', 'react-shock', 'react-sip');
-    const mouth = svg.querySelector('.m-mouth');
-    if (mouth) {
-      mouth.setAttribute('d', MOUTH[kind === 'shock' ? 'shock' : (kind ? 'happy' : 'neutral')]);
+    const head = svg.querySelector('.c-head');
+    if (head) {
+      const opts = kind === 'shock' ? { mouth: 'oh' }
+                 : kind            ? { mouth: 'grin', eyes: 'happy' }
+                 : { mouth: 'smile' };
+      head.innerHTML = global.KoraChar.face(opts);
       clearTimeout(react._t);
-      react._t = setTimeout(() => mouth.setAttribute('d', MOUTH.neutral), 2600);
+      react._t = setTimeout(() => { head.innerHTML = global.KoraChar.face({ mouth: 'smile' }); }, 2800);
     }
     if (kind) { void svg.offsetWidth; svg.classList.add('react-' + kind); }
   }

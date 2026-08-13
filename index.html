@@ -83,7 +83,7 @@
     84%,100% { transform: translateY(26px); opacity: 0; }
   }
 
-  .p-mouth { animation: gulp 4.6s ease-in-out infinite; transform-origin: 176px 180px; }
+  .p-body .c-gulp { animation: gulp 4.6s ease-in-out infinite; transform-origin: 60px 66px; }
   @keyframes gulp {
     0%, 80%  { transform: scale(1); }
     86%      { transform: scale(1.25, .5); }
@@ -99,7 +99,7 @@
     100%     { transform: translateY(0) rotate(0); }
   }
 
-  .p-splash { opacity: 0; animation: splash 4.6s ease-out infinite; transform-origin: 176px 180px; }
+  .p-splash { opacity: 0; animation: splash 4.6s ease-out infinite; transform-origin: 176px 182px; }
   @keyframes splash {
     0%, 82% { transform: scale(.2); opacity: 0; }
     87%     { transform: scale(1);  opacity: .85; }
@@ -212,36 +212,10 @@
       <path d="M176 152c6 7 9 11 9 15a9 9 0 0 1-18 0c0-4 3-8 9-15Z" fill="#8A5525"/>
     </g>
 
-    <!-- ---- Captain Kora, lying back, catching it ---- -->
-    <g class="p-body">
-      <!-- the floor he's sprawled on -->
-      <path d="M96 250h180" stroke="var(--gray-300)" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+    <ellipse class="p-splash" cx="176" cy="182" rx="20" ry="6" fill="#8A5525" opacity=".35"/>
 
-      <g fill="none" stroke="var(--wine-700)" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round">
-        <!-- torso: shoulder → hip -->
-        <path d="M200 220 Q 228 226 250 232"/>
-        <!-- front leg: hip → knee up → foot down -->
-        <path d="M250 232 L 272 204 L 288 232"/>
-        <!-- back leg, slightly behind -->
-        <path d="M250 236 L 266 214 L 280 240"/>
-        <!-- arm propping him up behind his head -->
-        <path d="M196 226 L 172 244 L 146 242"/>
-        <!-- arm raised, steadying the stream -->
-        <path d="M204 212 L 218 190 L 228 176"/>
-        <!-- head -->
-        <circle cx="176" cy="206" r="28"/>
-        <!-- hair curl -->
-        <path d="M152 190c-4-8 1-15 8-14s10 9 5 14"/>
-      </g>
-      <!-- face: eyes up, watching it come -->
-      <ellipse cx="162" cy="199" rx="3.4" ry="4" fill="var(--wine-800)"/>
-      <ellipse cx="190" cy="199" rx="3.4" ry="4" fill="var(--wine-800)"/>
-      <circle cx="155" cy="214" r="5" fill="var(--wine-300)" opacity=".5"/>
-      <circle cx="197" cy="214" r="5" fill="var(--wine-300)" opacity=".5"/>
-      <!-- mouth wide open at the top of his head, waiting -->
-      <ellipse class="p-mouth" cx="176" cy="180" rx="13" ry="10.5" fill="var(--wine-800)"/>
-      <ellipse class="p-splash" cx="176" cy="180" rx="20" ry="6" fill="#8A5525" opacity=".35"/>
-    </g>
+    <!-- ---- Captain Kora, lying back, catching it ---- -->
+    <g class="p-body" id="catcher"></g>
   </svg>
 </div>
 
@@ -314,6 +288,7 @@
 <script src="assets/supabase-config.js"></script>
 <script src="assets/data.js"></script>
 <script src="assets/api.js"></script>
+<script src="assets/character.js"></script>
 <script src="assets/ui.js"></script>
 <script>
   document.getElementById('c1').innerHTML = KoraUI.cupArt('#7B1E3E', 92);
@@ -332,6 +307,11 @@
     }
     field.innerHTML = html;
   })();
+
+  // drop the character into the pour scene, scaled + placed under the stream
+  document.getElementById('catcher').innerHTML =
+    `<g transform="translate(68,101) scale(.72)">${KoraChar.catcher()
+      .replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '')}</g>`;
 
   KoraUI.initReveal();
 
