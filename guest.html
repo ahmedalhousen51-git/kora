@@ -101,6 +101,37 @@
   @keyframes ping { 0%,100%{ box-shadow: 0 0 0 0 rgba(123,30,62,.45);} 50%{ box-shadow: 0 0 0 9px rgba(123,30,62,0);} }
   .rail .node span { font-size: .74rem; font-weight: 600; color: var(--text-soft); }
   .countdown { font-family: var(--ff-display); font-size: 3rem; font-weight: 700; letter-spacing: -.03em; }
+
+  /* live cup that fills as the order moves along */
+  .track-cup { position: relative; width: 84px; height: 124px; margin: 48px auto 16px; }
+  .track-cup .glass {
+    position: absolute; inset: 0; border: 3px solid var(--gray-300); border-top: none;
+    border-radius: 5px 5px 22px 22px; overflow: hidden; background: var(--gray-50);
+  }
+  .track-cup .fill {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 12%;
+    background: linear-gradient(180deg, #C4762A, #8A5525);
+    transition: height 1.2s cubic-bezier(.3,.9,.4,1);
+  }
+  .track-cup .fill::before {   /* wobbling surface */
+    content: ''; position: absolute; top: -6px; left: -50%; width: 200%; height: 12px;
+    background: #C4762A; border-radius: 50%;
+    animation: wobble 3s ease-in-out infinite;
+  }
+  @keyframes wobble { 0%,100% { transform: translateX(-6px) rotate(-1deg); } 50% { transform: translateX(6px) rotate(1deg); } }
+  .track-cup .bub {
+    position: absolute; bottom: 6px; border-radius: 50%;
+    background: rgba(42,26,34,.55); animation: bub-up 3.4s ease-in infinite;
+  }
+  @keyframes bub-up {
+    0%   { transform: translateY(0) scale(.6); opacity: 0; }
+    20%  { opacity: .9; }
+    100% { transform: translateY(-72px) scale(1); opacity: 0; }
+  }
+  .track-cup .lid { position: absolute; top: -10px; left: -7px; right: -7px; height: 11px; border-radius: 6px; background: var(--gray-300); }
+  .track-cup .straw { position: absolute; top: -40px; right: 18px; width: 9px; height: 58px; border-radius: 5px; background: var(--wine-500); transform: rotate(12deg); }
+  .track-cup.done .glass { border-color: var(--wine-500); }
+  @media (prefers-reduced-motion: reduce) { .track-cup .bub, .track-cup .fill::before { animation: none; } }
 </style>
 </head>
 <body>
@@ -207,6 +238,16 @@
       <div class="track-head">
         <p class="muted" style="margin:0;font-size:.85rem">Order</p>
         <div class="order-no" id="tOrderNo">—</div>
+        <div class="track-cup" id="tCup">
+          <div class="lid"></div><div class="straw"></div>
+          <div class="glass">
+            <div class="fill" id="tFill"></div>
+            <span class="bub" style="left:16px;width:11px;height:11px;animation-delay:0s"></span>
+            <span class="bub" style="left:36px;width:9px;height:9px;animation-delay:.9s"></span>
+            <span class="bub" style="left:54px;width:12px;height:12px;animation-delay:1.7s"></span>
+            <span class="bub" style="left:28px;width:8px;height:8px;animation-delay:2.5s"></span>
+          </div>
+        </div>
       </div>
       <div class="rail">
         <div class="node" id="n-received"><div class="dot">1</div><span>Received</span></div>
@@ -447,14 +488,16 @@
         <span class="btn btn-light btn-sm">Start building →</span>
       </button>`;
     $('grid').querySelectorAll('.drink').forEach(el => {
-      el.onclick = () => openCustom(el.dataset.id);
+      el.onclick = () => openCustom(el.dataset.id, el);
     });
     $('buildBtn').onclick = openBuild;
+    KoraUI.stagger($('grid'), 40);
   }
 
   /* ------------------------------------------------------ customise ---- */
-  let cur = null;
-  function openCustom(id) {
+  let cur = null, curCardEl = null;
+  function openCustom(id, cardEl) {
+    curCardEl = cardEl || null;
     const m = C.menu.find(x => x.id === id);
     cur = {
       kind: 'menu', menu_id: id, name: m.name,
@@ -531,9 +574,11 @@
   };
 
   window.addToCart = function () {
+    const art = (C.menu.find(m => m.id === cur.menu_id) || {}).art || '#7B1E3E';
     S.cart.push(Object.assign({ id: 'i' + Date.now() }, cur));
     closeM('mCustom');
     paintCart(); persist();
+    KoraUI.flyToCart(curCardEl, art);
     KoraUI.toast('Added to your order', 'ok');
   };
 
@@ -720,8 +765,14 @@
     window._track.eta = st.eta_minutes;
     window._track.setAt = st.eta_set_at ? new Date(st.eta_set_at).getTime() : null;
 
+    // cup fills up as the order moves along
+    const FILL = { received: 18, preparing: 62, ready: 92 };
+    $('tFill').style.height = (FILL[st.status] || 12) + '%';
+    $('tCup').classList.toggle('done', st.status === 'ready');
+
     if (st.status === 'ready' && lastStatus !== 'ready') {
       KoraUI.toast('Your drink is ready!', 'ok');
+      KoraUI.mascot.ready();
       $('etaLabel').textContent = 'Ready for you';
       $('tCount').textContent = '🎉';
       clearInterval(S.tickTimer);

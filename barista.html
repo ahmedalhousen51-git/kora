@@ -271,7 +271,12 @@
           <button class="btn btn-quiet btn-sm" onclick="clearShort('${o.id}')">clear</button></div>` : ''}
       </div>`;
     }).join('');
+    // Only replay the entrance animation when the queue actually changes —
+    // this view refreshes every 3s and re-animating each time would flicker.
+    const sig = orders.map(o => o.id + o.status + o.eta_minutes + o.shortage_flag).join('|');
+    if (sig !== lastSig) { KoraUI.stagger($('queue'), 55); lastSig = sig; }
   }
+  let lastSig = '';
 
   window.setStatus = async (id, st) => {
     try { await KoraAPI.staffSetStatus(id, st); refresh(); }

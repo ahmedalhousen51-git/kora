@@ -19,8 +19,13 @@
   .hero::before, .hero::after {
     content: ''; position: absolute; border-radius: 50%; filter: blur(90px);
   }
-  .hero::before { width: 460px; height: 460px; background: rgba(174,49,96,.34); top: -160px; right: -120px; }
-  .hero::after  { width: 380px; height: 380px; background: rgba(123,30,62,.30); bottom: -200px; left: -120px; }
+  .hero::before { width: 460px; height: 460px; background: rgba(174,49,96,.34); top: -160px; right: -120px; animation: blob 18s ease-in-out infinite; }
+  .hero::after  { width: 380px; height: 380px; background: rgba(123,30,62,.30); bottom: -200px; left: -120px; animation: blob 22s ease-in-out infinite reverse; }
+  @keyframes blob {
+    0%,100% { transform: translate(0,0) scale(1); }
+    33%     { transform: translate(40px,30px) scale(1.12); }
+    66%     { transform: translate(-30px,45px) scale(.94); }
+  }
   .hero-inner { position: relative; z-index: 1; display: grid; grid-template-columns: 1.15fr .85fr; gap: 48px; align-items: center; }
   @media (max-width: 860px) { .hero { padding: 60px 0 68px; } .hero-inner { grid-template-columns: 1fr; gap: 34px; } }
 
@@ -46,6 +51,66 @@
   .cup-stack > * { margin-left: -14px; filter: drop-shadow(0 18px 30px rgba(0,0,0,.34)); }
   .cup-stack > *:first-child { margin-left: 0; }
   .cup-stack .c2 { transform: translateY(-16px) scale(1.14); z-index: 2; }
+
+  /* ---------- the pour: drink falls out of the hero, Captain Kora catches it ----- */
+  .pour-strip {
+    position: relative; margin-top: -92px; z-index: 3;
+    pointer-events: none; display: flex; justify-content: center;
+  }
+  .pour-strip svg { width: min(430px, 94vw); height: auto; overflow: visible; }
+
+  .p-cup { filter: drop-shadow(0 14px 22px rgba(0,0,0,.34)); animation: cup-tip 4.6s ease-in-out infinite; transform-origin: 250px 60px; }
+  @keyframes cup-tip {
+    0%, 6%   { transform: rotate(-8deg); }
+    16%, 66% { transform: rotate(0deg); }
+    78%,100% { transform: rotate(-8deg); }
+  }
+
+  .p-stream { transform-origin: 176px 62px; animation: stream 4.6s cubic-bezier(.4,0,.5,1) infinite; }
+  @keyframes stream {
+    0%       { transform: scaleY(0);   opacity: 0; }
+    9%       { transform: scaleY(.28); opacity: 1; }
+    22%, 62% { transform: scaleY(1);   opacity: 1; }
+    72%      { transform: scaleY(.12); opacity: 1; }
+    78%,100% { transform: scaleY(0);   opacity: 0; }
+  }
+
+  .p-drop { animation: drop 4.6s cubic-bezier(.45,0,.8,.2) infinite; opacity: 0; }
+  @keyframes drop {
+    0%, 62%  { transform: translateY(0);   opacity: 0; }
+    66%      { transform: translateY(0);   opacity: 1; }
+    80%      { transform: translateY(20px); opacity: 1; }
+    84%,100% { transform: translateY(26px); opacity: 0; }
+  }
+
+  .p-mouth { animation: gulp 4.6s ease-in-out infinite; transform-origin: 176px 180px; }
+  @keyframes gulp {
+    0%, 80%  { transform: scale(1); }
+    86%      { transform: scale(1.25, .5); }
+    92%      { transform: scale(.9, 1.15); }
+    100%     { transform: scale(1); }
+  }
+
+  .p-body { animation: catch-bob 4.6s ease-in-out infinite; transform-origin: 176px 220px; }
+  @keyframes catch-bob {
+    0%, 62%  { transform: translateY(0) rotate(0); }
+    82%      { transform: translateY(0) rotate(-1.6deg); }
+    90%      { transform: translateY(3px) rotate(1.2deg); }
+    100%     { transform: translateY(0) rotate(0); }
+  }
+
+  .p-splash { opacity: 0; animation: splash 4.6s ease-out infinite; transform-origin: 176px 180px; }
+  @keyframes splash {
+    0%, 82% { transform: scale(.2); opacity: 0; }
+    87%     { transform: scale(1);  opacity: .85; }
+    100%    { transform: scale(1.8); opacity: 0; }
+  }
+
+  @media (max-width: 640px) { .pour-strip { margin-top: -66px; } }
+  @media (prefers-reduced-motion: reduce) {
+    .p-cup, .p-stream, .p-drop, .p-mouth, .p-body, .p-splash { animation: none; }
+    .p-stream { transform: scaleY(1); opacity: 1; }
+  }
 
   .stats { display: flex; gap: 36px; margin-top: 38px; flex-wrap: wrap; }
   .stats .s .n { font-family: var(--ff-display); font-size: 1.5rem; font-weight: 700; }
@@ -110,6 +175,74 @@
       </div>
     </div>
   </div>
+  <div class="pearl-field" id="pearls"></div>
+</div>
+
+<!-- the pour: a cup tips over the edge of the hero and Captain Kora catches it -->
+<div class="pour-strip" aria-hidden="true">
+  <svg viewBox="0 0 352 250">
+
+    <!-- ---- the tipped cup ---- -->
+    <g class="p-cup">
+      <g transform="translate(232,10) rotate(126) scale(1.25)">
+        <path d="M11 19h38l-3.6 44a7 7 0 0 1-7 6.4H21.6a7 7 0 0 1-7-6.4L11 19Z" fill="#F1F1F3"/>
+        <path d="M13 34h34l-2.4 29a7 7 0 0 1-7 6.4H22.4a7 7 0 0 1-7-6.4L13 34Z" fill="#C4762A"/>
+        <circle cx="22" cy="58" r="3.2" fill="#2A1A22" opacity=".6"/>
+        <circle cx="31" cy="63" r="3.2" fill="#2A1A22" opacity=".6"/>
+        <circle cx="39" cy="57" r="2.8" fill="#2A1A22" opacity=".5"/>
+        <path d="M11 19h38l-3.6 44a7 7 0 0 1-7 6.4H21.6a7 7 0 0 1-7-6.4L11 19Z"
+              fill="none" stroke="#D8D8DE" stroke-width="1.6"/>
+        <rect x="7.5" y="13" width="45" height="7.5" rx="3.7" fill="#B9B9C0"/>
+      </g>
+    </g>
+
+    <!-- ---- the falling stream ---- -->
+    <g class="p-stream">
+      <path d="M169 62h14v104a7 7 0 0 1-14 0V62Z" fill="url(#pourGrad)"/>
+      <ellipse cx="176" cy="168" rx="10" ry="8" fill="#8A5525"/>
+    </g>
+    <defs>
+      <linearGradient id="pourGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#C4762A"/><stop offset="1" stop-color="#8A5525"/>
+      </linearGradient>
+    </defs>
+
+    <!-- ---- the droplet that lands ---- -->
+    <g class="p-drop">
+      <path d="M176 152c6 7 9 11 9 15a9 9 0 0 1-18 0c0-4 3-8 9-15Z" fill="#8A5525"/>
+    </g>
+
+    <!-- ---- Captain Kora, lying back, catching it ---- -->
+    <g class="p-body">
+      <!-- the floor he's sprawled on -->
+      <path d="M96 250h180" stroke="var(--gray-300)" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+
+      <g fill="none" stroke="var(--wine-700)" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round">
+        <!-- torso: shoulder → hip -->
+        <path d="M200 220 Q 228 226 250 232"/>
+        <!-- front leg: hip → knee up → foot down -->
+        <path d="M250 232 L 272 204 L 288 232"/>
+        <!-- back leg, slightly behind -->
+        <path d="M250 236 L 266 214 L 280 240"/>
+        <!-- arm propping him up behind his head -->
+        <path d="M196 226 L 172 244 L 146 242"/>
+        <!-- arm raised, steadying the stream -->
+        <path d="M204 212 L 218 190 L 228 176"/>
+        <!-- head -->
+        <circle cx="176" cy="206" r="28"/>
+        <!-- hair curl -->
+        <path d="M152 190c-4-8 1-15 8-14s10 9 5 14"/>
+      </g>
+      <!-- face: eyes up, watching it come -->
+      <ellipse cx="162" cy="199" rx="3.4" ry="4" fill="var(--wine-800)"/>
+      <ellipse cx="190" cy="199" rx="3.4" ry="4" fill="var(--wine-800)"/>
+      <circle cx="155" cy="214" r="5" fill="var(--wine-300)" opacity=".5"/>
+      <circle cx="197" cy="214" r="5" fill="var(--wine-300)" opacity=".5"/>
+      <!-- mouth wide open at the top of his head, waiting -->
+      <ellipse class="p-mouth" cx="176" cy="180" rx="13" ry="10.5" fill="var(--wine-800)"/>
+      <ellipse class="p-splash" cx="176" cy="180" rx="20" ry="6" fill="#8A5525" opacity=".35"/>
+    </g>
+  </svg>
 </div>
 
 <section>
@@ -119,17 +252,17 @@
       <h2>Three steps, no queue</h2>
     </div>
     <div class="grid-3">
-      <div class="card step-card">
+      <div class="card step-card reveal">
         <div class="step-num">1</div>
         <h3>Scan or open</h3>
         <p>Every table has its own QR code. Scan it and your table number is already filled in — or order online for pickup and delivery.</p>
       </div>
-      <div class="card step-card">
+      <div class="card step-card reveal">
         <div class="step-num">2</div>
         <h3>Make it yours</h3>
         <p>Sugar level, ice level, milk, size, toppings — the price updates as you go. Want something new? Build it from scratch in the kitchen.</p>
       </div>
-      <div class="card step-card">
+      <div class="card step-card reveal">
         <div class="step-num">3</div>
         <h3>Track it live</h3>
         <p>The bar sees your exact measurements, sets a prep time, and your screen counts down until it's ready.</p>
@@ -146,7 +279,7 @@
       <p>In the cafe the table QR does this for you — this page just lets you try both paths.</p>
     </div>
     <div class="entry-grid">
-      <div class="card card-hover entry-card">
+      <div class="card card-hover entry-card reveal">
         <h3>At a table</h3>
         <p>Your table number comes straight from the QR code, so the bar knows exactly where to bring it.</p>
         <div class="table-input">
@@ -155,7 +288,7 @@
         </div>
         <button class="btn btn-primary" onclick="goTable()">Open table menu</button>
       </div>
-      <div class="card card-hover entry-card">
+      <div class="card card-hover entry-card reveal">
         <h3>Somewhere else</h3>
         <p>Order for pickup at the counter, or have it delivered — we'll ask for your location so the rider finds you fast.</p>
         <a href="guest.html?mode=general" class="btn btn-dark">Order for pickup or delivery</a>
@@ -187,6 +320,20 @@
   document.getElementById('c2').innerHTML = KoraUI.cupArt('#C4762A', 108);
   document.getElementById('c3').innerHTML = KoraUI.cupArt('#5C8A4A', 92);
   document.getElementById('footBrand').innerHTML = KoraUI.brandMark({ size: 30 });
+
+  // drifting pearls behind the hero
+  (function () {
+    const field = document.getElementById('pearls');
+    let html = '';
+    for (let i = 0; i < 14; i++) {
+      const size = 6 + Math.random() * 16;
+      html += `<i style="left:${Math.random() * 100}%;width:${size}px;height:${size}px;
+        animation-duration:${13 + Math.random() * 14}s;animation-delay:${-Math.random() * 20}s"></i>`;
+    }
+    field.innerHTML = html;
+  })();
+
+  KoraUI.initReveal();
 
   function goTable() {
     const t = document.getElementById('tableNo').value || '1';

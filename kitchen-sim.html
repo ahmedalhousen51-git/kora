@@ -29,7 +29,9 @@
     padding: 26px 24px 24px;
     backdrop-filter: blur(10px);
     text-align: center;
+    animation: panel-in .36s cubic-bezier(.2,.8,.3,1);
   }
+  @keyframes panel-in { from { opacity: 0; transform: translateY(18px) scale(.985); } to { opacity: 1; transform: none; } }
   .panel h2 { font-size: 1.35rem; margin-bottom: 6px; }
   .panel .hint-txt { color: rgba(255,255,255,.6); font-size: .87rem; margin: 0 0 22px; }
 
@@ -66,6 +68,29 @@
   .ice-c { width: 17px; height: 17px; border-radius: 4px; background: rgba(255,255,255,.6); box-shadow: inset -2px -2px 4px rgba(255,255,255,.5); }
   .lid { position: absolute; top: -14px; left: -8px; right: -8px; height: 15px; border-radius: 7px; background: rgba(255,255,255,.42); z-index: 3; }
   .straw { position: absolute; top: -52px; right: 22px; width: 11px; height: 76px; border-radius: 6px; background: var(--wine-500); transform: rotate(11deg); z-index: 1; }
+  /* live pour while you drag the slider */
+  .k-pour {
+    position: absolute; top: -34px; left: 50%; margin-left: -6px;
+    width: 12px; height: 104px; border-radius: 0 0 6px 6px;
+    background: linear-gradient(180deg, rgba(255,255,255,.15), #C4762A);
+    transform-origin: top center; transform: scaleY(0); opacity: 0;
+    transition: transform .18s ease, opacity .18s ease; z-index: 4;
+  }
+  .rig.pouring .k-pour { transform: scaleY(1); opacity: 1; }
+  .rig.pouring .k-pour::after {
+    content: ''; position: absolute; bottom: -4px; left: -2px;
+    width: 16px; height: 14px; border-radius: 50%; background: #C4762A;
+    animation: splat .4s ease-in-out infinite;
+  }
+  @keyframes splat { 0%,100% { transform: scale(1); } 50% { transform: scale(1.25,.8); } }
+  .ripple {
+    position: absolute; left: 50%; margin-left: -26px; bottom: 8px;
+    width: 52px; height: 8px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.34); opacity: 0;
+  }
+  .rig.pouring .ripple { animation: ripple-out 1s ease-out infinite; }
+  @keyframes ripple-out { 0% { transform: scale(.4); opacity: .8; } 100% { transform: scale(1.4); opacity: 0; } }
+
   .shaking { animation: shakeit .42s ease-in-out infinite; }
   @keyframes shakeit {
     0%,100% { transform: translate(0,0) rotate(0); }
@@ -160,7 +185,9 @@
 
     return `<div class="rig">
       <div class="counter"></div>
+      <div class="k-pour"></div>
       <div class="cup ${o.shake ? 'shaking' : ''}">
+        <div class="ripple"></div>
         <div class="layer l-syrup" style="height:${syrupPct}%"></div>
         <div class="layer l-base"  style="height:${syrupPct + basePct}%; opacity:.92"></div>
         <div class="layer l-cream" style="height:${syrupPct + basePct + creamPct}%; opacity:.55"></div>
@@ -225,7 +252,12 @@
       html += `<p class="lock-note">This is a brand-new drink — the bar makes it exactly as you set it here.</p>`;
     }
 
-    $('panel').innerHTML = html;
+    const panel = $('panel');
+    panel.innerHTML = html;
+    // replay the entrance animation on every station change
+    panel.style.animation = 'none';
+    void panel.offsetWidth;
+    panel.style.animation = '';
     wire(s);
   }
 
@@ -255,11 +287,19 @@
 
     const rng = $('rng');
     if (rng) {
+      let pourOff;
       rng.oninput = () => {
         V[s.id] = Number(rng.value);
         const ro = $('panel').querySelector('.readout');
         ro.innerHTML = V[s.id] + '<small>' + s.unit + '</small>';
         redrawCup(s.id === 'ice');
+        // show the stream while the slider is moving
+        const rig = $('panel').querySelector('.rig');
+        if (rig) {
+          rig.classList.add('pouring');
+          clearTimeout(pourOff);
+          pourOff = setTimeout(() => rig.classList.remove('pouring'), 480);
+        }
         if (V[s.id] >= s.max * .92) KoraUI.mascot.tooMuch();
         else if (s.min === 0 && V[s.id] <= s.max * .06) KoraUI.mascot.tooLittle();
         else if (Math.random() < .12) KoraUI.mascot.working();

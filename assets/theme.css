@@ -277,6 +277,60 @@ a { color: inherit; }
   font-size: .72rem; font-weight: 700; letter-spacing: .02em;
 }
 
+/* ==========================================================================
+   Motion
+   ========================================================================== */
+
+/* Scroll reveal — element gets .seen when it enters the viewport */
+.reveal { opacity: 0; transform: translateY(22px); }
+.reveal.seen {
+  opacity: 1; transform: none;
+  transition: opacity .55s ease, transform .55s cubic-bezier(.2,.8,.3,1);
+  transition-delay: var(--d, 0ms);
+}
+
+/* Staggered rise, used on grids */
+.rise { animation: rise-in .5s cubic-bezier(.2,.8,.3,1) both; animation-delay: var(--d, 0ms); }
+@keyframes rise-in { from { opacity: 0; transform: translateY(16px) scale(.98); } to { opacity: 1; transform: none; } }
+
+/* Step transitions in the order flow */
+.step.on { animation: step-in .4s cubic-bezier(.2,.8,.3,1) both; }
+@keyframes step-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* Cup flying into the cart */
+.fly-ghost {
+  position: fixed; z-index: 9998; pointer-events: none;
+  transition: transform .62s cubic-bezier(.4,0,.5,1), opacity .62s ease;
+}
+
+/* Button press ripple-ish lift */
+.btn-primary:not(:disabled):active { transform: translateY(1px) scale(.985); }
+
+/* Pulsing dot */
+@keyframes soft-pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+/* Floating boba pearls (decorative background) */
+.pearl-field { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.pearl-field i {
+  position: absolute; border-radius: 50%;
+  background: rgba(255,255,255,.14);
+  animation: pearl-rise linear infinite;
+  bottom: -40px;
+}
+@keyframes pearl-rise {
+  0%   { transform: translateY(0) scale(.7); opacity: 0; }
+  12%  { opacity: .75; }
+  85%  { opacity: .5; }
+  100% { transform: translateY(-118vh) scale(1.1); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal.seen { opacity: 1; transform: none; transition: none; }
+  .rise, .step.on { animation: none; }
+  .pearl-field { display: none; }
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
 ::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 10px; }
