@@ -1,234 +1,316 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>كورة ☕ — المطبخ</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/korra-theme.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Kitchen — Kora</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/theme.css">
 <style>
-  body { background: linear-gradient(180deg,#2a1a10,#4a2c16); min-height:100vh; }
-  .kit-top { padding: 18px 0; }
-  .kit-top .k-container { display:flex; align-items:center; justify-content:space-between; color:#fff; }
-  .progress-wrap { display:flex; gap:6px; margin: 0 auto 20px; max-width:500px; padding:0 18px; }
-  .progress-dot { flex:1; height:6px; border-radius:4px; background: rgba(255,255,255,0.15); }
-  .progress-dot.done { background: var(--gold); }
-  .progress-dot.now { background: #fff; }
-
-  .stage {
-    max-width: 480px; margin: 0 auto; padding: 0 18px 60px;
-    perspective: 900px;
+  body {
+    background: radial-gradient(1100px 600px at 50% -10%, var(--wine-900), var(--gray-950) 62%);
+    min-height: 100vh; color: #fff;
   }
-  .stage-card {
-    background: linear-gradient(160deg,#fdf6ec,#f4e9d8);
-    border-radius: 22px; padding: 26px 22px; text-align:center;
-    box-shadow: 0 30px 60px rgba(0,0,0,0.4);
-    transform: rotateX(3deg);
-    transform-style: preserve-3d;
+  .k-top { padding: 16px 0; }
+  .k-top .container { display: flex; align-items: center; justify-content: space-between; }
+  .k-mode { font-size: .74rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--wine-300); }
+
+  .progress { display: flex; gap: 5px; max-width: 520px; margin: 6px auto 26px; padding: 0 20px; }
+  .progress i { flex: 1; height: 4px; border-radius: 3px; background: rgba(255,255,255,.14); transition: background .25s; }
+  .progress i.done { background: var(--wine-500); }
+  .progress i.now { background: #fff; }
+
+  .stage { max-width: 460px; margin: 0 auto; padding: 0 20px 70px; }
+  .panel {
+    background: rgba(255,255,255,.055);
+    border: 1px solid rgba(255,255,255,.11);
+    border-radius: var(--r-xl);
+    padding: 26px 24px 24px;
+    backdrop-filter: blur(10px);
+    text-align: center;
   }
-  .stage-title { font-size: 1.2rem; font-weight:900; margin-bottom:4px; }
-  .stage-hint { color: var(--text-muted); font-size:0.85rem; margin-bottom: 20px; }
+  .panel h2 { font-size: 1.35rem; margin-bottom: 6px; }
+  .panel .hint-txt { color: rgba(255,255,255,.6); font-size: .87rem; margin: 0 0 22px; }
 
-  .equip { display:flex; justify-content:center; margin: 10px 0 24px; }
-  .cup-visual {
-    width: 110px; height: 140px; position:relative;
-    border: 4px solid var(--coffee-dark);
-    border-radius: 0 0 26px 26px; background: rgba(255,255,255,0.5);
-    overflow:hidden; box-shadow: inset 0 0 12px rgba(0,0,0,0.15), 0 12px 24px rgba(0,0,0,0.25);
-    transform: rotateX(8deg);
+  /* --- the cup rig --- */
+  .rig { position: relative; height: 210px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 22px; perspective: 700px; }
+  .counter {
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%) rotateX(58deg);
+    width: 250px; height: 90px; border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,.13), rgba(255,255,255,0) 68%);
   }
-  .cup-fill { position:absolute; bottom:0; inset-inline:0; background: linear-gradient(180deg,#c98a4b,#7a4a1e); transition: height .3s ease; height:0%; }
-  .ice-cubes { position:absolute; top:8px; inset-inline:0; display:flex; flex-wrap:wrap; gap:4px; justify-content:center; padding:0 8px; }
-  .ice-cube { width:14px; height:14px; background: rgba(255,255,255,0.85); border-radius:3px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+  .cup {
+    position: relative; width: 118px; height: 168px; z-index: 2;
+    border: 3px solid rgba(255,255,255,.62);
+    border-top: none;
+    border-radius: 6px 6px 26px 26px;
+    background: rgba(255,255,255,.16);
+    overflow: hidden;
+    box-shadow: 0 22px 44px rgba(0,0,0,.45), inset 0 -10px 24px rgba(0,0,0,.18);
+  }
+  .cup::after {
+    content: ''; position: absolute; top: 0; bottom: 0; left: 10px; width: 13px;
+    background: linear-gradient(180deg, rgba(255,255,255,.42), rgba(255,255,255,.06));
+    border-radius: 8px; z-index: 4; pointer-events: none;
+  }
+  .layer { position: absolute; left: 0; right: 0; bottom: 0; transition: height .32s cubic-bezier(.3,.9,.4,1); }
+  .l-base   { background: linear-gradient(180deg, #C08A4E, #8A5525); }
+  .l-cream  { background: linear-gradient(180deg, #FFF7EC, #F2E1C8); }
+  .l-syrup  { background: linear-gradient(180deg, #8A4A18, #4E2810); }
+  .pearls { position: absolute; left: 0; right: 0; bottom: 0; height: 58px; z-index: 3; }
+  .pearl { position: absolute; width: 15px; height: 15px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 32%, #4A2430, #1C0A12 70%);
+    box-shadow: 0 1px 2px rgba(0,0,0,.4); }
+  .ice-l { position: absolute; left: 6px; right: 6px; top: 8px; display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+  .ice-c { width: 17px; height: 17px; border-radius: 4px; background: rgba(255,255,255,.6); box-shadow: inset -2px -2px 4px rgba(255,255,255,.5); }
+  .lid { position: absolute; top: -14px; left: -8px; right: -8px; height: 15px; border-radius: 7px; background: rgba(255,255,255,.42); z-index: 3; }
+  .straw { position: absolute; top: -52px; right: 22px; width: 11px; height: 76px; border-radius: 6px; background: var(--wine-500); transform: rotate(11deg); z-index: 1; }
+  .shaking { animation: shakeit .42s ease-in-out infinite; }
+  @keyframes shakeit {
+    0%,100% { transform: translate(0,0) rotate(0); }
+    25% { transform: translate(-7px,-5px) rotate(-5deg); }
+    75% { transform: translate(7px,-5px) rotate(5deg); }
+  }
 
-  .choice-row { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:20px; }
-  .choice-btn { padding: 12px 20px; border-radius:14px; border:2px solid var(--border); background:#fff; font-weight:800; cursor:pointer; font-family:inherit; }
-  .choice-btn.sel { background: var(--pitch); color:#fff; border-color:var(--pitch); }
+  /* --- controls --- */
+  .readout { font-family: var(--ff-display); font-size: 2rem; font-weight: 700; letter-spacing: -.02em; }
+  .readout small { font-size: .95rem; font-weight: 500; color: rgba(255,255,255,.55); margin-left: 4px; }
+  input[type=range] { width: 100%; margin: 14px 0 4px; accent-color: var(--wine-500); height: 6px; }
+  .scale { display: flex; justify-content: space-between; font-size: .72rem; color: rgba(255,255,255,.42); }
 
-  .range-box { margin: 10px 0 22px; }
-  .range-val { font-size:1.6rem; font-weight:900; color: var(--coffee); margin-bottom:10px; }
-  input[type=range] { width:100%; accent-color: var(--pitch); height: 8px; }
-  .range-zone { display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted); margin-top:4px; }
+  .k-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 20px; }
+  .k-chip {
+    padding: 10px 16px; border-radius: var(--r-md); cursor: pointer;
+    border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.06);
+    color: #fff; font-family: inherit; font-size: .86rem; font-weight: 500;
+  }
+  .k-chip.on { background: #fff; color: var(--wine-800); border-color: #fff; font-weight: 600; }
 
-  .multi-row { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:20px; }
-  .multi-chip { padding:10px 16px; border-radius:12px; border:2px solid var(--border); font-weight:700; font-size:0.85rem; background:#fff; }
-  .multi-chip.on { background: var(--gold); border-color:var(--gold); color: var(--coffee-dark); }
+  .recap { text-align: left; background: rgba(0,0,0,.24); border-radius: var(--r-md); padding: 14px 16px; margin-bottom: 16px; font-size: .85rem; line-height: 1.9; color: rgba(255,255,255,.82); }
+  .recap b { color: #fff; }
 
-  .summary-list { text-align:right; font-size:0.86rem; line-height:2; color: var(--text); background: var(--cream-2); border-radius:12px; padding:14px 18px; margin-bottom:16px; }
-
-  .actions { display:flex; gap:10px; margin-top: 18px; }
-  .actions .k-btn { flex:1; }
-  .skip-hint { color: var(--text-muted); font-size:0.75rem; margin-top:10px; }
+  .k-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .k-actions .btn { flex: 1; }
+  .btn-white { background: #fff; color: var(--wine-800); }
+  .btn-white:hover { background: var(--gray-100); }
+  .btn-clear { background: transparent; color: rgba(255,255,255,.8); border-color: rgba(255,255,255,.24); }
+  .btn-clear:hover { background: rgba(255,255,255,.08); }
+  .lock-note { font-size: .76rem; color: rgba(255,255,255,.42); margin-top: 14px; }
+  .k-input { width: 100%; padding: 12px 14px; border-radius: var(--r-md); border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.07); color: #fff; font-family: inherit; font-size: .93rem; margin-bottom: 4px; }
+  .k-input::placeholder { color: rgba(255,255,255,.4); }
 </style>
 </head>
 <body>
 
-<div class="kit-top">
-  <div class="k-container">
-    <div class="k-brand" style="color:#fff;">👨‍🍳 المطبخ</div>
-    <span class="k-demo-flag" id="skippableFlag"></span>
+<div class="k-top">
+  <div class="container">
+    <div id="brandSlot"></div>
+    <span class="k-mode" id="modeTag"></span>
   </div>
 </div>
 
-<div class="progress-wrap" id="progressWrap"></div>
+<div class="progress" id="prog"></div>
+<div class="stage"><div class="panel" id="panel"></div></div>
 
-<div class="stage">
-  <div class="stage-card" id="stageCard"></div>
-</div>
-
-<script src="assets/korra-data.js"></script>
-<script src="assets/korra-store.js"></script>
-<script src="assets/korra-mascot.js"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/ui.js"></script>
 <script>
-(function(){
+(function () {
   'use strict';
+  const $ = id => document.getElementById(id);
+  const C = KoraAPI.catalog;
 
-  const STATIONS = KorraStore.getStations();
-  const skippable = localStorage.getItem('korra_kitchen_skippable') === 'true';
-  const isOptional = new URLSearchParams(location.search).get('optional') === '1';
   let spec = null;
-  try { spec = JSON.parse(localStorage.getItem('korra_pending_custom_spec') || 'null'); } catch(e){}
-  if (!spec) spec = { id: KorraStore.genId('item'), name:'مشروبك', selections:null, price:0, customerName:'' };
+  try { spec = JSON.parse(localStorage.getItem('kora_kitchen_spec') || 'null'); } catch (e) {}
+  if (!spec) { location.replace('guest.html'); return; }
 
-  document.getElementById('skippableFlag').textContent = skippable ? 'وضع اللعب — تقدر تتخطى' : 'إجباري — كل خطوة لازم تتظبط';
-
+  const OPTIONAL = spec.mode === 'optional';
+  const ST = C.stations || [];
   let idx = 0;
-  const values = { cup:'وسط', base:150, milk:150, syrup:15, ice:80, topping:[] };
 
-  function renderProgress(){
-    const wrap = document.getElementById('progressWrap');
-    wrap.innerHTML = STATIONS.map((s,i)=>
-      `<div class="progress-dot ${i<idx?'done':(i===idx?'now':'')}"></div>`
-    ).join('');
+  const V = { cup: 'Regular 500ml', brew: 180, creamer: 150, sweet: 25, ice: 90, toppings: [], shaken: false, name: spec.customer || '' };
+
+  $('brandSlot').innerHTML = KoraUI.brandMark({ size: 28, tagline: false, onDark: true, color: '#fff' });
+  $('modeTag').textContent = OPTIONAL ? 'Play mode · skippable' : 'Every step counts';
+
+  function paintProgress() {
+    $('prog').innerHTML = ST.map((s, i) =>
+      `<i class="${i < idx ? 'done' : (i === idx ? 'now' : '')}"></i>`).join('');
   }
 
-  function next(){
-    if (idx < STATIONS.length-1) { idx++; render(); }
-  }
-  function skipAll(){
-    idx = STATIONS.length-1; render();
-    KorraMascot.say('تمام، خدت الطريق السريع 😄');
-  }
-
-  function nameFromKey(list, key){ const f=(list||[]).find(o=>o.key===key); return f?f.name:key; }
-
-  function render(){
-    renderProgress();
-    const st = STATIONS[idx];
-    const card = document.getElementById('stageCard');
-    let inner = `<div class="stage-title">${st.title}</div><div class="stage-hint">${st.hint}</div>`;
-
-    if (st.type === 'choice') {
-      inner += `<div class="equip"><div class="cup-visual"><div class="cup-fill" style="height:55%"></div></div></div>`;
-      inner += `<div class="choice-row">` + st.options.map(o=>
-        `<button class="choice-btn ${values.cup===o?'sel':''}" onclick="window.__pickCup('${o}')">${o}</button>`
-      ).join('') + `</div>`;
+  function cupRig(opts) {
+    const o = opts || {};
+    const pct = v => Math.max(0, Math.min(100, v));
+    const basePct = pct((V.brew / 280) * 46);
+    const creamPct = pct((V.creamer / 250) * 40);
+    const syrupPct = pct((V.sweet / 60) * 14);
+    const pearlCount = Math.min(10, 4 + V.toppings.length * 2);
+    const cols = [9, 27, 45, 63, 81];
+    let pearls = '';
+    for (let i = 0; i < pearlCount; i++) {
+      const row = Math.floor(i / 5);
+      pearls += `<div class="pearl" style="left:${cols[i % 5] + (row % 2 ? 6 : 0)}px;bottom:${3 + row * 16}px"></div>`;
     }
-    else if (st.type === 'range') {
-      const v = values[st.id];
-      const pct = Math.round(((v - st.min) / (st.max - st.min)) * 100);
-      const isIce = st.id === 'ice';
-      inner += `<div class="equip"><div class="cup-visual">
-          ${isIce ? `<div class="ice-cubes">${'🧊'.repeat(Math.max(1,Math.round(v/50)))}</div>` : `<div class="cup-fill" style="height:${pct}%"></div>`}
-        </div></div>`;
-      inner += `<div class="range-box">
-        <div class="range-val">${v} ${st.unit}</div>
-        <input type="range" min="${st.min}" max="${st.max}" step="5" value="${v}" oninput="window.__setRange('${st.id}', this.value, ${st.min}, ${st.max})">
-        <div class="range-zone"><span>${st.min}</span><span>المنطقة المثالية</span><span>${st.max}</span></div>
-      </div>`;
-    }
-    else if (st.type === 'multi') {
-      if (spec.selections && spec.selections.topping) {
-        // اختيار سابق من شاشة الجيست — عرض تأكيد بس
-        const chosen = spec.selections.topping.map(k => nameFromKey(KORRA_SEED.buildCatalog.topping, k));
-        inner += `<div class="summary-list">${chosen.length? '🧁 ' + chosen.join('، ') : 'من غير توبينج'}</div>`;
-        values.topping = spec.selections.topping;
-      } else {
-        inner += `<div class="multi-row">` + st.options.map(o=>
-          `<button class="multi-chip ${values.topping.includes(o)?'on':''}" onclick="window.__toggleTopping('${o}')">${o}</button>`
-        ).join('') + `</div>`;
-      }
-    }
-    else if (st.type === 'final') {
-      inner += `<div class="summary-list">
-        ☕ الكوب: ${values.cup}<br>
-        💧 القاعدة: ${values.base} مل<br>
-        🥛 الحليب: ${values.milk} مل<br>
-        🍯 السيرب: ${values.syrup} مل<br>
-        🧊 التلج: ${values.ice} جم
+    const iceCount = Math.round(V.ice / 30);
+    let ice = '';
+    for (let i = 0; i < iceCount; i++) ice += '<div class="ice-c"></div>';
+
+    return `<div class="rig">
+      <div class="counter"></div>
+      <div class="cup ${o.shake ? 'shaking' : ''}">
+        <div class="layer l-syrup" style="height:${syrupPct}%"></div>
+        <div class="layer l-base"  style="height:${syrupPct + basePct}%; opacity:.92"></div>
+        <div class="layer l-cream" style="height:${syrupPct + basePct + creamPct}%; opacity:.55"></div>
+        <div class="pearls">${pearls}</div>
+        ${o.ice ? `<div class="ice-l">${ice}</div>` : ''}
+        ${o.lid ? '<div class="lid"></div><div class="straw"></div>' : ''}
       </div>
-      <input type="text" class="k-input" id="finalName" placeholder="اسمك على الكوب" value="${spec.customerName||''}" style="margin-bottom:14px;">`;
-    }
-
-    inner += `<div class="actions">`;
-    if (st.type !== 'final') {
-      inner += `<button class="k-btn k-btn-primary" onclick="window.__next()">التالي ⚽</button>`;
-      if (skippable) inner += `<button class="k-btn k-btn-outline" onclick="window.__skipAll()">تخطي الكل</button>`;
-    } else {
-      inner += `<button class="k-btn k-btn-primary" onclick="window.__finish()">✅ تسليم الطلب</button>`;
-    }
-    inner += `</div>`;
-    if (!skippable && st.type !== 'final') inner += `<div class="skip-hint">مفيش تخطي هنا — المشروب المبتكر محتاج دقة 🎯</div>`;
-
-    card.innerHTML = inner;
+    </div>`;
   }
 
-  window.__pickCup = function(o){ values.cup = o; render(); };
-  window.__setRange = function(id, v, min, max){
-    v = Number(v);
-    values[id] = v;
-    document.querySelector('.range-val').textContent = v + ' ' + STATIONS.find(s=>s.id===id).unit;
-    const fill = document.querySelector('.cup-fill');
-    if (fill) fill.style.height = Math.round(((v-min)/(max-min))*100) + '%';
-    const ice = document.querySelector('.ice-cubes');
-    if (ice) ice.innerHTML = '🧊'.repeat(Math.max(1,Math.round(v/50)));
-    if (v >= max*0.92) KorraMascot.limitExceeded();
-    else if (v <= min + (max-min)*0.06 && min>0) KorraMascot.limitTooLow();
-  };
-  window.__toggleTopping = function(o){
-    const i = values.topping.indexOf(o);
-    if (i===-1) values.topping.push(o); else values.topping.splice(i,1);
-    render();
-  };
-  window.__next = next;
-  window.__skipAll = skipAll;
+  function render() {
+    paintProgress();
+    const s = ST[idx];
+    let html = `<h2>${s.title}</h2><p class="hint-txt">${s.hint}</p>`;
 
-  window.__finish = function(){
-    const name = (document.getElementById('finalName')||{}).value || spec.customerName || '';
-    const returnUrl = new URLSearchParams(location.search).get('return') || 'guest.html';
-
-    if (isOptional) {
-      // لعب اختياري لمشروب جاهز — مفيش تعديل على السلة، بس تجربة ممتعة
-      localStorage.removeItem('korra_pending_custom_spec');
-      localStorage.removeItem('korra_kitchen_skippable');
-      location.href = returnUrl + '?played=1';
-      return;
+    if (s.type === 'choice') {
+      html += cupRig({});
+      html += `<div class="k-chips">${s.options.map(o =>
+        `<button class="k-chip ${V.cup === o ? 'on' : ''}" data-cup="${o}">${o}</button>`).join('')}</div>`;
+    }
+    else if (s.type === 'range') {
+      const val = V[s.id];
+      html += cupRig({ ice: s.id === 'ice' });
+      html += `<div class="readout">${val}<small>${s.unit}</small></div>
+        <input type="range" id="rng" min="${s.min}" max="${s.max}" step="5" value="${val}">
+        <div class="scale"><span>${s.min}${s.unit}</span><span>sweet spot</span><span>${s.max}${s.unit}</span></div>`;
+    }
+    else if (s.type === 'multi') {
+      html += cupRig({});
+      html += `<div class="k-chips">${s.options.map(o =>
+        `<button class="k-chip ${V.toppings.includes(o) ? 'on' : ''}" data-top="${o}">${o}</button>`).join('')}</div>`;
+    }
+    else if (s.type === 'shake') {
+      html += cupRig({ shake: V.shaken, lid: true, ice: true });
+      html += V.shaken
+        ? `<p style="color:var(--wine-300);font-weight:600;margin:0 0 4px">Nicely mixed.</p>`
+        : `<button class="btn btn-white" id="shakeBtn">Shake it</button>`;
+    }
+    else if (s.type === 'final') {
+      html += cupRig({ lid: true, ice: true });
+      html += `<div class="recap">
+          <b>Cup</b> ${V.cup}<br>
+          <b>Base</b> ${V.brew} ml${spec.labels ? ' · ' + spec.labels.base : ''}<br>
+          <b>Creamer</b> ${V.creamer} ml${spec.labels ? ' · ' + spec.labels.creamer : ''}<br>
+          <b>Syrup</b> ${V.sweet} ml${spec.labels && spec.labels.flavor.length ? ' · ' + spec.labels.flavor.join(', ') : ''}<br>
+          <b>Ice</b> ${V.ice} g<br>
+          <b>Toppings</b> ${V.toppings.length ? V.toppings.join(', ') : 'none'}
+        </div>
+        <input class="k-input" id="drinkName" placeholder="Name your creation" value="${V.name ? V.name + "'s blend" : ''}">`;
     }
 
+    html += `<div class="k-actions">`;
+    if (s.type === 'final') {
+      html += `<button class="btn btn-white" id="finishBtn">${OPTIONAL ? 'Done' : 'Send to the bar'}</button>`;
+    } else {
+      html += `<button class="btn btn-white" id="nextBtn">Next</button>`;
+      if (idx > 0) html += `<button class="btn btn-clear" id="backBtn">Back</button>`;
+      if (OPTIONAL) html += `<button class="btn btn-clear" id="skipBtn">Skip all</button>`;
+    }
+    html += `</div>`;
+    if (!OPTIONAL && s.type !== 'final') {
+      html += `<p class="lock-note">This is a brand-new drink — the bar makes it exactly as you set it here.</p>`;
+    }
+
+    $('panel').innerHTML = html;
+    wire(s);
+  }
+
+  function wire(s) {
+    const next = $('nextBtn');
+    if (next) next.onclick = () => {
+      if (s.type === 'shake' && !V.shaken) { KoraUI.mascot.blocked(); KoraUI.toast('Give it a shake first'); return; }
+      idx = Math.min(ST.length - 1, idx + 1); render();
+    };
+    const back = $('backBtn');
+    if (back) back.onclick = () => { idx = Math.max(0, idx - 1); render(); };
+    const skip = $('skipBtn');
+    if (skip) skip.onclick = () => { idx = ST.length - 1; render(); };
+
+    $('panel').querySelectorAll('[data-cup]').forEach(b => {
+      b.onclick = () => { V.cup = b.dataset.cup; render(); };
+    });
+    $('panel').querySelectorAll('[data-top]').forEach(b => {
+      b.onclick = () => {
+        const t = b.dataset.top;
+        const i = V.toppings.indexOf(t);
+        if (i > -1) V.toppings.splice(i, 1); else V.toppings.push(t);
+        if (V.toppings.length > 4) KoraUI.mascot.tooMuch();
+        render();
+      };
+    });
+
+    const rng = $('rng');
+    if (rng) {
+      rng.oninput = () => {
+        V[s.id] = Number(rng.value);
+        const ro = $('panel').querySelector('.readout');
+        ro.innerHTML = V[s.id] + '<small>' + s.unit + '</small>';
+        redrawCup(s.id === 'ice');
+        if (V[s.id] >= s.max * .92) KoraUI.mascot.tooMuch();
+        else if (s.min === 0 && V[s.id] <= s.max * .06) KoraUI.mascot.tooLittle();
+        else if (Math.random() < .12) KoraUI.mascot.working();
+      };
+    }
+
+    const shake = $('shakeBtn');
+    if (shake) shake.onclick = () => {
+      V.shaken = true;
+      render();
+      const cup = $('panel').querySelector('.cup');
+      setTimeout(() => { if (cup) cup.classList.remove('shaking'); }, 1400);
+      KoraUI.mascot.working();
+    };
+
+    const fin = $('finishBtn');
+    if (fin) fin.onclick = finish;
+  }
+
+  function redrawCup(withIce) {
+    const rig = $('panel').querySelector('.rig');
+    if (!rig) return;
+    const wrap = document.createElement('div');
+    wrap.innerHTML = cupRig({ ice: withIce });
+    rig.replaceWith(wrap.firstElementChild);
+  }
+
+  function finish() {
+    localStorage.removeItem('kora_kitchen_spec');
+    if (OPTIONAL) { location.href = 'guest.html'; return; }
+    const nameField = $('drinkName');
+    const name = (nameField && nameField.value.trim()) || 'Custom Blend';
     const item = {
-      id: spec.id,
+      id: 'i' + Date.now(),
       kind: 'custom',
-      name: name ? ('مشروب ' + name) : spec.name,
-      emoji: '🎨',
-      basePrice: 0,
-      addons: [],
-      freeAdjustments: [],
-      totalPrice: spec.price,
-      wentThroughKitchenSim: true,
-      customStepsLog: {
-        cup: values.cup, base_ml: values.base, milk_ml: values.milk,
-        syrup_ml: values.syrup, ice_g: values.ice, topping: values.topping,
-        selections: spec.selections
+      name: name,
+      qty: 1,
+      toppings: [],
+      build_price: spec.build_price || 0,
+      selections: spec.selections || null,
+      labels: spec.labels || null,
+      kitchen: {
+        cup: V.cup, brew: V.brew, creamer: V.creamer,
+        sweet: V.sweet, ice: V.ice, toppings: V.toppings, shaken: V.shaken
       }
     };
-    localStorage.setItem('korra_pending_custom_result', JSON.stringify(item));
-    localStorage.removeItem('korra_pending_custom_spec');
-    localStorage.removeItem('korra_kitchen_skippable');
-    KorraMascot.orderSubmitted();
-    location.href = returnUrl;
-  };
+    localStorage.setItem('kora_custom_result', JSON.stringify(item));
+    location.href = 'guest.html';
+  }
 
-  render();
+  KoraAPI.ready().then(render).catch(render);
 })();
 </script>
 </body>
