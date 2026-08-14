@@ -49,6 +49,11 @@
   .side.l { left: 0; transform: rotateY(38deg); transform-origin: left center; }
   .side.r { right: 0; transform: rotateY(-38deg); transform-origin: right center;
     background: linear-gradient(270deg, rgba(120,80,60,.20), rgba(120,80,60,0)); }
+  .kitchen::after {
+    content: ''; position: absolute; inset: 0; z-index: 13; pointer-events: none;
+    border-radius: var(--r-xl);
+    box-shadow: inset 0 0 90px rgba(120,80,65,.28), inset 0 0 26px rgba(120,80,65,.16);
+  }
   .kitchen-3d { position: absolute; inset: 0; transform-style: preserve-3d;
     transition: transform .3s cubic-bezier(.2,.8,.3,1); will-change: transform; }
 
@@ -64,10 +69,15 @@
   /* ---- upper cabinets + open shelf + clock ---- */
   .cabinets { position: absolute; left: 3%; right: 3%; top: 10px; height: 132px; display: flex; gap: 10px; }
   .cab {
-    background: linear-gradient(180deg, var(--k-white), #F1E7DE);
+    background: linear-gradient(180deg, var(--k-white), #EFE3D9);
     border: 2px solid var(--k-line); border-radius: 12px; position: relative;
-    box-shadow: 0 4px 0 rgba(0,0,0,.05);
+    box-shadow:
+      inset 0 3px 0 rgba(255,255,255,.95),
+      inset 0 -6px 12px rgba(150,115,90,.20),
+      0 7px 12px rgba(140,105,85,.22);
   }
+  /* the open shelf is a hole in the run, so it is lit from outside in */
+  .cab.open { box-shadow: inset 0 8px 16px rgba(120,88,68,.34), inset 0 -3px 6px rgba(120,88,68,.18); }
   .cab.door { flex: 0 0 148px; }
   .cab.door::after { content: ''; position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
     width: 34px; height: 6px; border-radius: 4px; background: var(--k-mint-d); }
@@ -107,7 +117,8 @@
       repeating-linear-gradient(90deg, rgba(255,255,255,.55) 0 2px, transparent 2px 44px),
       repeating-linear-gradient(0deg,  rgba(255,255,255,.55) 0 2px, transparent 2px 44px),
       linear-gradient(180deg, #FBEDE4, #F3DDD0);
-    box-shadow: inset 0 2px 0 rgba(255,255,255,.7); pointer-events: none; }
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.7), inset 0 -16px 22px rgba(140,100,80,.22);
+    pointer-events: none; }
 
   /* --- things that move on their own, so the room is never dead --- */
   .steam { position: absolute; z-index: 2; pointer-events: none; }
@@ -146,21 +157,33 @@
   /* ---- the counter ---- */
   .counter { position: absolute; left: 0; right: 0; top: 372px; bottom: 0; z-index: 3;
     transform-style: preserve-3d; transform: translateZ(40px);
-    background: linear-gradient(180deg, var(--k-pink), #E79FB4 40%, #DB8AA3); }
-  .counter .top { position: absolute; top: -40px; left: -4%; width: 108%; height: 74px;
-    transform: rotateX(64deg); transform-origin: bottom center;
-    background: linear-gradient(180deg, #F7E3C6, var(--k-wood));
-    box-shadow: 0 14px 22px rgba(90,60,40,.22); }
-  .counter .lip { position: absolute; top: 32px; left: 0; right: 0; height: 14px;
-    background: linear-gradient(180deg, #E6C395, var(--k-wood-d));
-    border-radius: 0 0 4px 4px; box-shadow: 0 4px 8px rgba(90,60,40,.28); }
+    background: linear-gradient(180deg, #F6BACA 0%, #EAA5B9 18%, #DE8FA8 62%, #C87A92 100%); }
+  /* the dark strip where the cabinet meets the floor reads as a toe kick */
+  .counter::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 22px;
+    background: linear-gradient(180deg, rgba(90,45,60,.24), rgba(90,45,60,.42)); }
+  .counter .top { position: absolute; top: -66px; left: -4%; width: 108%; height: 104px;
+    transform: rotateX(68deg); transform-origin: bottom center;
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.5), transparent 60%),
+      linear-gradient(180deg, #FBEDD8, #F0D2A6 55%, var(--k-wood));
+    box-shadow: 0 16px 26px rgba(90,60,40,.26), inset 0 -8px 18px rgba(150,105,65,.22); }
+  .counter .lip { position: absolute; top: 32px; left: 0; right: 0; height: 16px;
+    background: linear-gradient(180deg, #FBEBD2 0 3px, #E6C395 3px, #C9A06A 100%);
+    border-radius: 0 0 5px 5px;
+    box-shadow: 0 6px 12px rgba(90,60,40,.34), inset 0 -2px 3px rgba(120,80,45,.5); }
   .counter .grain { position: absolute; top: 41px; left: 0; right: 0; bottom: 0;
     background: repeating-linear-gradient(90deg, rgba(255,255,255,.16) 0 2px, transparent 2px 132px); }
   /* cabinet doors + knobs along the front of the counter */
   .counter .doors { position: absolute; top: 56px; left: 3%; right: 3%; bottom: 96px;
     display: flex; gap: 14px; }
-  .counter .doors span { flex: 1; border-radius: 10px; background: rgba(255,255,255,.18);
-    border: 2px solid rgba(255,255,255,.28); position: relative; }
+  /* each door is sunk into the slab: light on the top edge, shadow inside */
+  .counter .doors span { flex: 1; border-radius: 10px; position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,.24), rgba(150,70,95,.10));
+    box-shadow:
+      inset 0 2px 0 rgba(255,255,255,.55),
+      inset 0 -3px 7px rgba(140,65,90,.32),
+      inset 3px 0 6px rgba(140,65,90,.16),
+      0 1px 0 rgba(255,255,255,.28); }
   .counter .doors span::after { content: ''; position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
     width: 30px; height: 6px; border-radius: 4px; background: var(--k-mint); }
 
@@ -174,6 +197,29 @@
   .ing { width: 64px; text-align: center; opacity: .62; transform: scale(.92);
     transition: opacity .3s ease, transform .3s cubic-bezier(.2,.9,.3,1.4); }
   .ing.on { opacity: 1; transform: scale(1.12) translateY(-6px); }
+  /* Objects on a surface need a shadow touching them or they read as stickers.
+     One elliptical pool under each thing that stands on the counter. */
+  .ing { position: relative; }
+  .ing::after {
+    content: ''; position: absolute; left: 50%; bottom: 22px; width: 58px; height: 12px;
+    transform: translateX(-50%); border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(120,70,55,.34), transparent 70%);
+    filter: blur(2px); z-index: -1;
+  }
+  .cup-stage::after {
+    content: ''; position: absolute; left: 50%; bottom: -10px; width: 118px; height: 22px;
+    transform: translateX(-50%); border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(120,70,55,.4), transparent 70%);
+    filter: blur(4px); z-index: -1; pointer-events: none;
+  }
+  .cup-choice .cc-art { position: relative; }
+  .cup-choice .cc-art::after {
+    content: ''; position: absolute; left: 50%; bottom: -9px; width: 110%; height: 14px;
+    transform: translateX(-50%); border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(120,70,55,.34), transparent 70%);
+    filter: blur(3px); z-index: -1;
+  }
+
   .ing .bowl {
     width: 56px; height: 38px; margin: 0 auto 5px; position: relative;
     border-radius: 6px 6px 26px 26px;
@@ -184,6 +230,18 @@
   .ing .bowl b { position: absolute; left: 3px; right: 3px; bottom: 3px; height: 24px;
     border-radius: 4px 4px 20px 20px; background: var(--c); display: block;
     box-shadow: inset 0 3px 5px rgba(0,0,0,.16); }
+  /* the surface of what is in the bowl, seen from slightly above */
+  .ing .bowl b::after {
+    content: ''; position: absolute; top: -5px; left: 0; right: 0; height: 11px;
+    border-radius: 50%; background: var(--c); filter: brightness(1.22);
+    box-shadow: inset 0 2px 3px rgba(255,255,255,.4);
+  }
+  /* rim thickness, so the bowl has a wall */
+  .ing .bowl::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 9px;
+    border-radius: 50%; background: linear-gradient(180deg, #FFF, #E4D6C8);
+    box-shadow: inset 0 -2px 3px rgba(120,90,70,.28);
+  }
   .ing .bowl::after { content: ''; position: absolute; top: 4px; left: 6px; width: 14px; height: 5px;
     border-radius: 50%; background: rgba(255,255,255,.6); }
   .ing.jar-shape .bowl { height: 50px; border-radius: 5px 5px 9px 9px; }
@@ -229,6 +287,7 @@
   .cup-stage { position: absolute; left: 50%; margin-left: -58px; bottom: 156px;
     width: 116px; height: 156px; z-index: 6; transform-style: preserve-3d;
     transform: translateZ(50px); }
+  .cup-stage.hide-cup { opacity: 0; pointer-events: none; }
   .cup-stage.grabbable { cursor: grab; }
   .cup-stage.grabbing { cursor: grabbing; }
   .cup-stage.wobble { animation: wob3d .45s ease-in-out; }
@@ -296,7 +355,7 @@
 
   .cup-choice { position: absolute; z-index: 6; cursor: pointer; text-align: center; }
   .cup-choice .cc-art { background: linear-gradient(180deg,#FFFDFB,#EFE3DA); border: 2.5px solid var(--k-line);
-    border-radius: 4px 4px 16px 16px; margin: 0 auto 6px; transition: transform .18s ease; }
+    border-radius: 4px 4px 16px 16px; margin: 6px auto 0; transition: transform .18s ease; }
   .cup-choice:hover .cc-art { transform: translateY(-6px) scale(1.04); }
   .cup-choice.on .cc-art { border-color: var(--k-pink-d); box-shadow: 0 0 0 4px rgba(224,135,159,.28); }
   .cup-choice .cc-label { font-size: .7rem; font-weight: 700; color: #7A5C46;
@@ -1058,16 +1117,20 @@
   function makeChoices(station) {
     const layer = $('choiceLayer');
     layer.innerHTML = '';
+    cupEl.classList.add('hide-cup');
     (station.options || []).forEach((o, i) => {
       const big = o.indexOf('كبير') === 0;
       const d = document.createElement('div');
       d.className = 'cup-choice' + (V.cup === o ? ' on' : '');
       // percentages, so this works before the scene has been measured
-      d.style.left = (i ? '72%' : '24%');
-      d.style.transform = 'translateX(-50%)';
-      d.style.bottom = '34px';
-      d.innerHTML = `<div class="cc-art" style="width:${big ? 52 : 42}px;height:${big ? 70 : 56}px"></div>
-                     <div class="cc-label">${o}</div>`;
+      // On a narrow scene 30/70 puts them on top of the cup in the middle, so
+      // the split widens as the room gets smaller.
+      const narrow = $('kitchen').getBoundingClientRect().width < 760;
+      d.style.left = narrow ? (i ? '64%' : '36%') : (i ? '70%' : '30%');
+      d.style.transform = 'translateX(-50%) translateZ(50px)';
+      d.style.bottom = narrow ? '140px' : '166px';
+      d.innerHTML = `<div class="cc-label">${o}</div>
+                     <div class="cc-art" style="width:${big ? 52 : 42}px;height:${big ? 70 : 56}px"></div>`;
       d.onclick = () => {
         V.cup = o; paintCup();
         layer.querySelectorAll('.cup-choice').forEach(x => x.classList.toggle('on', x === d));
@@ -1144,6 +1207,7 @@
     const s = ST[idx];
     if (tool) { tool.destroy(); tool = null; }
     $('choiceLayer').innerHTML = '';
+    cupEl.classList.remove('hide-cup');
     focusMachine(s.id);
     focusIngredient(s.id);
     paintCup();
@@ -1381,18 +1445,31 @@
   KoraSFX.mountToggle($('brandSlot').parentElement);
   KoraAPI.ready().then(() => { render(); maybeWeirdMix(); touchIdle(); }).catch(render);
 
-  // the whole room leans toward wherever you are pointing
+  // The room leans toward wherever you are pointing, and keeps breathing on its
+  // own when nobody is touching it — a still frame of a 3D scene reads flat, so
+  // the idle drift is what sells the depth.
   (function () {
     const stage = $('kitchen'), inner = $('kitchen3d');
-    let raf = 0, rx = 0, ry = 0;
-    const apply = () => { raf = 0; inner.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`; };
+    let rx = 0, ry = 0, hovering = false, t = 0;
+    const apply = () => {
+      inner.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+    };
     stage.addEventListener('pointermove', e => {
+      hovering = true;
       const r = stage.getBoundingClientRect();
-      ry = ((e.clientX - r.left) / r.width - .5) * 9;
-      rx = -((e.clientY - r.top) / r.height - .5) * 7;
-      if (!raf) raf = requestAnimationFrame(apply);
+      ry = ((e.clientX - r.left) / r.width - .5) * 11;
+      rx = -((e.clientY - r.top) / r.height - .5) * 8;
+      apply();
     });
-    stage.addEventListener('pointerleave', () => { rx = 0; ry = 0; if (!raf) raf = requestAnimationFrame(apply); });
+    stage.addEventListener('pointerleave', () => { hovering = false; });
+    // an interval rather than rAF, for the same reason the pour uses one
+    setInterval(() => {
+      if (hovering) return;
+      t += 0.05;
+      ry += (Math.sin(t) * 2.4 - ry) * .06;
+      rx += (Math.cos(t * .7) * 1.4 - rx) * .06;
+      apply();
+    }, 50);
   })();
 })();
 </script>
