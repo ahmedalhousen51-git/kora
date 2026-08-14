@@ -7,6 +7,9 @@
 window.KORA_SEED = {
 
   /* ---------------- Drinks ---------------- */
+  // Each drink may carry `image: 'https://…'`. When it is set the menu shows
+  // the photo; when it is missing Kora draws the cup instead, tinted with
+  // `art`. Both paths work everywhere, so photos can be added one at a time.
   menu: [
     { id:'brown_sugar_boba', name:'Brown Sugar Boba', category:'Milk Tea', tagline:'Caramelised brown sugar, fresh milk, warm boba', price:85, art:'#7B1E3E',
       recipe:{ black_tea:120, milk:180, brown_sugar_syrup:35, tapioca:80 } },

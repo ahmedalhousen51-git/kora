@@ -169,6 +169,19 @@ a { color: inherit; }
 .card-hover { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
 .card-hover:hover { transform: translateY(-3px); box-shadow: var(--sh-3); border-color: var(--gray-300); }
 
+/* ---------- Drink photography ----------
+   Photos and the drawn cup are interchangeable: both sit in the same slot, so
+   a menu can be half photographed and half drawn without the grid jumping. */
+.item-photo {
+  display: block; width: 100%; height: auto;
+  aspect-ratio: 4 / 3; object-fit: cover;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.item-art-fallback { display: flex; justify-content: center; }
+/* on the dark shelf the photo takes the cup's footprint instead of the card's */
+.shelf-photo { width: 120px; aspect-ratio: 3 / 4; border-radius: var(--r-lg); }
+
 /* ---------- Pills / badges ---------- */
 .pill {
   display: inline-flex; align-items: center; gap: 6px;

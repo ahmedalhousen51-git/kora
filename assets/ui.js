@@ -46,6 +46,50 @@
     toastTimer = setTimeout(() => { toastEl.className = 'toast'; }, 3000);
   }
 
+  /* ------------------------------------------------------ drink art ------ */
+  /* One decision point for "photo or drawn cup", so every surface that shows a
+     drink behaves the same. A drink carries `image` only once someone attaches
+     a photo to it; until then — and if the URL ever fails to load — the cup
+     Kora draws in CSS stands in, so a card is never empty or broken. */
+  function esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function drawnCup(item, o) {
+    const art = (item && item.art) || '#7B1E3E';
+    if (o.cup3d && global.Kora3D) {
+      return global.Kora3D.cup({ w: o.w || 120, h: o.h || 162, liquid: art, fill: .66, pearls: 6 });
+    }
+    return cupArt(art, o.size || 74);
+  }
+
+  /** Markup for a drink's picture: its photo when it has one, else the cup. */
+  function drinkArt(item, opts) {
+    const o = opts || {};
+    if (!item || !item.image) return drawnCup(item, o);
+    return `<img class="${o.imgClass || 'item-photo'}" src="${esc(item.image)}"
+      alt="${esc(item.name)}" loading="lazy" decoding="async"
+      data-art="${esc((item && item.art) || '#7B1E3E')}"
+      data-cup3d="${o.cup3d ? '1' : '0'}" data-w="${o.w || 120}" data-h="${o.h || 162}"
+      data-size="${o.size || 74}" onerror="KoraUI.artFallback(this)">`;
+  }
+
+  /** Swap a photo that failed to load back to the drawn cup. */
+  function artFallback(img) {
+    if (!img || !img.parentNode) return;
+    const d = img.dataset;
+    const html = drawnCup({ art: d.art }, {
+      cup3d: d.cup3d === '1',
+      w: +d.w || 120, h: +d.h || 162, size: +d.size || 74
+    });
+    const holder = document.createElement('span');
+    holder.className = 'item-art-fallback';
+    holder.innerHTML = html;
+    img.replaceWith(holder);
+  }
+
   /* -------------------------------------------------------- cup art ------ */
   function cupArt(color, size) {
     const s = size || 74;
@@ -535,7 +579,7 @@
   initRipples();
 
   global.KoraUI = {
-    logoSVG, brandMark, toast, cupArt, mascot,
+    logoSVG, brandMark, toast, cupArt, drinkArt, artFallback, mascot,
     initReveal, stagger, flyToCart,
     countTo, confetti, pop
   };

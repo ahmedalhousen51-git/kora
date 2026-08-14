@@ -30,7 +30,8 @@
     padding: 14px 0; z-index: 40; }
   .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
   .drink { padding: 20px; display: flex; flex-direction: column; gap: 4px; text-align: left; font-family: inherit; cursor: pointer; }
-  .drink-art { display: flex; justify-content: center; margin-bottom: 6px; }
+  .drink-art { display: flex; justify-content: center; margin-bottom: 10px; }
+  .drink-art .item-photo { width: 100%; aspect-ratio: 4 / 3; }
   .drink h3 { font-size: 1rem; }
   .drink .tag { color: var(--text-soft); font-size: .82rem; margin: 2px 0 12px; flex: 1; line-height: 1.5; }
   .drink .foot { display: flex; align-items: center; justify-content: space-between; }
@@ -460,7 +461,7 @@
     const items = C.menu.filter(m => S.cat === 'All' || m.category === S.cat);
     $('grid').innerHTML = items.map(m => `
       <button class="card card-hover drink" data-id="${m.id}">
-        <div class="drink-art">${KoraUI.cupArt(m.art || '#7B1E3E', 70)}</div>
+        <div class="drink-art">${KoraUI.drinkArt(m, { size: 70 })}</div>
         <h3>${m.name}</h3>
         <p class="tag">${m.tagline || ''}</p>
         <div class="foot">

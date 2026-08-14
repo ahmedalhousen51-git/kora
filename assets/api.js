@@ -74,7 +74,7 @@
     }
     catalog.menu = (menu.data || []).map(m => ({
       id: m.id, name: m.name, category: m.category, tagline: m.tagline,
-      price: Number(m.price), art: m.art, recipe: m.recipe || {}
+      price: Number(m.price), art: m.art, image: m.image_url || '', recipe: m.recipe || {}
     }));
     catalog.toppings = (tops.data || []).map(t => ({
       key: t.key, name: t.name, price: Number(t.price), unit: t.unit, portion: Number(t.portion)
