@@ -507,8 +507,14 @@
         </div>
       </div>`;
 
+    // The size badge has to come from the drink, not the size group: the board
+    // charges a different upsize per drink, and many have a single price.
+    const sizeOpts = C.sizes.map(o => Object.assign({}, o, {
+      priceDelta: o.key === 'large' ? (m.largeDelta || 0) : 0
+    }));
+
     $('cBody').innerHTML =
-      seg('Size', C.sizes, 'size') +
+      seg('Size', sizeOpts, 'size') +
       seg('Sugar level', C.sugarLevels, 'sugar') +
       seg('Ice level', C.iceLevels, 'ice') +
       seg('Milk', C.milkOptions, 'milk') +

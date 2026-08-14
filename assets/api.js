@@ -74,7 +74,9 @@
     }
     catalog.menu = (menu.data || []).map(m => ({
       id: m.id, name: m.name, category: m.category, tagline: m.tagline,
-      price: Number(m.price), art: m.art, image: m.image_url || '', recipe: m.recipe || {}
+      price: Number(m.price), art: m.art, image: m.image_url || '',
+      largeDelta: m.large_delta == null ? null : Number(m.large_delta),
+      recipe: m.recipe || {}
     }));
     catalog.toppings = (tops.data || []).map(t => ({
       key: t.key, name: t.name, price: Number(t.price), unit: t.unit, portion: Number(t.portion)
@@ -102,8 +104,9 @@
       const m = catalog.menu.find(x => x.id === item.menu_id);
       if (!m) return 0;
       line = m.price;
-      const size = catalog.sizes.find(s => s.key === item.size);
-      if (size) line += Number(size.priceDelta || 0);
+      // Mirrors place_order: the upsize price lives on the drink, because the
+      // board charges a different amount per drink and some have one price.
+      if (item.size === 'large') line += Number(m.largeDelta || 0);
       const milk = catalog.milkOptions.find(s => s.key === item.milk);
       if (milk) line += Number(milk.priceDelta || 0);
     } else {

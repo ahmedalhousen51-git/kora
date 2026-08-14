@@ -206,7 +206,7 @@
         @keyframes kora-bob { 0%,100%{transform:translateY(0) rotate(0)}
           50%{transform:translateY(-5px) rotate(-1.4deg)} }
         /* the raised arm gives a little wave now and then */
-        #koraMascot .c-arm { transform-origin:86px 116px; animation: kora-wave 6s ease-in-out infinite; }
+        #koraMascot .c-arm { transform-origin:86px 101px; animation: kora-wave 6s ease-in-out infinite; }
         @keyframes kora-wave { 0%,86%,100%{transform:rotate(0)} 90%{transform:rotate(-16deg)} 95%{transform:rotate(6deg)} }
         #koraMascot .m-bubble { position:absolute; bottom:calc(100% + 10px); right:0;
           width:max-content; max-width:216px;
@@ -222,6 +222,8 @@
         #koraMascot.flip .m-bubble { right:auto; left:0; border-radius:14px 14px 14px 4px; }
         #koraMascot.flip .m-bubble::after { right:auto; left:22px; }
         /* blinking */
+        /* the drawing is single-weight line art: it takes its colour from here */
+        .kora-mascot-svg { color: var(--on-bg, #F4F6F8); }
         .kora-mascot-svg .c-eyes { animation: kora-blink 5.2s infinite; transform-origin:60px 51px; }
         @keyframes kora-blink { 0%,93%,100%{transform:scaleY(1)} 96%{transform:scaleY(.1)} }
         /* reaction states */
@@ -232,7 +234,7 @@
         @keyframes kora-jolt { 0%{transform:translateY(0) rotate(0)}
           30%{transform:translateY(-10px) rotate(5deg)} 60%{transform:translateY(2px) rotate(-3deg)}
           100%{transform:translateY(0) rotate(0)} }
-        .kora-mascot-svg.react-sip .c-arm { animation: kora-sip 1.2s ease-in-out; transform-origin:86px 116px; }
+        .kora-mascot-svg.react-sip .c-arm { animation: kora-sip 1.2s ease-in-out; transform-origin:86px 101px; }
         @keyframes kora-sip { 0%,100%{transform:rotate(0)} 45%{transform:rotate(-30deg)} }
         @media (max-width:560px){ #koraMascot{ width:70px; }
           #koraMascot .m-bubble{ max-width:158px; font-size:.78rem; } }
