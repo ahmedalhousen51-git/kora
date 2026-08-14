@@ -130,7 +130,7 @@
 @keyframes slide-left { to { transform: translateX(-50%); } }
 
 /* ------------------------------------------- the scroll-built drink ----- */
-.story { position: relative; background: var(--bg); }
+.story { position: relative; }
 .story-rail { height: 420vh; }
 .story-stage {
   position: sticky; top: 0; height: 100svh;
@@ -147,20 +147,20 @@
 .story::before {
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background:
-    radial-gradient(900px 620px at 12% 40%, rgba(123,30,62,.13), transparent 62%),
-    radial-gradient(760px 520px at 88% 66%, rgba(196,118,42,.10), transparent 60%);
+    radial-gradient(900px 620px at 12% 40%, rgba(174,49,96,.26), transparent 62%),
+    radial-gradient(760px 520px at 88% 66%, rgba(196,118,42,.16), transparent 60%);
 }
 .story-copy { position: relative; z-index: 1; }
 .story-count { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
 .story-count b {
   font-family: var(--ff-display); font-size: clamp(2.6rem, 6vw, 4.4rem); font-weight: 800;
   line-height: .85; letter-spacing: -.05em; color: transparent;
-  -webkit-text-stroke: 2px rgba(123,30,62,.34);
+  -webkit-text-stroke: 2px rgba(240,185,205,.5);
 }
-.story-count span { font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-faint); }
-.story-copy .eyebrow { color: var(--wine-600); }
+.story-count span { font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: var(--on-bg-faint); }
+.story-copy .eyebrow { color: var(--on-bg-accent); }
 .story-copy h2 { font-size: clamp(2rem, 4.4vw, 3.2rem); letter-spacing: -.035em; line-height: 1.04; }
-.story-copy p { color: var(--text-soft); font-size: 1.06rem; line-height: 1.62; margin-top: 12px; max-width: 440px; }
+.story-copy p { color: var(--on-bg-soft); font-size: 1.06rem; line-height: 1.62; margin-top: 12px; max-width: 440px; }
 @media (max-width: 860px) { .story-copy p { margin-inline: auto; } }
 
 /* the ingredients of the current step, dropping in one after another */
@@ -179,8 +179,8 @@
 
 .story-steps { display: flex; gap: 8px; margin-top: 26px; }
 @media (max-width: 860px) { .story-steps { justify-content: center; } }
-.story-steps i { width: 34px; height: 4px; border-radius: 3px; background: var(--gray-300); transition: background .3s, width .3s; }
-.story-steps i.on { background: var(--wine-700); width: 52px; }
+.story-steps i { width: 34px; height: 4px; border-radius: 3px; background: rgba(255,255,255,.28); transition: background .3s, width .3s; }
+.story-steps i.on { background: var(--wine-500); width: 52px; }
 
 /* the cup sits on a lit podium instead of floating in empty gray */
 .story-cup { position: relative; z-index: 1; display: grid; place-items: center; perspective: 1100px; height: 100%; }
@@ -212,12 +212,12 @@
 @media (max-width: 1040px) { .gauge { display: none; } }
 .gauge-track {
   position: relative; width: 6px; border-radius: 4px; margin-left: auto;
-  background: rgba(20,23,26,.09);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.5);
+  background: rgba(10,12,14,.28);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.28);
 }
 .gauge-track::after {
   content: ''; position: absolute; inset: 0; border-radius: 4px;
-  background: repeating-linear-gradient(to bottom, transparent 0 31px, rgba(20,23,26,.16) 31px 32px);
+  background: repeating-linear-gradient(to bottom, transparent 0 31px, rgba(255,255,255,.3) 31px 32px);
 }
 .gauge-fill {
   position: absolute; left: 0; right: 0; bottom: 0; height: 0; border-radius: 4px;
@@ -227,7 +227,7 @@
 }
 .gauge b {
   position: absolute; right: 16px; bottom: -4px; font-size: .72rem; font-weight: 700;
-  letter-spacing: .06em; color: var(--wine-700); white-space: nowrap;
+  letter-spacing: .06em; color: var(--on-bg-accent); white-space: nowrap;
   writing-mode: vertical-rl; text-orientation: mixed;
 }
 .cup-holder { position: relative; transform-style: preserve-3d; }
@@ -384,12 +384,13 @@
 @keyframes bubble-pop { from { opacity: 0; transform: scale(.6) translateY(10px); } to { opacity: 1; transform: none; } }
 
 /* ----------------------------------------------------------- stats ------ */
-.band { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 54px 0; }
+.band { background: rgba(255,255,255,.05); border-top: 1px solid rgba(255,255,255,.14);
+  border-bottom: 1px solid rgba(255,255,255,.14); padding: 54px 0; }
 .band-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; text-align: center; }
 @media (max-width: 760px) { .band-grid { grid-template-columns: repeat(2, 1fr); gap: 28px; } }
 .band .n { font-family: var(--ff-display); font-size: clamp(1.9rem, 4vw, 2.8rem); font-weight: 800;
-  letter-spacing: -.03em; color: var(--wine-700); }
-.band .l { font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); margin-top: 4px; }
+  letter-spacing: -.03em; color: var(--wine-300); }
+.band .l { font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; color: var(--on-bg-faint); margin-top: 4px; }
 
 /* ----------------------------------------------------------- entry ------ */
 .entry-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }

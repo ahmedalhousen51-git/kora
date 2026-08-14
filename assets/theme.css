@@ -39,6 +39,14 @@
   --text-faint: #A2ABB5;
   --border: #C6CED7;
 
+  /* The page background is graphite, so anything sitting straight on it needs
+     light ink. --text* stays dark and is re-asserted by every light surface
+     (cards, panels, inputs, bars) so their contents stay readable. */
+  --on-bg: #F4F6F8;
+  --on-bg-soft: #D3D8DE;
+  --on-bg-faint: #A8AFB7;
+  --on-bg-accent: #F0B9CD;
+
   --success: #1F7A4D;
   --warn: #B4761B;
   --danger: #B3282F;
@@ -62,13 +70,29 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   font-family: var(--ff-body);
-  /* brushed-silver sheen rather than one flat grey */
+  /* graphite sheen: light pooling in the middle, darker at top and bottom */
   background:
-    linear-gradient(160deg, #D5DBE2 0%, var(--bg) 42%, #BEC6CF 100%) fixed;
-  color: var(--text);
+    radial-gradient(130% 78% at 50% 46%, rgba(255,255,255,.20), transparent 64%),
+    linear-gradient(180deg, #3C3F42 0%, #5C6064 20%, #8A8E92 47%, #7C8084 70%, #52565A 100%);
+  background-attachment: fixed;
+  color: var(--on-bg);
   -webkit-font-smoothing: antialiased;
   line-height: 1.6;
 }
+
+/* Every light surface hands the dark ink back to whatever is inside it. */
+.card, .panel, .modal, .topbar:not(.topbar-dark), .cartbar, .sheet,
+.type-card, .segment, .table, table,
+input, select, textarea, .input {
+  color: var(--text);
+}
+/* ...and the muted utilities flip with whichever ground they land on. */
+.muted { color: var(--on-bg-soft); }
+.faint { color: var(--on-bg-faint); }
+.card .muted, .panel .muted, .modal .muted, .cartbar .muted,
+.type-card .muted, .table .muted, table .muted { color: var(--text-soft); }
+.card .faint, .panel .faint, .modal .faint, .cartbar .faint,
+.type-card .faint, .table .faint, table .faint { color: var(--text-faint); }
 h1, h2, h3, h4 { font-family: var(--ff-display); margin: 0; line-height: 1.2; letter-spacing: -0.02em; }
 a { color: inherit; }
 
@@ -159,7 +183,8 @@ a { color: inherit; }
 .pill-outline { border: 1px solid var(--border); background: var(--surface); color: var(--text-soft); }
 
 /* ---------- Form ---------- */
-.label { display: block; font-size: .82rem; font-weight: 600; color: var(--text-soft); margin-bottom: 6px; }
+.label { display: block; font-size: .82rem; font-weight: 600; color: var(--on-bg-soft); margin-bottom: 6px; }
+.card .label, .panel .label, .modal .label, .cartbar .label { color: var(--text-soft); }
 .input, .select, textarea.input {
   width: 100%;
   font-family: var(--ff-body);
@@ -205,14 +230,16 @@ a { color: inherit; }
 /* ---------- Section headers ---------- */
 .section-head { margin-bottom: 18px; }
 .section-head h2 { font-size: 1.4rem; }
-.section-head p { margin: 4px 0 0; color: var(--text-soft); font-size: .9rem; }
+.section-head p { margin: 4px 0 0; color: var(--on-bg-soft); font-size: .9rem; }
+.card .section-head p, .panel .section-head p { color: var(--text-soft); }
 .eyebrow {
   font-size: .72rem; font-weight: 700; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--wine-600); margin-bottom: 8px;
+  text-transform: uppercase; color: var(--on-bg-accent); margin-bottom: 8px;
 }
 
 /* ---------- Divider ---------- */
-.divider { height: 1px; background: var(--border); border: none; margin: 20px 0; }
+.divider { height: 1px; background: rgba(255,255,255,.16); border: none; margin: 20px 0; }
+.card .divider, .panel .divider, .modal .divider { background: var(--border); }
 
 /* ---------- Toast ---------- */
 .toast {
