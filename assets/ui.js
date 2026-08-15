@@ -27,7 +27,7 @@
       ${logoSVG(o.size || 32, o.color)}
       <span>
         <span class="brand-name${o.onDark ? ' on-dark' : ''}">Kora</span>
-        ${o.tagline === false ? '' : `<span class="brand-sub" style="display:block;margin-top:-4px">Bubble Tea Bar</span>`}
+        ${o.tagline === false ? '' : `<span class="brand-sub" style="display:block;margin-top:-4px">Coffee &amp; Boba</span>`}
       </span>
     </a>`;
   }
@@ -191,7 +191,7 @@
            above it absolutely, so it never inflates the box we use to work out
            where he is allowed to stand. */
         #koraMascot { position:fixed; left:16px; top:60vh; z-index:420;
-          width:96px; pointer-events:none;
+          width:150px; pointer-events:none;
           transition: left 2.4s cubic-bezier(.45,.05,.3,1), top 2.4s cubic-bezier(.45,.05,.3,1); }
         #koraMascot.dragging { transition:none; }
         #koraMascot .kora-mascot-svg { display:block; width:100%; height:auto;
@@ -236,7 +236,7 @@
           100%{transform:translateY(0) rotate(0)} }
         .kora-mascot-svg.react-sip .c-arm { animation: kora-sip 1.2s ease-in-out; transform-origin:86px 101px; }
         @keyframes kora-sip { 0%,100%{transform:rotate(0)} 45%{transform:rotate(-30deg)} }
-        @media (max-width:560px){ #koraMascot{ width:70px; }
+        @media (max-width:560px){ #koraMascot{ width:112px; }
           #koraMascot .m-bubble{ max-width:158px; font-size:.78rem; } }
         @media (prefers-reduced-motion: reduce) {
           #koraMascot .kora-mascot-svg, .kora-mascot-svg .m-eye { animation:none !important; }

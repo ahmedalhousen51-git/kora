@@ -105,9 +105,14 @@
 .hero-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: #6EE7A8; animation: soft-pulse 2s infinite; }
 
 .hero-art { display: flex; justify-content: center; perspective: 1100px; }
-.hero-cups { display: flex; align-items: flex-end; gap: 10px; transform-style: preserve-3d; }
-.hero-cups > * { filter: drop-shadow(0 26px 34px rgba(0,0,0,.5)); }
-.hero-cups .hc2 { transform: translateY(-22px); z-index: 2; }
+/* the hero photo: big, cropped tall, softened into the burgundy behind it */
+.hero-photo {
+  transition: transform .5s cubic-bezier(.2,.8,.3,1);
+  width: 100%; max-width: 460px; aspect-ratio: 9 / 10; object-fit: cover;
+  border-radius: 240px 240px 28px 28px;
+  box-shadow: 0 40px 80px rgba(0,0,0,.5);
+}
+@media (max-width: 900px) { .hero-photo { max-width: 320px; aspect-ratio: 1; border-radius: 200px 200px 24px 24px; } }
 
 .scroll-cue {
   position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kora — Bubble Tea Bar</title>
-<meta name="description" content="Kora is a bubble tea bar. Order from your table, build your own drink gram by gram, and watch it come together.">
+<title>Kora — Coffee &amp; Boba</title>
+<meta name="description" content="Kora — coffee, boba, shakes and smoothies. Order from your table, build your own drink gram by gram, and watch it come together.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -64,8 +64,8 @@
       </span>
 
       <h1 class="kinetic">
-        <span class="ln"><span>Bubble tea,</span></span>
-        <span class="ln"><span>built <em>exactly</em></span></span>
+        <span class="ln"><span>Coffee and boba,</span></span>
+        <span class="ln"><span>made <em>exactly</em></span></span>
         <span class="ln"><span>the way you want it.</span></span>
       </h1>
 
@@ -82,11 +82,9 @@
     </div>
 
     <div class="hero-art fade-up" style="animation-delay:.4s">
-      <div class="hero-cups" id="heroCups">
-        <div class="hc1 float3d" id="hc1"></div>
-        <div class="hc2 float3d" id="hc2"></div>
-        <div class="hc3 float3d" id="hc3"></div>
-      </div>
+      <!-- one real photograph carries the hero, the way every café site does -->
+      <img class="hero-photo" alt="Milk poured into a fresh cup"
+           src="https://images.unsplash.com/photo-1541167760496-1628856ab772?w=900&h=1000&fit=crop&q=85">
     </div>
   </div>
 
@@ -186,7 +184,7 @@
     <div class="section-head center">
       <div class="eyebrow" style="color:var(--wine-300)">On the menu</div>
       <h2>Pick a lane</h2>
-      <p>Milk teas, fruit teas and a specials shelf that keeps changing.</p>
+      <p>Espresso, boba, shakes and smoothies — a hundred ways to get it exactly right.</p>
     </div>
   </div>
   <div class="shelf-row" id="shelf"></div>
@@ -346,9 +344,7 @@
   }
 
   /* --------------------------------------------------------- hero art ---- */
-  $('hc1').innerHTML = Kora3D.cup({ w: 86,  h: 116, liquid: '#7B1E3E', fill: .68, pearls: 5 });
-  $('hc2').innerHTML = Kora3D.cup({ w: 104, h: 140, liquid: '#C4762A', fill: .74, pearls: 7, sealed: true });
-  $('hc3').innerHTML = Kora3D.cup({ w: 86,  h: 116, liquid: '#5C8A4A', fill: .6,  pearls: 5 });
+  // the hero is a photograph now — no cups to build here
   $('footBrand').innerHTML = KoraUI.brandMark({ size: 30, onDark: true });
   $('catcher').innerHTML =
     `<g transform="translate(68,101) scale(.72)">${KoraChar.catcher().replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '')}</g>`;
@@ -364,16 +360,16 @@
     $('pearls').innerHTML = html;
   })();
 
-  // the hero cups lean with the pointer
+  // the hero photo drifts a little with the pointer
   if (!reduced) {
-    const cups = $('heroCups');
+    const photo = document.querySelector('.hero-photo');
     $('hero').addEventListener('pointermove', e => {
       const r = $('hero').getBoundingClientRect();
       const px = (e.clientX - r.left) / r.width - .5;
       const py = (e.clientY - r.top) / r.height - .5;
-      cups.style.transform = `rotateY(${px * 16}deg) rotateX(${-py * 10}deg)`;
+      photo.style.transform = `translate(${px * 14}px, ${py * 12}px) scale(1.02)`;
     });
-    $('hero').addEventListener('pointerleave', () => { cups.style.transform = ''; });
+    $('hero').addEventListener('pointerleave', () => { photo.style.transform = ''; });
   }
 
   /* ==========================================================================
@@ -549,10 +545,10 @@
     io.observe(band);
 
     const live = KoraAPI.mode === 'supabase';
-    $('modeText').textContent = live ? 'Live · connected to Supabase' : 'Demo mode · placeholder menu';
+    $('modeText').textContent = live ? 'Live · connected to Supabase' : 'Demo mode · full menu loaded';
     $('footNote').textContent = live
       ? 'Kora — orders, stock and staff accounts run on Supabase.'
-      : 'Kora — running in local demo mode with a placeholder menu. Add your Supabase keys in assets/supabase-config.js to go live.';
+      : 'Kora — running in local demo mode. Add your Supabase keys in assets/supabase-config.js to go live.';
   }).catch(err => {
     $('modeText').textContent = 'Connection problem';
     $('footNote').textContent = 'Could not reach the database: ' + err.message;

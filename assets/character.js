@@ -18,7 +18,7 @@
 
   /* One stroke weight for the whole character — that single weight is what
      makes signage line art read as signage. */
-  const W = 2.6, WT = 2.1;
+  const W = 3.6, WT = 2.9;
   const S = `fill="none" stroke="currentColor" stroke-width="${W}" stroke-linecap="round" stroke-linejoin="round"`;
   const ST = `fill="none" stroke="currentColor" stroke-width="${WT}" stroke-linecap="round" stroke-linejoin="round"`;
   const FILL = `fill="currentColor" stroke="none"`;
