@@ -389,6 +389,59 @@ window.KORA_SEED = {
   },
   craftFee: 20,
 
+
+  /* ---------------- Kitchen: the bar's real equipment ----------------
+     One entry per machine on the counter. `key` is the recipe ingredient the
+     station fills, so the target comes from the drink being made — an espresso
+     asks for 36ml, a latte's milk asks for 220ml, and neither is hard-coded. */
+  stationLib: {
+    cup:     { title:'اختار الكوباية', hint:'كبيرة ولا عادية؟', type:'choice',
+               options:['عادي 500 مل','كبير 700 مل'] },
+    grind:   { title:'اطحن البن', hint:'المطحنة — الرقم اللي على الشاشة بالجرام.', type:'range', unit:'جم', key:'coffee_beans' },
+    extract: { title:'اسحب الشوت', hint:'الـCimbali. اقلب الحامل فوق الكوباية وسيبه يجري.', type:'range', unit:'مل', key:'espresso', tool:'kettle' },
+    turkish: { title:'اغلي القهوة التركي', hint:'على السخّان، وخليك واقف — بتفور فجأة.', type:'range', unit:'مل', key:'water', tool:'kettle' },
+    brew:    { title:'اسقي الشاي', hint:'من الحلة اللي على السخّان.', type:'range', unit:'مل', key:'@tea', tool:'kettle' },
+    whisk:   { title:'اخفق الماتشا', hint:'من علبة الماتشا اللي على الرف.', type:'range', unit:'جم', key:'matcha', tool:'pearlScoop' },
+    steam:   { title:'بخّر اللبن', hint:'لحد ما يسخن ويلمع — متغليهوش.', type:'range', unit:'مل', key:'steamed_milk', tool:'jug' },
+    milk:    { title:'صب اللبن', hint:'بارد، على مهلك عشان الشكل يطلع حلو.', type:'range', unit:'مل', key:'@milk', tool:'jug' },
+    syrup:   { title:'مضخات 1883', hint:'كل ضغطة حوالي 5 مل.', type:'range', unit:'مل', key:'@syrup', tool:'pump' },
+    sauce:   { title:'الصوص', hint:'شوكولاتة ولا كراميل — على جنب الكوباية.', type:'range', unit:'جم', key:'@sauce', tool:'pump' },
+    icecream:{ title:'الآيس كريم', hint:'سكوبات في البلندر.', type:'range', unit:'جم', key:'vanilla_ice_cream', tool:'iceScoop' },
+    fruit:   { title:'الفاكهة', hint:'من عبوات الكراش.', type:'range', unit:'مل', key:'@fruit', tool:'jug' },
+    ice:     { title:'التلج', hint:'من ماكينة التلج تحت البنش.', type:'range', unit:'جم', key:'ice', tool:'iceScoop' },
+    boba:    { title:'البوبا', hint:'اغرف من الحلة وهي لسه دافية.', type:'range', unit:'جم', key:'tapioca', tool:'pearlScoop' },
+    blend:   { title:'البلندر', hint:'قفّل الغطا ودوّس لحد ما ينعم.', type:'shake' },
+    shake:   { title:'رجّها', hint:'امسك الكوباية ورجّها يمين وشمال.', type:'shake' },
+    seal:    { title:'اقفلها وسمّيها', hint:'غطا وشاليموه وخلاص.', type:'final' }
+  },
+
+  /* Which stations a drink goes through. The template is filtered down to the
+     steps its recipe actually needs, so a drink with no milk never asks for
+     milk and a smoothie never touches the espresso machine. */
+  methods: {
+    'Espresso':             ['cup','grind','extract','steam','syrup','sauce','seal'],
+    'Cold Beverages':       ['cup','grind','extract','brew','whisk','ice','milk','syrup','sauce','seal'],
+    'Hot Drinks':           ['cup','turkish','brew','whisk','grind','extract','steam','syrup','sauce','seal'],
+    'Frappe · Espresso':    ['cup','grind','extract','milk','sauce','syrup','ice','blend','seal'],
+    'Frappe · No Espresso': ['cup','milk','sauce','syrup','ice','blend','seal'],
+    'Boba':                 ['cup','boba','brew','grind','extract','whisk','milk','syrup','sauce','fruit','shake','seal'],
+    'Milkshakes':           ['cup','icecream','milk','sauce','syrup','fruit','grind','extract','whisk','blend','seal'],
+    'Smoothies':            ['cup','fruit','ice','blend','seal'],
+    'Mojito':               ['cup','syrup','ice','blend','seal']
+  },
+
+  /* Ingredient families, so one station can stand for any member of it. */
+  families: {
+    '@tea':   ['black_tea','green_tea','fruit_tea','herbal_infusion','chai_concentrate','apple_cider'],
+    '@milk':  ['cold_milk','coconut_milk','condensed_milk'],
+    '@syrup': ['vanilla_syrup','cinnamon_syrup','pistachio_syrup','flavour_syrup','fruit_syrup',
+               'brown_sugar_syrup','salted_caramel','cane_sugar'],
+    '@sauce': ['dark_chocolate','white_chocolate','caramel_sauce','lotus_spread','nutella',
+               'kinder_spread','oreo_crumb','taro_powder'],
+    '@fruit': ['strawberry_puree','mango_puree','peach_puree','kiwi_puree','watermelon_puree',
+               'blueberry_puree','redberry_puree','passion_puree','lemon_mint_puree','blue_raspberry_puree']
+  },
+
   /* ---------------- Kitchen simulation stations ---------------- */
   stations: [
     { id:'style',    title:'المشروب ده هيبقى إيه؟', hint:'اختار الشكل الأول عشان نعرف نشتغل إزاي.',

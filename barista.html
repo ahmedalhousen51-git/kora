@@ -160,22 +160,39 @@
     if (item.kind === 'custom') {
       const k = item.kitchen || {};
       const L = item.labels || {};
-      if (L.base) rows[L.base] = k.brew + ' ml';
-      if (L.creamer && L.creamer !== 'No Creamer') rows[L.creamer] = k.creamer + ' ml';
-      (L.flavor || []).forEach(f => { rows[f] = k.sweet + ' ml'; });
-      if (k.ice) rows['Ice'] = k.ice + ' g';
-      (k.toppings || []).forEach(t => { rows[t] = 'portion'; });
+      if (k.poured) {
+        Object.keys(k.poured).forEach(key => {
+          rows[lbl(key)] = Math.round(k.poured[key]) + ' ' + unit(key);
+        });
+      } else {
+        if (L.base) rows[L.base] = k.brew + ' ml';
+        if (L.creamer && L.creamer !== 'No Creamer') rows[L.creamer] = k.creamer + ' ml';
+        (L.flavor || []).forEach(f => { rows[f] = k.sweet + ' ml'; });
+        if (k.ice) rows['Ice'] = k.ice + ' g';
+        (k.toppings || []).forEach(t => { rows[t] = 'portion'; });
+      }
       return { rows, note: 'Cup: ' + (k.cup || '—') + (k.shaken ? ' · shaken' : '') };
     }
     // The customer went into the kitchen and measured this one themselves —
     // pour it the way they poured it, not by the standard recipe.
     if (item.handmade && item.kitchen) {
       const k = item.kitchen;
-      if (k.brew) rows['Tea base'] = Math.round(k.brew) + ' ml';
-      if (k.creamer) rows['Creamer'] = Math.round(k.creamer) + ' ml';
-      if (k.sweet) rows['Syrup'] = Math.round(k.sweet) + ' ml';
-      if (k.ice) rows['Ice'] = Math.round(k.ice) + ' g';
-      (k.toppings || []).forEach(t => { rows[t] = 'portion'; });
+      // current shape: every ingredient they actually poured, with the recipe
+      // target beside it so the bar can see where they went off
+      if (k.poured) {
+        Object.keys(k.poured).forEach(key => {
+          const want = (k.target || {})[key];
+          const got = Math.round(k.poured[key]);
+          rows[lbl(key)] = got + ' ' + unit(key) + (want ? '  (recipe ' + Math.round(want) + ')' : '');
+        });
+      } else {
+        // orders placed before the per-ingredient rewrite still use the old keys
+        if (k.brew) rows['Tea base'] = Math.round(k.brew) + ' ml';
+        if (k.creamer) rows['Creamer'] = Math.round(k.creamer) + ' ml';
+        if (k.sweet) rows['Syrup'] = Math.round(k.sweet) + ' ml';
+        if (k.ice) rows['Ice'] = Math.round(k.ice) + ' g';
+        (k.toppings || []).forEach(t => { rows[t] = 'portion'; });
+      }
       return { rows, note: '✋ Made by the customer · ' + (k.cup || '') + (k.shaken ? ' · shaken' : '') };
     }
 

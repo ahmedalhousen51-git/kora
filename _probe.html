@@ -1,0 +1,23 @@
+<!doctype html><meta charset="utf-8"><title>probe</title>
+<body><pre id="out">running…</pre>
+<script>
+const DRINKS=['espresso','cappuccino','iced_latte','matcha_latte_hot','frappe_pistachio',
+              'boba_taro','shake_oreo','smoothie_kiwi','mojito','turkish_coffee','english_tea'];
+(async()=>{
+ const lines=[];
+ for(const id of DRINKS){
+   localStorage.setItem('kora_kitchen_spec', JSON.stringify(
+     {mode:'optional',customer:'A',item:{id:'x',menu_id:id,name:id,qty:1,toppings:[]}}));
+   const f=document.createElement('iframe');
+   f.style.cssText='width:1000px;height:700px;position:absolute;left:-9999px';
+   document.body.appendChild(f);
+   await new Promise(res=>{ f.onload=res; f.src='kitchen-sim.html?p='+id+'&t='+Date.now(); });
+   await new Promise(r=>setTimeout(r,500));
+   const R=f.contentWindow.KoraRoute;
+   lines.push(R ? (R.drink.padEnd(22)+' | '+R.steps.map(s=>s.id+(s.target?':'+s.target:'')).join(' → '))
+                : (id+' | NO ROUTE'));
+   f.remove();
+ }
+ document.getElementById('out').textContent=lines.join('\n');
+})();
+</script>

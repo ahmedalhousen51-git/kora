@@ -50,18 +50,22 @@
 
   /* ------------------------------------------------------- catalogue ----- */
   const catalog = {
-    menu: SEED.menu || [],
-    toppings: SEED.toppings || [],
-    sizes: SEED.sizes || [],
-    sugarLevels: SEED.sugarLevels || [],
-    iceLevels: SEED.iceLevels || [],
-    milkOptions: SEED.milkOptions || [],
-    buildCatalog: SEED.buildCatalog || {},
-    stations: SEED.stations || [],
-    craftFee: SEED.craftFee || 20,
-    currency: SEED.currency || 'EGP',
-    labels: SEED.labels || {}
-  };
+  menu: SEED.menu || [],
+  toppings: SEED.toppings || [],
+  sizes: SEED.sizes || [],
+  sugarLevels: SEED.sugarLevels || [],
+  iceLevels: SEED.iceLevels || [],
+  milkOptions: SEED.milkOptions || [],
+  buildCatalog: SEED.buildCatalog || {},
+  stations: SEED.stations || [],
+  // the kitchen builds a per-drink route out of these three
+  stationLib: SEED.stationLib || {},
+  methods: SEED.methods || {},
+  families: SEED.families || {},
+  craftFee: SEED.craftFee || 20,
+  currency: SEED.currency || 'EGP',
+  labels: SEED.labels || {}
+};
 
   async function loadCatalogFromSupabase() {
     const [menu, tops, settings] = await Promise.all([

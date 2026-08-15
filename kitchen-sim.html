@@ -592,11 +592,84 @@
   if (!spec) { location.replace('guest.html'); return; }
 
   const OPTIONAL = spec.mode === 'optional';
-  const ST = C.stations || [];
+
+  /* ======================================================================
+     Build the route for THIS drink.
+     A cappuccino is not a smoothie: the steps come from the drink's category,
+     and each step only survives if the drink's own recipe actually contains
+     the thing that step handles. The target quantity comes from the recipe
+     too, so the numbers on screen are the numbers the bar will pull.
+     ====================================================================== */
+  const LIB = C.stationLib || {};
+  const FAM = C.families || {};
+
+  // the menu item being made, when there is one
+  const MENU_ITEM = (spec.item && spec.item.menu_id)
+    ? C.menu.find(m => m.id === spec.item.menu_id)
+    : (spec.item && C.menu.find(m => m.name === spec.item.name)) || null;
+
+  const RECIPE = (MENU_ITEM && MENU_ITEM.recipe) || buildRecipeFromSelections();
+  const CATEGORY = (MENU_ITEM && MENU_ITEM.category) || 'Boba';
+
+  // a hand-built drink has no menu row, so infer a recipe from what they picked
+  function buildRecipeFromSelections() {
+    const sel = spec.selections || {};
+    const r = {};
+    if (sel.base && sel.base !== 'cold_milk') r[sel.base] = 160;
+    if (sel.creamer && sel.creamer !== 'none') r[sel.creamer] = 150;
+    (sel.flavor || []).forEach(f => { r[f] = 25; });
+    r.ice = 90; r.tapioca = 60;
+    return r;
+  }
+
+  /* Which recipe key does this station stand for on this drink? */
+  function keyFor(st) {
+    if (!st.key) return null;
+    if (st.key.charAt(0) !== '@') return (st.key in RECIPE) ? st.key : null;
+    const members = FAM[st.key] || [];
+    return members.find(k => k in RECIPE) || null;
+  }
+
+  function buildRoute() {
+    const template = (C.methods && C.methods[CATEGORY]) || (C.methods && C.methods.Boba) || [];
+    const out = [];
+    template.forEach(id => {
+      const base = LIB[id];
+      if (!base) return;
+      const st = Object.assign({ id: id }, base);
+
+      if (st.type === 'range') {
+        const k = keyFor(st);
+        if (k === null) return;                 // this drink does not use it
+        const target = Math.max(4, Math.round(RECIPE[k]));
+        st.recipeKey = k;
+        st.target = target;
+        st.min = 0;
+        st.max = Math.round(target * 1.9);
+        // name the station after the actual ingredient
+        const lab = (C.labels && C.labels[k] && C.labels[k].n) || '';
+        if (lab) st.sub = lab;
+      }
+      if (id === 'blend' || id === 'shake') st.type = 'shake';
+      out.push(st);
+    });
+    // a route always needs a cup at the front and a lid at the back
+    if (!out.some(x => x.id === 'cup')) out.unshift(Object.assign({ id: 'cup' }, LIB.cup));
+    if (!out.some(x => x.id === 'seal')) out.push(Object.assign({ id: 'seal' }, LIB.seal));
+    return out;
+  }
+
+  const ST = buildRoute();
+  // exposed so the route can be inspected in tests and while debugging
+  window.KoraRoute = { drink: (MENU_ITEM && MENU_ITEM.name) || 'custom', category: CATEGORY,
+                       recipe: RECIPE, steps: ST.map(x => ({ id: x.id, key: x.recipeKey, target: x.target })) };
   let idx = 0;
 
-  const V = { style: 'آيس', cup: 'عادي 500 مل', scoops: 1, brew: 0, creamer: 0, sweet: 0, ice: 0,
-              toppings: [], shakes: 0, shaken: false, sealed: false, name: spec.customer || '' };
+  // amounts live under the recipe key the station fills, so every drink keeps
+  // its own numbers instead of sharing four global ones
+  const V = { cup: 'عادي 500 مل', amt: {}, toppings: [],
+              shakes: 0, shaken: false, sealed: false, name: spec.customer || '' };
+  const amt = k => V.amt[k] || 0;
 
   $('brandSlot').innerHTML = KoraUI.brandMark({ size: 26, tagline: false, onDark: true, color: '#fff' });
   $('modeTag').textContent = OPTIONAL ? 'وضع اللعب · تقدر تتخطى' : 'كل خطوة ليها حساب';
@@ -706,16 +779,24 @@
   const cup3d = cupEl.querySelector('.cup3d');
   const capacity = () => (V.cup.indexOf('كبير') === 0 ? 600 : 480);
 
+  /* The cup shows what is actually in it: syrups and sauces sink, the brew
+     sits on them, milk floats on top. Each band is the sum of that family. */
+  const SUNK  = (C.families && C.families['@syrup'] || []).concat(C.families && C.families['@sauce'] || []);
+  const BREWY = (C.families && C.families['@tea'] || []).concat(['espresso', 'water', 'matcha']);
+  const MILKY = (C.families && C.families['@milk'] || []).concat(['steamed_milk', 'vanilla_ice_cream']);
+  const FRUITY = (C.families && C.families['@fruit'] || []);
+  const sumOf = keys => keys.reduce((t, k) => t + amt(k), 0);
+
   function paintCup() {
     const cap = capacity();
     Kora3D.setCup(cup3d, {
       layers: [
-        { amount: Math.min(1, V.sweet / cap),   color: '#7A3F14' },
-        { amount: Math.min(1, V.brew / cap),    color: '#B4763C' },
-        { amount: Math.min(1, V.creamer / cap), color: '#F3E3CB' }
+        { amount: Math.min(1, sumOf(SUNK) / cap),   color: '#7A3F14' },
+        { amount: Math.min(1, (sumOf(BREWY) + sumOf(FRUITY)) / cap), color: '#B4763C' },
+        { amount: Math.min(1, sumOf(MILKY) / cap),  color: '#F3E3CB' }
       ],
-      ice: Math.min(1, V.ice / 220),
-      pearls: Math.min(12, V.toppings.length * 3),
+      ice: Math.min(1, amt('ice') / 200),
+      pearls: Math.min(12, Math.round(amt('tapioca') / 8)),
       sealed: V.sealed
     });
   }
@@ -934,7 +1015,7 @@
         const dt = Math.min(0.12, (now - P.last) / 1000);
         P.last = now;
         const sp = api.spout();
-        if (opts.field) V[opts.field] = Math.min(station.max, V[opts.field] + RATE * dt);
+        if (opts.field) V.amt[opts.field] = Math.min(station.max, amt(opts.field) + RATE * dt);
         if (opts.solid) {
           if (Math.random() < .3) dropLumps(opts.lump, sp.x, sp.y);
         } else {
@@ -942,7 +1023,7 @@
         }
         cup3d.classList.add('rippling');
         if (opts.solid) { if (Math.random() < .22) KoraSFX.ice(); }
-        else KoraSFX.pourLevel((V[opts.field] - station.min) / (station.max - station.min));
+        else KoraSFX.pourLevel(amt(opts.field) / (station.max || 1));
         refresh(station);
       }, 16);
     }
@@ -979,7 +1060,7 @@
       if (head) { head.style.transform = 'translateY(7px)'; setTimeout(() => { head.style.transform = ''; }, 130); }
       const sp = api.spout();
       KoraSFX.pump();
-      V.sweet = Math.min(station.max, V.sweet + 5);
+      V.amt[station.recipeKey] = Math.min(station.max, amt(station.recipeKey) + 5);
       stream(true, cfg.color, sp.x, sp.y);
       setTimeout(() => stream(false), 200);
       refresh(station);
@@ -1142,15 +1223,16 @@
   }
 
   /* ---------------- judging + readout ---------------- */
-  const zoneOf = s => ({ lo: Math.round(s.min + (s.max - s.min) * .3),
-                         hi: Math.round(s.min + (s.max - s.min) * .7) });
+  // the good range is around what the recipe actually calls for
+  const zoneOf = s => ({ lo: Math.round((s.target || 0) * .82),
+                         hi: Math.round((s.target || 0) * 1.18) });
   let lastNag = 0;
   function judge(s) {
     if (s.type !== 'range') return;
-    const v = V[s.id], z = zoneOf(s), now = Date.now();
+    const v = amt(s.recipeKey), z = zoneOf(s), now = Date.now();
     if (now - lastNag < 1600) return;
     lastNag = now;
-    if (s.id === 'ice' && v >= s.max * .8) { say(pick(SMART.tooMuchIce), 4200, 'shock'); KoraSFX.ohNo(); }
+    if (s.recipeKey === 'ice' && v >= s.max * .8) { say(pick(SMART.tooMuchIce), 4200, 'shock'); KoraSFX.ohNo(); }
     else if (v >= s.max * .96) { say(pick(NAG.much), 3600, 'shock'); KoraSFX.ohNo(); }
     else if (v <= s.max * .08) say(pick(NAG.little), 3400);
     else if (v >= z.lo && v <= z.hi) { celebrate(); KoraSFX.success(); say(pick(NAG.nice), 3200, 'happy'); }
@@ -1159,11 +1241,11 @@
   function refresh(s) {
     paintCup();
     if (s.type === 'range') {
-      const v = Math.round(V[s.id]), z = zoneOf(s);
+      const v = Math.round(amt(s.recipeKey)), z = zoneOf(s);
       // written straight out — this ticks 60x a second while pouring, so an
       // easing animation would just fight itself
       const ro = $('ro'); if (ro) ro.innerHTML = v + '<small>' + s.unit + '</small>';
-      const bar = $('bar'); if (bar) bar.style.width = ((v - s.min) / (s.max - s.min) * 100) + '%';
+      const bar = $('bar'); if (bar) bar.style.width = Math.max(0, Math.min(100, v / s.max * 100)) + '%';
       const t = $('tgt');
       if (t) {
         const good = v >= z.lo && v <= z.hi;
@@ -1190,8 +1272,8 @@
 
   function canAdvance(s) {
     if (OPTIONAL) return true;
-    if (s.type === 'scoops' || s.id === 'style') return true;
-    if (s.type === 'range') return V[s.id] > s.min + (s.max - s.min) * .05;
+    if (s.type === 'scoops' || s.id === 'cup') return true;
+    if (s.type === 'range') return amt(s.recipeKey) >= (s.target || 0) * .45;
     if (s.type === 'shake') return V.shaken;
     return true;
   }
@@ -1213,7 +1295,9 @@
     focusIngredient(s.id);
     paintCup();
 
-    let html = `<h2>${s.title}</h2><p class="hint-txt">${s.hint}</p>`;
+    let html = `<h2>${s.title}</h2>` +
+      (s.sub ? `<p class="hint-txt"><b>${s.sub}</b> · هدف ${s.target} ${s.unit || ''}</p>`
+             : `<p class="hint-txt">${s.hint || ''}</p>`);
     if (s.id === 'style') {
       html += `<div class="style-row">` + s.options.map(o =>
         `<button class="style-pick ${V.style === o ? 'on' : ''}" data-style="${o}">
@@ -1228,7 +1312,7 @@
         </div>`;
     } else if (s.type === 'range') {
       const z = zoneOf(s);
-      html += `<div class="readout" id="ro">${Math.round(V[s.id])}<small>${s.unit}</small></div>
+      html += `<div class="readout" id="ro">${Math.round(amt(s.recipeKey))}<small>${s.unit}</small></div>
         <div class="target" id="tgt">صوّب على ${z.lo}–${z.hi} ${s.unit}</div>
         <div class="gauge"><div class="zone-bar"></div><div class="bar" id="bar"></div></div>
         <div class="fine-row">
@@ -1256,15 +1340,20 @@
         </div>
         <button class="step-reset" data-clear="1">شيل الإضافات كلها</button>`;
     } else if (s.type === 'final') {
+      const lines = Object.keys(V.amt)
+        .filter(k => Math.round(amt(k)) > 0)
+        .map(k => {
+          const L = (C.labels && C.labels[k]) || { n: k, u: 'مل' };
+          const want = RECIPE[k];
+          const off = want ? Math.round((amt(k) - want) / want * 100) : 0;
+          const note = !want ? '' : Math.abs(off) <= 18 ? ' ✓'
+                     : (off > 0 ? ' (+' + off + '%)' : ' (' + off + '%)');
+          return `<b>${L.n}</b> <span>${Math.round(amt(k))} ${L.u}${note}</span>`;
+        }).join('<br>');
       html += `<div class="recap">
-          <b>الشكل</b> <span>${V.style || '—'}</span><br>
+          <b>المشروب</b> <span>${(MENU_ITEM && MENU_ITEM.name) || 'اختراع جديد'}</span><br>
           <b>الكوباية</b> <span>${V.cup}</span><br>
-          <b>الأساس</b> <span>${Math.round(V.brew)} مل${spec.labels ? ' · ' + spec.labels.base : ''}</span><br>
-          <b>اللبن</b> <span>${Math.round(V.creamer)} مل${spec.labels ? ' · ' + spec.labels.creamer : ''}</span><br>
-          <b>السيرب</b> <span>${Math.round(V.sweet)} مل${spec.labels && spec.labels.flavor.length ? ' · ' + spec.labels.flavor.join(', ') : ''}</span><br>
-          <b>سكوب</b> <span>${V.scoops}</span><br>
-          <b>التلج</b> <span>${Math.round(V.ice)} جم</span><br>
-          <b>الإضافات</b> <span>${V.toppings.length ? V.toppings.join(', ') : 'مفيش'}</span>
+          ${lines || '<span>الكوباية لسه فاضية</span>'}
         </div>
         <input class="input" id="drinkName" placeholder="سمّي اختراعك"
                value="${V.name ? V.name + '’s blend' : ''}">`;
@@ -1283,19 +1372,23 @@
     $('panel').innerHTML = html;
     $('panel').classList.remove('enter'); void $('panel').offsetWidth; $('panel').classList.add('enter');
 
-    /* hand over the right tool */
+    /* hand over the tool this station calls for */
     if (s.id === 'cup') makeChoices(s);
-    else if (s.id === 'brew') tool = makePourTool('kettle', s, { hint: 'اسحبني فوق الكوباية ✋', field: 'brew' });
-    else if (s.id === 'creamer') tool = makePourTool('jug', s, { hint: 'اسحبني فوق الكوباية ✋', field: 'creamer' });
-    else if (s.id === 'sweet') tool = makePump(s);
-    else if (s.id === 'toppings') tool = makePearlScoop(s);
-    else if (s.id === 'ice') tool = makePourTool('iceScoop', s, { hint: 'اسحبني واقلبني ✋', field: 'ice', solid: true, lump: 'ice' });
     else if (s.type === 'shake') tool = makeShaker(s);
     else if (s.id === 'seal') { V.sealed = false; paintCup(); tool = makeLid(s); }
+    else if (s.type === 'range') {
+      const solid = s.tool === 'iceScoop' || s.tool === 'pearlScoop';
+      if (s.tool === 'pump') tool = makePump(s);
+      else tool = makePourTool(s.tool || 'jug', s, {
+        hint: solid ? 'اسحبني واقلبني ✋' : 'اسحبني فوق الكوباية ✋',
+        field: s.recipeKey, solid: solid,
+        lump: s.recipeKey === 'ice' ? 'ice' : 'pearl'
+      });
+    }
 
     wire(s);
     refresh(s);
-    if (GUIDE[s.id]) say(GUIDE[s.id], 5200);
+    if (s.hint) say(s.hint, 5200);
   }
 
   function wire(s) {
@@ -1342,9 +1435,9 @@
     $('panel').querySelectorAll('[data-fine]').forEach(b => {
       b.onclick = () => {
         const step = Number(b.dataset.fine);
-        const was = V[s.id];
-        V[s.id] = Math.max(0, Math.min(s.max, V[s.id] + step));
-        if (V[s.id] === was) { KoraSFX.ohNo(); return; }
+        const was = amt(s.recipeKey);
+        V.amt[s.recipeKey] = Math.max(0, Math.min(s.max, amt(s.recipeKey) + step));
+        if (amt(s.recipeKey) === was) { KoraSFX.ohNo(); return; }
         KoraSFX.pop();
         cupEl.classList.remove('wobble'); void cupEl.offsetWidth; cupEl.classList.add('wobble');
         refresh(s); judge(s);
@@ -1355,10 +1448,10 @@
     $('panel').querySelectorAll('[data-preset]').forEach(b => {
       b.onclick = () => {
         const z = zoneOf(s);
-        const to = b.dataset.preset === 'low'  ? Math.round(s.min + (z.lo - s.min) * .55)
-                 : b.dataset.preset === 'high' ? Math.round(z.hi + (s.max - z.hi) * .55)
-                 : Math.round((z.lo + z.hi) / 2);
-        V[s.id] = Math.max(0, Math.min(s.max, to));
+        const to = b.dataset.preset === 'low'  ? Math.round((s.target || 0) * .6)
+                 : b.dataset.preset === 'high' ? Math.round((s.target || 0) * 1.4)
+                 : (s.target || 0);
+        V.amt[s.recipeKey] = Math.max(0, Math.min(s.max, to));
         $('panel').querySelectorAll('[data-preset]').forEach(x => x.classList.toggle('on', x === b));
         KoraSFX.plop();
         cupEl.classList.remove('wobble'); void cupEl.offsetWidth; cupEl.classList.add('wobble');
@@ -1369,7 +1462,7 @@
     /* --- start the step over --- */
     const rs = $('panel').querySelector('[data-reset]');
     if (rs) rs.onclick = () => {
-      V[s.id] = 0;
+      V.amt[s.recipeKey] = 0;
       KoraSFX.pop();
       say('مسحناها، ابدأ من الأول 🧽', 2800);
       refresh(s);
@@ -1413,11 +1506,17 @@
 
   function finish() {
     localStorage.removeItem('kora_kitchen_spec');
+    // Whatever ended up in the cup, ingredient by ingredient, next to what the
+    // recipe asked for — the bar needs both to reproduce it.
+    const poured = {};
+    Object.keys(V.amt).forEach(k => {
+      const v = Math.round(amt(k));
+      if (v > 0) poured[k] = v;
+    });
     const madeByHand = {
-      style: V.style, cup: V.cup, scoops: V.scoops,
-      brew: Math.round(V.brew), creamer: Math.round(V.creamer),
-      sweet: Math.round(V.sweet), ice: Math.round(V.ice),
-      toppings: V.toppings, shaken: V.shaken
+      drink: (MENU_ITEM && MENU_ITEM.name) || null,
+      cup: V.cup, poured: poured, target: RECIPE,
+      shaken: V.shaken, sealed: V.sealed
     };
 
     // Play mode still counts: the measurements ride back with the drink so
