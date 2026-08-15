@@ -138,14 +138,15 @@
         <div class="story-chips" id="stChips"></div>
         <div class="story-steps" id="stDots"></div>
       </div>
-      <div class="story-cup">
-        <div class="stage-light"></div>
-        <div class="podium"><i></i></div>
-        <div class="cup-holder" id="storyCup"></div>
-        <div class="gauge" aria-hidden="true">
-          <div class="gauge-track"><div class="gauge-fill" id="stFill"></div></div>
-          <b id="stMl">0 ml</b>
-        </div>
+      <!-- the stage is a photograph now: a big plate, a smaller one behind it,
+           both on their own parallax so the pair reads as having depth -->
+      <div class="story-shot">
+        <div class="shot-glow"></div>
+        <figure class="shot-back"><img id="stBack" alt="" decoding="async"></figure>
+        <figure class="shot-main">
+          <img id="stFront" alt="" decoding="async">
+          <figcaption id="stCap"></figcaption>
+        </figure>
       </div>
     </div>
   </div>
@@ -375,34 +376,45 @@
   /* ==========================================================================
      The scroll-built drink: as you scroll this section the cup is made.
      ========================================================================== */
-  const TEA = { amount: .42, color: '#B4763C' }, MILK = { amount: .3, color: '#F3E3CB' };
+  /* Six real photographs of the drink being made. Each chapter swaps the
+     pair — a big plate and a smaller one behind it — and the two move at
+     different rates as you scroll, which is where the depth comes from. */
+  const IMG = k => 'https://images.unsplash.com/' + ({
+    beans:'photo-1692296113053-76f240e5ce33', grind:'photo-1537130508299-46ab547b4be3', dose:'photo-1629248990514-c350da4e7bc9', pull:'photo-1777292679545-060a4693b896',
+    shot:'photo-1616388761741-a5936c6f61f6', milk:'photo-1541167760496-1628856ab772', boba:'photo-1745883949374-baeba0ed57c3', iced:'photo-1517701550927-30cf4ba1dba5', done:'photo-1525803377221-4f6ccdaa5133'
+  })[k];
+
   const CHAPTERS = [
-    { at: .00, title: 'Start with the cup',  body: 'Every drink begins empty. What happens next is entirely yours.',
-      chips: [['Large · 700 ml', '#8B949E']],
-      cup: { layers: [], ice: 0, pearls: 0, sealed: false } },
-    { at: .18, title: 'Brew the base',       body: 'Black, jasmine green, oolong or a double espresso — steeped, then poured.',
-      chips: [['Black tea', '#7A4A22'], ['180 ml', '#B4763C']],
-      cup: { layers: [TEA], ice: 0, pearls: 0, sealed: false } },
-    { at: .38, title: 'Pour the milk',       body: 'Whole, oat, almond or coconut, poured slowly so it marbles as it settles.',
-      chips: [['Oat milk', '#F3E3CB'], ['120 ml', '#D8C3A2']],
-      cup: { layers: [TEA, MILK], ice: 0, pearls: 0, sealed: false } },
-    { at: .56, title: 'Drop the boba',       body: 'Warm tapioca at the bottom, popping boba if you like a surprise.',
-      chips: [['Tapioca boba', '#3B2318'], ['60 g', '#5C3A26'], ['Popping mango', '#E2A33C']],
-      cup: { layers: [TEA, MILK], ice: 0, pearls: 9, sealed: false } },
-    { at: .74, title: 'Ice it down',         body: 'Just enough to chill it without watering down what you just built.',
-      chips: [['Ice', '#BFD6E4'], ['Sugar 50%', '#C08A4A']],
-      cup: { layers: [TEA, MILK], ice: .8, pearls: 9, sealed: false } },
-    { at: .90, title: 'Sealed and yours',    body: 'Lid on, straw in, and the bar makes it to the exact numbers you set.',
-      chips: [['Sealed', '#7B1E3E'], ['Table 5', '#4A525B'], ['4 min', '#5C8A4A']],
-      cup: { layers: [TEA, MILK], ice: .8, pearls: 9, sealed: true } }
+    { at: .00, title: 'It starts as beans',   body: 'Whole beans, ground to order. Nothing sits waiting.',
+      cap: 'Single origin, ground per shot', front: 'beans', back: 'grind',
+      chips: [['18 g dose', '#3B2318'], ['Ground to order', '#8A5525']] },
+    { at: .18, title: 'Into the portafilter', body: 'Dosed, levelled and tamped flat — an even bed or the water finds a shortcut.',
+      cap: 'Dosed and tamped level', front: 'dose', back: 'beans',
+      chips: [['Level tamp', '#5C3A22'], ['58 mm basket', '#A9713C']] },
+    { at: .36, title: 'Pull the shot',        body: 'Twenty-five to thirty seconds. You can hear when it is right.',
+      cap: '36 ml in 25–30 seconds', front: 'shot', back: 'pull',
+      chips: [['36 ml', '#4A2C1B'], ['25–30 s', '#C4762A']] },
+    { at: .54, title: 'Steam and pour',       body: 'Milk textured to a glossy microfoam, then poured slowly so it folds in.',
+      cap: 'Textured to 65°C', front: 'milk', back: 'shot',
+      chips: [['Oat or whole', '#F3E3CB'], ['65°C', '#D8C3A2']] },
+    { at: .72, title: 'Or go the other way',  body: 'Warm tapioca at the bottom, ice on top, and the tea poured over both.',
+      cap: 'Tapioca cooked this morning', front: 'boba', back: 'iced',
+      chips: [['60 g boba', '#3B2318'], ['Popping mango', '#E2A33C']] },
+    { at: .90, title: 'Sealed and yours',     body: 'Lid on, straw in, and the bar made it to the numbers you set.',
+      cap: 'Made to your numbers', front: 'done', back: 'boba',
+      chips: [['Sealed', '#7B1E3E'], ['Table 5', '#4A525B'], ['4 min', '#5C8A4A']] }
   ];
 
-  $('storyCup').innerHTML = Kora3D.cup({ w: 236, h: 318, fill: 0 });
-  const storyCup = $('storyCup').querySelector('.cup3d');
+  const stFront = $('stFront'), stBack = $('stBack'), stCap = $('stCap');
+  const shotWrap = document.querySelector('.story-shot');
   $('stDots').innerHTML = CHAPTERS.map(() => '<i></i>').join('');
   $('stTotal').textContent = '/ ' + String(CHAPTERS.length).padStart(2, '0');
   const dots = $('stDots').querySelectorAll('i');
   let lastChapter = -1;
+
+  // warm the cache so a chapter change never shows an empty frame
+  Object.keys({beans:1,grind:1,dose:1,pull:1,shot:1,milk:1,boba:1,iced:1,done:1})
+    .forEach(k => { const i = new Image(); i.src = IMG(k) + '?w=900&h=1000&fit=crop&q=85'; });
 
   function paintStory() {
     const rail = document.querySelector('.story-rail');
@@ -418,23 +430,23 @@
       $('stNum').textContent = String(idx + 1).padStart(2, '0');
       $('stTitle').textContent = c.title;
       $('stBody').textContent = c.body;
+      stCap.textContent = c.cap;
       $('stChips').innerHTML = c.chips
         .map(([t, col], i) => `<b style="--d:${i * 110}ms"><i style="--c:${col}"></i>${t}</b>`).join('');
       KoraUI.pop($('stTitle'));
       dots.forEach((d, i) => d.classList.toggle('on', i <= idx));
-      Kora3D.setCup(storyCup, c.cup);
 
-      // the gauge tracks what is actually in the cup, in ml
-      const liquid = c.cup.layers.reduce((s, l) => s + l.amount, 0);
-      const level = Math.min(1, liquid + (c.cup.ice ? .12 : 0) + (c.cup.pearls ? .06 : 0));
-      $('stFill').style.height = (level * 100).toFixed(0) + '%';
-      $('stMl').textContent = Math.round(liquid * 700 / 10) * 10 + ' ml';
-      if (c.cup.sealed) {
-        storyCup.classList.remove('spin'); void storyCup.offsetWidth; storyCup.classList.add('spin');
-      }
+      // crossfade rather than a hard cut
+      shotWrap.classList.remove('swap'); void shotWrap.offsetWidth;
+      stFront.src = IMG(c.front) + '?w=900&h=1000&fit=crop&q=85';
+      stBack.src  = IMG(c.back) + '?w=520&h=560&fit=crop&q=80';
+      shotWrap.classList.add('swap');
     }
-    // the cup turns gently through the whole section
-    storyCup.style.transform = `rotateY(${-14 + p * 28}deg) rotateX(3deg)`;
+
+    // the two plates drift at different rates — that is the depth
+    const t = (p - .5) * 2;
+    stFront.style.transform = 'translate3d(0,' + (t * -22).toFixed(1) + 'px,0) scale(1.03)';
+    stBack.style.transform  = 'translate3d(0,' + (t * 34).toFixed(1) + 'px,0)';
   }
   addEventListener('scroll', paintStory, { passive: true });
   paintStory();

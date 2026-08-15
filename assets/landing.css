@@ -187,56 +187,49 @@
 .story-steps i { width: 34px; height: 4px; border-radius: 3px; background: rgba(255,255,255,.28); transition: background .3s, width .3s; }
 .story-steps i.on { background: var(--wine-500); width: 52px; }
 
-/* the cup sits on a lit podium instead of floating in empty gray */
-.story-cup { position: relative; z-index: 1; display: grid; place-items: center; perspective: 1100px; height: 100%; }
-.stage-light {
-  position: absolute; width: min(560px, 92%); aspect-ratio: 1; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,.85), rgba(255,255,255,.28) 42%, transparent 68%);
-  filter: blur(8px); animation: light-breathe 7s ease-in-out infinite;
+/* ---- the stage is a pair of photographs, layered for depth ---- */
+.story-shot {
+  position: relative; z-index: 1; display: grid; place-items: center;
+  height: 100%; perspective: 1400px;
 }
-@keyframes light-breathe { 0%,100% { transform: scale(1); opacity: .9; } 50% { transform: scale(1.07); opacity: 1; } }
-.podium {
-  position: absolute; top: calc(50% + 118px); width: min(430px, 84%); height: 120px;
-  transform: rotateX(74deg); transform-style: preserve-3d;
-  background: radial-gradient(ellipse at 50% 40%, rgba(255,255,255,.9), rgba(190,198,207,.55) 55%, transparent 74%);
-  border-radius: 50%;
+.shot-glow {
+  position: absolute; width: min(620px, 96%); aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.30), transparent 66%);
+  filter: blur(10px);
 }
-.podium i {
-  position: absolute; inset: 26% 22%; border-radius: 50%;
-  border: 1px solid rgba(123,30,62,.18);
-  animation: podium-ring 4.5s ease-out infinite;
+.story-shot figure { margin: 0; position: absolute; overflow: hidden; will-change: transform; }
+.story-shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* the small plate sits behind and to the side, turned away from you */
+.shot-back {
+  width: 190px; aspect-ratio: 3 / 4; right: 2%; top: 8%;
+  border-radius: 18px; transform-origin: 50% 50%;
+  box-shadow: 0 26px 50px rgba(20,16,14,.45);
+  filter: saturate(.85) brightness(.8);
 }
-@keyframes podium-ring {
-  0% { transform: scale(.7); opacity: 0; }
-  30% { opacity: .8; }
-  100% { transform: scale(1.6); opacity: 0; }
+.shot-back img { transition: opacity .45s ease; }
+
+/* the big plate is the subject */
+.shot-main {
+  width: min(400px, 74%); aspect-ratio: 4 / 5; left: 4%;
+  border-radius: 26px;
+  box-shadow: 0 44px 80px rgba(20,16,14,.55), 0 8px 20px rgba(20,16,14,.35);
 }
-/* a lab gauge down the right edge — the level climbs with the story */
-.gauge { position: absolute; right: 10px; top: calc(50% - 159px); height: 318px; width: 58px;
-  display: flex; align-items: stretch; gap: 10px; }
-@media (max-width: 1040px) { .gauge { display: none; } }
-.gauge-track {
-  position: relative; width: 6px; border-radius: 4px; margin-left: auto;
-  background: rgba(10,12,14,.28);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.28);
+.shot-main img { transition: opacity .45s ease; }
+.shot-main figcaption {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 40px 20px 16px; color: #fff; font-size: .82rem; font-weight: 600;
+  background: linear-gradient(transparent, rgba(16,12,10,.85));
 }
-.gauge-track::after {
-  content: ''; position: absolute; inset: 0; border-radius: 4px;
-  background: repeating-linear-gradient(to bottom, transparent 0 31px, rgba(255,255,255,.3) 31px 32px);
+/* a chapter change fades the new frame in rather than snapping */
+.story-shot.swap .shot-main img,
+.story-shot.swap .shot-back img { animation: shot-in .5s ease both; }
+@keyframes shot-in { from { opacity: 0; } to { opacity: 1; } }
+
+@media (max-width: 860px) {
+  .shot-main { width: 78%; left: 2%; }
+  .shot-back { width: 132px; right: 0; top: 4%; }
 }
-.gauge-fill {
-  position: absolute; left: 0; right: 0; bottom: 0; height: 0; border-radius: 4px;
-  background: linear-gradient(to top, var(--wine-800), var(--wine-500));
-  transition: height .7s cubic-bezier(.2,.9,.3,1);
-  box-shadow: 0 0 14px rgba(123,30,62,.4);
-}
-.gauge b {
-  position: absolute; right: 16px; bottom: -4px; font-size: .72rem; font-weight: 700;
-  letter-spacing: .06em; color: var(--on-bg-accent); white-space: nowrap;
-  writing-mode: vertical-rl; text-orientation: mixed;
-}
-.cup-holder { position: relative; transform-style: preserve-3d; }
-.cup-holder .cup3d { transform: rotateY(-10deg) rotateX(3deg); filter: drop-shadow(0 34px 34px rgba(20,23,26,.22)); }
 
 /* --------------------------------------------------------- how it works - */
 .steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; position: relative; }
