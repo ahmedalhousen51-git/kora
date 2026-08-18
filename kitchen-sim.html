@@ -16,10 +16,18 @@
   body { overflow-x: hidden; }
 
   :root {
-    --k-pink: #F4B6C6;  --k-pink-d: #E0879F;  --k-pink-l: #FBDDE4;
-    --k-mint: #A9DED6;  --k-mint-d: #79C3B8;  --k-mint-l: #D6F0EC;
-    --k-cream:#FBF3E6;  --k-wood:  #E9C89B;   --k-wood-d: #C79E68;
-    --k-white:#FDFBF9;  --k-line:  #E2D3C6;
+    /* straight off the photos of the bar: white subway tile, warm light wood,
+       brushed steel, black machines, and the green of the matcha tins */
+    --k-tile:  #EDEAE3;  --k-tile-l:#F7F5F0;  --k-grout: #D3CCC0;
+    --k-wood:  #C8A268;  --k-wood-d:#96713F;  --k-wood-l:#E8D3AC;
+    --k-board: #6B4A2C;
+    --k-steel: #B9BCC0;  --k-steel-d:#7C8186; --k-steel-l:#E1E4E7;
+    --k-black: #26282B;  --k-black-l:#3C4045;
+    --k-green: #4E7A52;
+    --k-cream: #F3EFE6;  --k-line:  #D8D2C6;  --k-white:#FBFAF7;
+    /* old names kept so nothing that still references them breaks */
+    --k-pink: #C8A268; --k-pink-d:#96713F; --k-pink-l:#E8D3AC;
+    --k-mint: #B9BCC0; --k-mint-d:#7C8186; --k-mint-l:#E1E4E7;
   }
 
   .k-top { background: linear-gradient(120deg, var(--gray-950), var(--wine-900)); color: #fff; padding: 12px 0; }
@@ -67,58 +75,19 @@
   }
 
   /* ---- upper cabinets + open shelf + clock ---- */
-  .cabinets { position: absolute; left: 3%; right: 3%; top: 10px; height: 132px; display: flex; gap: 10px; }
-  .cab {
-    background: linear-gradient(180deg, var(--k-white), #EFE3D9);
-    border: 2px solid var(--k-line); border-radius: 12px; position: relative;
-    box-shadow:
-      inset 0 3px 0 rgba(255,255,255,.95),
-      inset 0 -6px 12px rgba(150,115,90,.20),
-      0 7px 12px rgba(140,105,85,.22);
-  }
   /* the open shelf is a hole in the run, so it is lit from outside in */
-  .cab.open { box-shadow: inset 0 8px 16px rgba(120,88,68,.34), inset 0 -3px 6px rgba(120,88,68,.18); }
-  .cab.door { flex: 0 0 148px; }
-  .cab.door::after { content: ''; position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
-    width: 34px; height: 6px; border-radius: 4px; background: var(--k-mint-d); }
-  .cab.door.pink::after { background: var(--k-pink-d); }
-  .cab.open { flex: 1; background: linear-gradient(180deg, #F3E7DB, #E9DACB); display: flex;
-    align-items: flex-end; justify-content: center; gap: 12px; padding: 0 16px 12px; }
-  .cab.open .jar { width: 20px; border-radius: 4px 4px 3px 3px; position: relative; }
-  .cab.open .jar::before { content: ''; position: absolute; top: -5px; left: -2px; right: -2px;
-    height: 6px; border-radius: 3px; background: #C9B7A6; }
-  .clock { flex: 0 0 96px; border-radius: 50%; background: var(--k-white);
-    border: 4px solid var(--k-pink); align-self: center; height: 96px; position: relative; }
-  .clock::before, .clock::after { content: ''; position: absolute; left: 50%; top: 50%;
-    background: var(--k-pink-d); border-radius: 2px; transform-origin: 0 50%; }
-  .clock::before { width: 26px; height: 4px; transform: translate(0,-50%) rotate(-58deg); }
-  .clock::after  { width: 34px; height: 3px; transform: translate(0,-50%) rotate(24deg); }
 
-  /* ---- rail of hanging utensils ---- */
-  .hangrail { position: absolute; left: 8%; right: 8%; top: 152px; height: 62px; }
-  .hangrail .bar-h { position: absolute; top: 0; left: 0; right: 0; height: 6px; border-radius: 3px;
-    background: linear-gradient(180deg, #C9B7A6, #A89583); }
-  .hangrail .hook { position: absolute; top: 6px; width: 30px; text-align: center; }
-  .hangrail .hook i { display: block; width: 2px; height: 10px; margin: 0 auto; background: #A89583; }
-  .hangrail .hook u { display: block; width: 26px; height: 34px; margin: 0 auto; border-radius: 6px 6px 12px 12px;
-    text-decoration: none; }
 
   /* the shelf class is kept: the machines rail still hangs off the wall */
   .shelf { display: none; }
   .rail { position: absolute; left: 43%; top: 196px; width: 130px; height: 140px; transform-style: preserve-3d; }
+  .rail { display: none; }
   .rail .machine { position: absolute; top: 0; width: 130px; height: 140px;
     transition: transform .5s cubic-bezier(.3,.9,.35,1), opacity .4s ease;
     opacity: .28; transform-origin: 65px 130px; transform-style: preserve-3d; }
   .rail .machine svg { width: 100%; height: 100%; display: block; }
   .rail .machine.on { opacity: .95; }
 
-  .splash { position: absolute; left: 0; right: 0; bottom: 0; height: 104px;
-    background:
-      repeating-linear-gradient(90deg, rgba(255,255,255,.55) 0 2px, transparent 2px 44px),
-      repeating-linear-gradient(0deg,  rgba(255,255,255,.55) 0 2px, transparent 2px 44px),
-      linear-gradient(180deg, #FBEDE4, #F3DDD0);
-    box-shadow: inset 0 2px 0 rgba(255,255,255,.7), inset 0 -16px 22px rgba(140,100,80,.22);
-    pointer-events: none; }
 
   /* --- things that move on their own, so the room is never dead --- */
   .steam { position: absolute; z-index: 2; pointer-events: none; }
@@ -132,13 +101,8 @@
     18%  { opacity: .85; }
     100% { transform: translate(var(--sx,10px), -74px) scale(2.1); opacity: 0; }
   }
-  .hangrail .hook u { animation: sway 3.6s ease-in-out infinite; transform-origin: 50% 0;
-    animation-delay: var(--d, 0s); }
   @keyframes sway { 0%,100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
-  .clock::after { animation: tick 12s steps(12) infinite; }
   @keyframes tick { to { transform: translate(0,-50%) rotate(384deg); } }
-  .cab.open .jar { animation: jar-breathe 4.4s ease-in-out infinite; animation-delay: var(--d,0s);
-    transform-origin: 50% 100%; }
   @keyframes jar-breathe { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.04); } }
   .ing { animation: ing-bob 3.8s ease-in-out infinite; animation-delay: var(--d,0s); }
   @keyframes ing-bob { 0%,100% { translate: 0 0; } 50% { translate: 0 -3px; } }
@@ -157,18 +121,19 @@
   /* ---- the counter ---- */
   .counter { position: absolute; left: 0; right: 0; top: 372px; bottom: 0; z-index: 3;
     transform-style: preserve-3d; transform: translateZ(40px);
-    background: linear-gradient(180deg, #F6BACA 0%, #EAA5B9 18%, #DE8FA8 62%, #C87A92 100%); }
+    background: linear-gradient(180deg, #D9B77E 0%, #C8A268 16%, #A9884F 66%, #8A6B3A 100%); }
   /* the dark strip where the cabinet meets the floor reads as a toe kick */
   .counter::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 22px;
-    background: linear-gradient(180deg, rgba(90,45,60,.24), rgba(90,45,60,.42)); }
+    background: linear-gradient(180deg, rgba(60,40,20,.26), rgba(45,30,15,.5)); }
   .counter .top { position: absolute; top: -66px; left: -4%; width: 108%; height: 104px;
     transform: rotateX(68deg); transform-origin: bottom center;
     background:
-      radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.5), transparent 60%),
-      linear-gradient(180deg, #FBEDD8, #F0D2A6 55%, var(--k-wood));
+      repeating-linear-gradient(92deg, rgba(120,86,44,.10) 0 2px, transparent 2px 26px),
+      radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.45), transparent 62%),
+      linear-gradient(180deg, #F2DCB4, #DCBF8C 55%, var(--k-wood-d));
     box-shadow: 0 16px 26px rgba(90,60,40,.26), inset 0 -8px 18px rgba(150,105,65,.22); }
   .counter .lip { position: absolute; top: 32px; left: 0; right: 0; height: 16px;
-    background: linear-gradient(180deg, #FBEBD2 0 3px, #E6C395 3px, #C9A06A 100%);
+    background: linear-gradient(180deg, #F6E3BE 0 3px, #C8A268 3px, #8A6B3A 100%);
     border-radius: 0 0 5px 5px;
     box-shadow: 0 6px 12px rgba(90,60,40,.34), inset 0 -2px 3px rgba(120,80,45,.5); }
   .counter .grain { position: absolute; top: 41px; left: 0; right: 0; bottom: 0;
@@ -178,14 +143,204 @@
     display: flex; gap: 14px; }
   /* each door is sunk into the slab: light on the top edge, shadow inside */
   .counter .doors span { flex: 1; border-radius: 10px; position: relative;
-    background: linear-gradient(180deg, rgba(255,255,255,.24), rgba(150,70,95,.10));
+    background:
+      repeating-linear-gradient(180deg, rgba(90,62,30,.10) 0 1px, transparent 1px 9px),
+      linear-gradient(180deg, rgba(255,255,255,.20), rgba(80,54,26,.16));
     box-shadow:
-      inset 0 2px 0 rgba(255,255,255,.55),
-      inset 0 -3px 7px rgba(140,65,90,.32),
-      inset 3px 0 6px rgba(140,65,90,.16),
-      0 1px 0 rgba(255,255,255,.28); }
+      inset 0 2px 0 rgba(255,255,255,.45),
+      inset 0 -3px 7px rgba(80,54,26,.34),
+      0 1px 0 rgba(255,255,255,.22); }
   .counter .doors span::after { content: ''; position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
     width: 30px; height: 6px; border-radius: 4px; background: var(--k-mint); }
+
+
+  /* ================= the bar, drawn from the photos ================= */
+  .tiles {
+    position: absolute; inset: 0;
+    background-color: var(--k-tile);
+    background-image:
+      radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,.55), transparent 60%),
+      repeating-linear-gradient(0deg,  var(--k-grout) 0 3px, transparent 3px 38px),
+      repeating-linear-gradient(90deg, var(--k-grout) 0 3px, transparent 3px 76px);
+    box-shadow: inset 0 -30px 44px rgba(120,100,80,.18);
+  }
+
+  /* --- dark wood shelf on steel brackets --- */
+  .shelf-hi { position: absolute; left: 6%; right: 6%; top: 46px; height: 84px; }
+  .shelf-hi .plank {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 12px; border-radius: 2px;
+    background: linear-gradient(180deg, #8A6038 0 3px, var(--k-board) 3px, #4E3520);
+    box-shadow: 0 8px 14px rgba(60,40,25,.32);
+  }
+  .shelf-hi .brk {
+    position: absolute; bottom: -16px; width: 5px; height: 18px; border-radius: 1px;
+    background: linear-gradient(180deg, var(--k-steel-d), #5A5F63);
+  }
+  .shelf-hi .goods {
+    position: absolute; left: 4%; right: 4%; bottom: 12px; height: 70px;
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 4px;
+  }
+  .shelf-hi .goods span { display: block; position: relative; }
+  /* matcha tins: the green cylinders on the top shelf */
+  .shelf-hi .tin {
+    width: 22px; height: 42px; border-radius: 3px 3px 2px 2px;
+    background: linear-gradient(90deg, #3C6340 0 4px, var(--k-green) 4px 16px, #2F5236 16px);
+  }
+  .shelf-hi .tin::before {
+    content: ''; position: absolute; inset: 12px 3px auto 3px; height: 14px;
+    background: rgba(255,255,255,.72); border-radius: 1px;
+  }
+  .shelf-hi .tin::after {
+    content: ''; position: absolute; top: -4px; left: -1px; right: -1px; height: 5px;
+    border-radius: 2px; background: #9AA0A4;
+  }
+  /* syrup bottles standing on the shelf */
+  .shelf-hi .bottle {
+    width: 15px; height: 54px; border-radius: 2px 2px 3px 3px;
+    background: linear-gradient(90deg, rgba(255,255,255,.4) 0 3px, var(--b) 3px);
+  }
+  .shelf-hi .bottle::before {
+    content: ''; position: absolute; top: -9px; left: 4px; width: 7px; height: 10px;
+    background: #43484C; border-radius: 2px;
+  }
+  /* stacked paper cups */
+  .shelf-hi .paper {
+    width: 19px; height: 34px; border-radius: 2px 2px 5px 5px;
+    background: linear-gradient(180deg, #E4D3B4, #C9B48A);
+    box-shadow: inset -3px 0 4px rgba(0,0,0,.12);
+  }
+
+  /* --- the 1883 / Monin pump rack --- */
+  .pumps {
+    position: absolute; left: 65%; bottom: 4px; height: 76px;
+    display: flex; align-items: flex-end; gap: 6px;
+  }
+  .pumps span {
+    position: relative; display: block; width: 15px; height: 52px;
+    border-radius: 2px 2px 4px 4px;
+    background: linear-gradient(90deg, rgba(255,255,255,.45) 0 3px, var(--b) 3px 12px, rgba(0,0,0,.14) 12px);
+    box-shadow: 0 6px 10px rgba(60,45,30,.28);
+  }
+  /* the black pump head and its spout */
+  .pumps span::before {
+    content: ''; position: absolute; top: -22px; left: 4px; width: 8px; height: 24px;
+    background: #22252A; border-radius: 3px 3px 0 0;
+  }
+  .pumps span::after {
+    content: ''; position: absolute; top: -12px; left: -7px; width: 12px; height: 4px;
+    background: #22252A; border-radius: 2px;
+  }
+  /* the wire rack they sit in */
+  .pumps::after {
+    content: ''; position: absolute; left: -7px; right: -7px; bottom: 4px; height: 26px;
+    border: 2px solid #1E2124; border-top: none; border-radius: 0 0 4px 4px;
+  }
+
+  /* --- La Cimbali M32: wide, low, brushed steel --- */
+  .cimbali {
+    position: absolute; left: 17%; bottom: 150px; width: 27%; height: 150px;
+    z-index: 4; transform: translateZ(30px); pointer-events: none;
+  }
+  .cim-body {
+    position: absolute; inset: 0 0 44px 0; border-radius: 6px 6px 2px 2px;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.14) 0 1px, transparent 1px 4px),
+      linear-gradient(180deg, #E4E7EA 0 10%, #B4B8BC 34%, #85898D 70%, #5E6367);
+    box-shadow: 0 14px 22px rgba(30,26,22,.45), inset 0 2px 0 rgba(255,255,255,.85),
+                inset 0 -6px 12px rgba(0,0,0,.28);
+  }
+  .cim-badge {
+    position: absolute; left: 50%; top: 24px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 8px; font-family: var(--ff-display);
+  }
+  .cim-badge b { font-size: .5rem; letter-spacing: .1em; color: #2B2E31; }
+  .cim-badge em {
+    font-style: normal; font-size: .48rem; letter-spacing: .16em; color: #fff;
+    background: linear-gradient(90deg, #9B1C24, #C8262F); padding: 2px 12px; border-radius: 2px;
+  }
+  .cim-keys { position: absolute; left: 8%; top: 46px; display: flex; gap: 4px; }
+  .cim-keys.r { left: auto; right: 8%; }
+  .cim-keys i { width: 13px; height: 9px; border-radius: 2px;
+    background: linear-gradient(180deg, #4A4E52, #26292C); box-shadow: inset 0 1px 0 rgba(255,255,255,.24); }
+  .cim-groups {
+    position: absolute; left: 0; right: 0; bottom: 30px; height: 46px;
+    display: flex; justify-content: space-evenly; align-items: flex-start;
+  }
+  .cim-groups .grp { position: relative; width: 54px; }
+  .cim-groups .head {
+    display: block; width: 40px; height: 18px; margin: 0 auto; border-radius: 3px;
+    background: linear-gradient(180deg, #9EA2A6, #5C6165);
+    box-shadow: 0 3px 6px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.5);
+  }
+  /* the portafilter hanging out of the group */
+  .cim-groups .pf {
+    display: block; width: 30px; height: 12px; margin: 2px auto 0; border-radius: 0 0 5px 5px;
+    background: linear-gradient(180deg, #8B8F93, #4E5357); position: relative;
+  }
+  .cim-groups .pf::after {
+    content: ''; position: absolute; left: 50%; top: 10px; transform: translateX(-50%);
+    width: 9px; height: 22px; border-radius: 0 0 4px 4px;
+    background: linear-gradient(180deg, #2A2D30, #17191B);
+  }
+  .cim-tray {
+    position: absolute; left: 2%; right: 2%; bottom: 16px; height: 16px; border-radius: 2px;
+    background:
+      repeating-linear-gradient(90deg, #8E9296 0 2px, #6A6E72 2px 6px),
+      #74787C;
+    box-shadow: inset 0 2px 3px rgba(0,0,0,.3);
+  }
+  .cim-wand {
+    position: absolute; right: 4px; bottom: 30px; width: 5px; height: 46px;
+    border-radius: 3px; background: linear-gradient(180deg, #C2C6CA, #7E8286);
+    transform: rotate(9deg); transform-origin: top center;
+  }
+  .cim-feet { position: absolute; left: 0; right: 0; bottom: 0; height: 16px; }
+  .cim-feet i { position: absolute; bottom: 0; width: 16px; height: 12px; border-radius: 2px;
+    background: #2E3134; }
+  .cim-feet i:first-child { left: 10%; } .cim-feet i:last-child { right: 10%; }
+
+  /* --- the grinder --- */
+  .grinder {
+    position: absolute; left: 57%; bottom: 150px; width: 6.6%; height: 158px;
+    z-index: 4; transform: translateZ(30px); pointer-events: none;
+  }
+  .grinder .hopper {
+    position: absolute; left: 8px; right: 8px; top: 0; height: 58px;
+    border-radius: 4px 4px 2px 2px;
+    background: linear-gradient(180deg, rgba(190,175,160,.42) 0 40%, rgba(90,64,40,.78) 40%);
+    border: 1px solid rgba(255,255,255,.4);
+    box-shadow: inset 0 -8px 10px rgba(40,26,16,.45), inset 0 2px 0 rgba(255,255,255,.6);
+  }
+  .grinder .gr-body {
+    position: absolute; left: 0; right: 0; top: 54px; bottom: 22px; border-radius: 5px;
+    background: linear-gradient(180deg, var(--k-steel-l), var(--k-steel-d));
+    box-shadow: 0 8px 14px rgba(40,35,30,.32);
+  }
+  .grinder .screen {
+    position: absolute; left: 50%; top: 16px; transform: translateX(-50%);
+    width: 30px; height: 15px; border-radius: 2px;
+    background: linear-gradient(180deg, #2E6F9E, #1D4E76);
+    box-shadow: inset 0 0 6px rgba(120,220,255,.5);
+  }
+  .grinder .gr-fork {
+    position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%);
+    width: 26px; height: 12px; background: #3A3E42; border-radius: 0 0 3px 3px;
+  }
+
+  /* --- the under-counter ice machine --- */
+  .counter .icebox {
+    position: absolute; left: 4%; top: 62px; width: 122px; height: 84px;
+    border-radius: 4px; background: linear-gradient(180deg, #E8E9EA, #C9CBCD);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.9), 0 6px 12px rgba(0,0,0,.22);
+  }
+  .counter .icebox .ib-screen {
+    position: absolute; left: 10px; top: 12px; width: 34px; height: 13px; border-radius: 2px;
+    background: #23262A; box-shadow: inset 0 0 5px rgba(90,200,255,.55);
+  }
+  .counter .icebox .ib-vent {
+    position: absolute; left: 10px; right: 10px; bottom: 10px; height: 26px; border-radius: 2px;
+    background: repeating-linear-gradient(180deg, #A9ACAF 0 2px, #DDDEDF 2px 6px);
+  }
 
   /* ---- the ingredient bench: everything you cook with, visible at once ---- */
   .bench { position: absolute; left: 0; right: 0; bottom: 40px; height: 76px; z-index: 7;
@@ -193,7 +348,7 @@
     pointer-events: none; transform: translateZ(56px); transform-style: preserve-3d; }
   /* a ledge so the bowls read as placed on something */
   .bench::before { content: ''; position: absolute; left: 6%; right: 6%; bottom: -8px; height: 8px;
-    border-radius: 5px; background: rgba(255,255,255,.32); box-shadow: 0 3px 6px rgba(90,60,40,.18); }
+    border-radius: 5px; background: rgba(255,255,255,.26); box-shadow: 0 3px 6px rgba(70,48,26,.28); }
   .ing { width: 64px; text-align: center; opacity: .62; transform: scale(.92);
     transition: opacity .3s ease, transform .3s cubic-bezier(.2,.9,.3,1.4); }
   .ing.on { opacity: 1; transform: scale(1.12) translateY(-6px); }
@@ -462,17 +617,22 @@
     .kitchen { height: auto; overflow: visible; border-radius: 0; margin-top: 0; }
     .kitchen-3d { position: relative; height: 470px; overflow: hidden; }
     .wall { height: 300px; }
-    .cabinets { height: 96px; }
-    .cab.door { flex: 0 0 92px; }
-    .clock { flex: 0 0 64px; height: 64px; }
-    .hangrail { top: 112px; }
-    .splash { height: 78px; }
-    .rail { top: 150px; }
+              .rail { top: 150px; }
     .counter { top: 300px; }
     .bench { bottom: 12px; height: 62px; gap: 10px; }
     .ing { width: 46px; }
     .ing .bowl { width: 40px; height: 27px; }
-    .chef { width: 92px; left: 8px; bottom: 126px; }
+    .chef { width: 92px; left: 4px; bottom: 126px; }
+    .cimbali { left: 20%; width: 34%; height: 104px; bottom: 128px; }
+    .grinder { left: 60%; width: 9%; height: 108px; bottom: 128px; }
+    .pumps { left: 71%; height: 54px; }
+    .pumps span { width: 10px; height: 34px; }
+    .shelf-hi { top: 30px; height: 60px; }
+    .shelf-hi .goods { height: 48px; }
+    .shelf-hi .tin { width: 15px; height: 28px; }
+    .shelf-hi .bottle { width: 10px; height: 34px; }
+    .shelf-hi .paper { width: 13px; height: 22px; }
+    .counter .icebox { width: 84px; height: 58px; top: 50px; }
     .chef-bubble { max-width: 170px; font-size: .78rem; bottom: 208px; left: 10px; }
     .cup-stage { bottom: 128px; }
     .tool { left: 150px; bottom: 138px; }
@@ -508,34 +668,31 @@
 <div class="kitchen" id="kitchen">
  <div class="kitchen-3d" id="kitchen3d">
   <div class="wall">
-    <!-- upper cabinets, an open shelf of jars, and a clock -->
-    <div class="cabinets">
-      <div class="cab door pink"></div>
-      <div class="clock"></div>
-      <div class="cab open">
-        <span class="jar" style="height:30px;background:#C2334D;--d:0s"></span>
-        <span class="jar" style="height:38px;background:#8A5525;--d:.5s"></span>
-        <span class="jar" style="height:26px;background:#5C8A4A;--d:1s"></span>
-        <span class="jar" style="height:34px;background:#D19A1D;--d:1.5s"></span>
-        <span class="jar" style="height:28px;background:#8E6BAF;--d:2s"></span>
+    <div class="tiles"></div>
+
+    <!-- dark wood shelf on steel brackets: matcha tins, syrups, paper cups -->
+    <div class="shelf-hi">
+      <i class="brk" style="left:12%"></i><i class="brk" style="right:12%"></i>
+      <div class="goods">
+        <span class="tin"></span><span class="tin"></span><span class="tin"></span>
+        <span class="bottle" style="--b:#C9A227"></span>
+        <span class="bottle" style="--b:#B8324A"></span>
+        <span class="tin"></span>
+        <span class="paper"></span><span class="paper"></span>
+        <span class="bottle" style="--b:#7FA05C"></span>
       </div>
-      <div class="cab door"></div>
+      <div class="plank"></div>
     </div>
 
-    <!-- utensils hanging off a rail, the way a real kitchen reads -->
-    <div class="hangrail">
-      <div class="bar-h"></div>
-      <div class="hook" style="left:6%;--d:0.0s"><i></i><u style="background:#E0879F"></u></div>
-      <div class="hook" style="left:18%;--d:0.5s"><i></i><u style="background:#79C3B8;border-radius:12px 12px 4px 4px"></u></div>
-      <div class="hook" style="left:30%;--d:0.9s"><i></i><u style="background:#F0C36B;border-radius:50% 50% 6px 6px"></u></div>
-      <div class="hook" style="right:30%;--d:1.4s"><i></i><u style="background:#A9DED6"></u></div>
-      <div class="hook" style="right:18%;--d:1.8s"><i></i><u style="background:#F4B6C6;border-radius:12px 12px 4px 4px"></u></div>
-      <div class="hook" style="right:6%;--d:2.2s"><i></i><u style="background:#C79E68;border-radius:50% 50% 6px 6px"></u></div>
+    <!-- the syrup rack: 1883 and Monin, black pumps -->
+    <div class="pumps">
+      <span style="--b:#D9A6B4"></span><span style="--b:#8E2F45"></span>
+      <span style="--b:#3E5C8A"></span><span style="--b:#C2334D"></span>
+      <span style="--b:#EDE7DC"></span>
     </div>
 
-    <div class="splash"></div>
     <div class="rail" id="rail"></div>
-    <div class="steam" style="left:46%;bottom:36px">
+    <div class="steam" style="left:26%;bottom:16px">
       <i style="--sx:-12px;animation-delay:0s"></i>
       <i style="--sx:8px;left:12px;animation-delay:1.1s"></i>
       <i style="--sx:16px;left:24px;animation-delay:2.2s"></i>
@@ -545,9 +702,34 @@
   <div class="side l"></div>
   <div class="side r"></div>
 
+  <!-- the espresso machine: wide, low, brushed steel, three groups -->
+  <div class="cimbali">
+    <div class="cim-body">
+      <div class="cim-badge"><b>LA CIMBALI</b><em>SILVER</em></div>
+      <div class="cim-keys"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="cim-keys r"><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="cim-groups">
+      <div class="grp"><span class="head"></span><span class="pf"></span></div>
+      <div class="grp"><span class="head"></span><span class="pf"></span></div>
+      <div class="grp"><span class="head"></span><span class="pf"></span></div>
+    </div>
+    <div class="cim-wand"></div>
+    <div class="cim-tray"></div>
+    <div class="cim-feet"><i></i><i></i></div>
+  </div>
+
+  <!-- the grinder beside it, hopper full -->
+  <div class="grinder">
+    <div class="hopper"></div>
+    <div class="gr-body"><span class="screen"></span></div>
+    <div class="gr-fork"></div>
+  </div>
+
   <div class="counter">
     <div class="top"></div><div class="lip"></div><div class="grain"></div>
     <div class="doors"><span></span><span></span><span></span><span></span></div>
+    <div class="icebox"><span class="ib-screen"></span><span class="ib-vent"></span></div>
   </div>
 
   <!-- every ingredient in the drink, out on the bench where you can see it -->
