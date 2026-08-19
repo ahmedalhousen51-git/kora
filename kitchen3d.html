@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>المطبخ 3D — Kora</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/theme.css">
+<style>
+  body { overflow: hidden; }
+  .k3-top { background: linear-gradient(120deg, var(--gray-950), var(--wine-900)); color: #fff; padding: 10px 0; }
+  .k3-top .container { display: flex; align-items: center; justify-content: space-between; }
+  .k3-tag { font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--wine-300); }
+
+  .k3-wrap { position: relative; height: calc(100svh - 58px); }
+  #stage { position: absolute; inset: 0; }
+
+  /* the station the barista is standing at */
+  .k3-station {
+    position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(14px);
+    background: rgba(20,17,15,.86); color: #fff; backdrop-filter: blur(10px);
+    padding: 12px 22px; border-radius: 16px; font-weight: 700; font-size: 1rem;
+    opacity: 0; transition: opacity .25s ease, transform .25s ease; pointer-events: none;
+    box-shadow: 0 18px 40px rgba(0,0,0,.4);
+  }
+  .k3-station.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .k3-station small { display: block; font-weight: 500; font-size: .74rem; opacity: .72; margin-top: 3px; }
+
+  /* the stock you picked, riding along with you */
+  .k3-hud {
+    position: absolute; top: 16px; inset-inline-start: 16px; width: 190px;
+    background: rgba(253,251,249,.94); border-radius: var(--r-lg);
+    box-shadow: 0 18px 40px rgba(60,40,25,.3); padding: 14px 14px 12px;
+    color: var(--text);
+  }
+  .k3-hud h3 { font-size: .84rem; margin-bottom: 8px; }
+  .k3-hud button {
+    display: flex; width: 100%; align-items: center; gap: 8px; margin-bottom: 6px;
+    padding: 8px 10px; border-radius: 10px; border: 1.5px solid var(--border);
+    background: #fff; font-family: inherit; font-size: .78rem; font-weight: 600;
+    color: var(--text); cursor: pointer; text-align: start;
+  }
+  .k3-hud button:hover { border-color: var(--wine-300); transform: translateX(-2px); }
+  .k3-hud button i { width: 11px; height: 11px; border-radius: 50%; background: var(--c); flex: none; }
+
+  .k3-help {
+    position: absolute; top: 16px; inset-inline-end: 16px;
+    background: rgba(20,17,15,.7); color: #fff; padding: 9px 14px;
+    border-radius: 12px; font-size: .74rem; line-height: 1.7;
+  }
+  .k3-fallback { display: none; padding: 60px 20px; text-align: center; }
+  @media (max-width: 760px) {
+    .k3-hud { width: 148px; padding: 10px; }
+    .k3-help { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="k3-top">
+  <div class="container">
+    <div id="brandSlot"></div>
+    <span class="k3-tag">امشي في المطبخ</span>
+  </div>
+</div>
+
+<div class="k3-wrap">
+  <div id="stage"></div>
+
+  <div class="k3-hud">
+    <h3>المخزون</h3>
+    <div id="hud"></div>
+  </div>
+
+  <div class="k3-help">
+    الأسهم للمشي<br>أو دوس على الأرض
+  </div>
+
+  <div class="k3-station" id="stationTag"></div>
+
+  <div class="k3-fallback" id="fallback">
+    <h2>الجهاز ده مش شايل الرسم ثلاثي الأبعاد</h2>
+    <p class="muted">افتح <a href="kitchen-sim.html">المطبخ العادي</a> — نفس اللعبة بالظبط.</p>
+  </div>
+</div>
+
+<script src="assets/supabase-config.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/character.js"></script>
+<script src="assets/ui.js"></script>
+<script src="assets/kitchen3d.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  $('brandSlot').innerHTML = KoraUI.brandMark({ size: 26, tagline: false, onDark: true });
+
+  if (!KoraKitchen3D.supported()) {
+    $('stage').style.display = 'none';
+    $('fallback').style.display = 'block';
+    return;
+  }
+
+  /* The stock the bar actually carries, each tied to the machine that serves
+     it — picking one walks the barista over to that station. */
+  const STOCK = [
+    { k: 'espresso', n: 'إسبريسو', c: '#3B2318', at: 'espresso' },
+    { k: 'beans',    n: 'بن للطحن', c: '#5C3A22', at: 'grinder' },
+    { k: 'syrup',    n: 'سيرب 1883', c: '#C2334D', at: 'syrup' },
+    { k: 'milk',     n: 'لبن',      c: '#F3E3CB', at: 'blender' },
+    { k: 'ice',      n: 'تلج',      c: '#CFE7F5', at: 'ice' },
+    { k: 'tea',      n: 'شاي وبوبا', c: '#B4763C', at: 'brew' }
+  ];
+
+  let api = null;
+  $('hud').innerHTML = STOCK.map(s =>
+    `<button data-go="${s.at}"><i style="--c:${s.c}"></i>${s.n}</button>`).join('');
+  $('hud').querySelectorAll('[data-go]').forEach(b => {
+    b.onclick = () => { if (api) api.goTo(b.dataset.go); };
+  });
+
+  KoraKitchen3D.mount($('stage'), {
+    onStation(st) {
+      const tag = $('stationTag');
+      if (!st) { tag.classList.remove('on'); return; }
+      tag.innerHTML = st.label + '<small>دوس عشان تشتغل عليها</small>';
+      tag.classList.add('on');
+    }
+  }).then(a => {
+    api = a;
+    if (!a) { $('stage').style.display = 'none'; $('fallback').style.display = 'block'; }
+  });
+})();
+</script>
+</body>
+</html>
