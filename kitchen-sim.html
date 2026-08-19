@@ -443,6 +443,10 @@
   .cup-stage { position: absolute; left: 50%; margin-left: -58px; bottom: 156px;
     width: 116px; height: 156px; z-index: 6; transform-style: preserve-3d;
     transform: translateZ(50px); }
+
+  /* once the WebGL cup mounts, the CSS one steps aside */
+  .cup-stage.gl-on .cup3d { opacity: 0; transition: opacity .4s ease; }
+  .cup-stage.gl-on { overflow: visible; }
   .cup-stage.hide-cup { opacity: 0; pointer-events: none; }
   .cup-stage.grabbable { cursor: grab; }
   .cup-stage.grabbing { cursor: grabbing; }
@@ -560,6 +564,22 @@
   .style-pick .sp-ic { font-size: 1.3rem; }
   .style-pick:hover { transform: translateY(-3px); border-color: var(--k-pink); }
   .style-pick.on { background: var(--k-pink-d); border-color: var(--k-pink-d); color: #fff; }
+
+
+  /* the taste profile, read off what actually went in */
+  .balance { margin-bottom: 12px; }
+  .balance .bl { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; direction: rtl; }
+  .balance .bl span { font-size: .72rem; font-weight: 700; color: var(--text-soft); width: 38px; }
+  .balance .bl i { flex: 1; height: 8px; border-radius: 5px; background: #E7DACE; overflow: hidden; }
+  .balance .bl b { display: block; height: 100%; border-radius: 5px; transition: width .5s cubic-bezier(.2,.9,.3,1); }
+  .balance .bl u { font-size: .7rem; font-weight: 700; text-decoration: none; color: var(--text-soft); width: 24px; text-align: left; }
+  .balance .shotline {
+    margin-top: 8px; font-size: .72rem; font-weight: 700; direction: rtl;
+    padding: 5px 9px; border-radius: 8px; background: #F1E7DC; color: var(--text-soft);
+  }
+  .balance .shotline.perfect { background: #E4F2EA; color: var(--success); }
+  .balance .shotline.sour    { background: #FBF0DC; color: var(--warn); }
+  .balance .shotline.bitter  { background: #FBE7E8; color: var(--danger); }
 
   /* Dragging is the fun way; these are the accurate way. Numbers stay LTR so
      "-20 -5 +5 +20" reads in the order you expect inside the RTL card. */
@@ -760,6 +780,7 @@
 <script src="assets/kitchen-art.js"></script>
 <script src="assets/sfx.js"></script>
 <script src="assets/scene3d.js"></script>
+<script src="assets/cup3d-gl.js"></script>
 <script src="assets/kitchen-tools.js"></script>
 <script>
 (function () {
@@ -969,8 +990,34 @@
   const FRUITY = (C.families && C.families['@fruit'] || []);
   const sumOf = keys => keys.reduce((t, k) => t + amt(k), 0);
 
+  /* The WebGL cup renders on top of the CSS one and is fed the same state.
+     Its canvas ignores pointer events, so grabbing the cup to shake it still
+     lands on the DOM element underneath and every mechanic is untouched.
+     If WebGL or the CDN is missing, gl stays null and the CSS cup shows. */
+  let gl = null;
+  if (global_KoraGL_ok()) {
+    KoraGL.mount(cupEl).then(api => {
+      if (!api) return;
+      gl = api;
+      cupEl.classList.add('gl-on');
+      paintCup();
+    });
+  }
+  function global_KoraGL_ok() { return typeof KoraGL !== 'undefined' && KoraGL.supported(); }
+
   function paintCup() {
     const cap = capacity();
+    const glState = {
+      layers: [
+        { amount: Math.min(1, sumOf(SUNK) / cap),   color: '#7A3F14' },
+        { amount: Math.min(1, (sumOf(BREWY) + sumOf(FRUITY)) / cap), color: '#B4763C' },
+        { amount: Math.min(1, sumOf(MILKY) / cap),  color: '#F3E3CB' }
+      ],
+      ice: Math.min(1, amt('ice') / 200),
+      pearls: Math.min(16, Math.round(amt('tapioca') / 6)),
+      sealed: V.sealed
+    };
+    if (gl) gl.set(glState);
     Kora3D.setCup(cup3d, {
       layers: [
         { amount: Math.min(1, sumOf(SUNK) / cap),   color: '#7A3F14' },
@@ -1006,6 +1053,66 @@
       if (h) h.style.transform = 'rotate(' + headNow.toFixed(2) + 'deg) translateX(' + (headNow * .5).toFixed(2) + 'px)';
       if (Math.abs(headTarget - headNow) < .12) { clearInterval(headTimer); headTimer = 0; }
     }, 30);
+  }
+
+
+  /* =====================================================================
+     Barista science — the numbers the game judges you against.
+     Espresso: SCA puts a good extraction between 18% and 22% yield. In the
+     cup that is an 18 g dose pulled to about 36 g in 25–30 s; run it faster
+     and it comes out sour and thin, drag it out and it turns bitter and dry.
+     Matcha: usucha is 1.5–2 g whisked into 60–80 ml of 70–80°C water, in a
+     rapid W from the wrist for 20–40 s. Boiling water scorches it bitter.
+     ===================================================================== */
+  const SCIENCE = {
+    shot: { lo: 25, hi: 30, floor: 20, ceil: 35 },   // seconds, as on the machine
+    shotScale: 9,   // 3 s of holding reads as a 27 s extraction
+    whisk: { strokes: 22, lo: 20, hi: 40 }            // strokes, seconds
+  };
+
+  function shotVerdict(sec, ml) {
+    if (!sec) return null;
+    if (sec < SCIENCE.shot.floor) return { k: 'sour',  t: 'جرى بسرعة — الشوت طلع حامض وخفيف 😖' };
+    if (sec > SCIENCE.shot.ceil)  return { k: 'bitter', t: 'اتأخر كتير — طلع مُر وناشف 😬' };
+    if (sec >= SCIENCE.shot.lo && sec <= SCIENCE.shot.hi)
+      return { k: 'perfect', t: 'زمن مظبوط! ' + Math.round(sec) + ' ثانية — ده الاستخلاص الصح 👌' };
+    return { k: 'ok', t: 'ماشي، بس صوّب على 25–30 ثانية' };
+  }
+
+  /* Sugar and bitterness, read off what actually went in the cup. */
+  const SWEET_W = { cane_sugar:1, brown_sugar_syrup:.9, vanilla_syrup:.8, cinnamon_syrup:.8,
+                    pistachio_syrup:.8, flavour_syrup:.8, fruit_syrup:.8, salted_caramel:.85,
+                    caramel_sauce:.85, condensed_milk:.9, lotus_spread:.8, nutella:.75,
+                    kinder_spread:.8, white_chocolate:.8, oreo_crumb:.6, vanilla_ice_cream:.5 };
+  const BITTER_W = { espresso:1, coffee_beans:.6, matcha:1.4, dark_chocolate:.5,
+                     black_tea:.25, green_tea:.2, turkish_coffee:1.1 };
+  function balance() {
+    let s = 0, b = 0;
+    Object.keys(V.amt).forEach(k => {
+      const v = amt(k);
+      if (SWEET_W[k])  s += v * SWEET_W[k];
+      if (BITTER_W[k]) b += v * BITTER_W[k];
+    });
+    // a long or short shot moves the bitterness
+    const vd = shotVerdict(V.shotTime, amt('espresso'));
+    if (vd && vd.k === 'bitter') b *= 1.35;
+    if (vd && vd.k === 'sour')   b *= .7;
+    return { sweet: Math.min(100, Math.round(s / 1.1)), bitter: Math.min(100, Math.round(b / .9)) };
+  }
+
+  /* A cartoon Egyptian name, earned from the profile of the drink. */
+  function egyptianName() {
+    const B = balance();
+    const has = k => amt(k) > 0;
+    let head;
+    if (B.sweet > 70 && B.bitter < 25)      head = pick(['سكر زيادة', 'دلع', 'حلاوة روح']);
+    else if (B.bitter > 65)                 head = pick(['مقلب الصحيان', 'مُر وجدع', 'صاحي']);
+    else if (has('matcha'))                 head = pick(['أخضر الليل', 'ماتشا يا حلاوة']);
+    else if (amt('tapioca') > 70)           head = pick(['بوبا فوق البوبا', 'كرات المزاج']);
+    else if (B.sweet > 45 && B.bitter > 40) head = pick(['حلو ومُر', 'الوسط الذهبي']);
+    else                                    head = pick(['التركيبة', 'الخلطة', 'شغل إيد']);
+    const tail = V.name ? (' بتاعة ' + V.name) : '';
+    return head + tail;
   }
 
   /* ---------------- the ingredient bench ----------------
@@ -1178,13 +1285,15 @@
     const P = { on: false, raf: 0 };
 
     // Pour rate is per second, not per frame, so it feels the same on a
-    // 60Hz laptop and a 120Hz phone.
-    const RATE = opts.solid ? 72 : 95;
+    // 60Hz laptop and a 120Hz phone. The espresso group runs deliberately
+    // slow — the whole point of that station is holding it for the right beat.
+    const RATE = station.recipeKey === 'espresso' ? 13 : (opts.solid ? 72 : 95);
 
     function start() {
       if (P.on) return;
       P.on = true;
       P.last = performance.now();
+      if (!P.t0) P.t0 = performance.now();   // the shot clock starts on first flow
       api.el.style.transform = 'rotate(' + cfg.tilt + 'deg)';
       $('chef').classList.add('busy');
       chefFace({ mouth: 'grin', eyes: 'happy' });
@@ -1225,6 +1334,17 @@
       onMove: on => { if (on) start(); else stop(); },
       onDrop: wasOver => {
         stop(); api.goHome();
+        // an espresso is judged on time as much as volume
+        if (station.recipeKey === 'espresso' && P.t0) {
+          V.shotTime = ((performance.now() - P.t0) / 1000) * SCIENCE.shotScale;
+          const vd = shotVerdict(V.shotTime, amt('espresso'));
+          if (vd) {
+            say(vd.t, 5200, vd.k === 'perfect' ? 'happy' : 'shock');
+            if (vd.k === 'perfect') { celebrate(); KoraSFX.success(); } else KoraSFX.ohNo();
+          }
+          refresh(station);
+          return;
+        }
         if (opts.onDrop) opts.onDrop(wasOver);
         else judge(station);
       }
@@ -1332,15 +1452,24 @@
       const dx = e.clientX - S.lastX;
       if (Math.abs(dx) < 9) return;
       const d = dx > 0 ? 1 : -1;
-      if (S.dir && d !== S.dir && !V.shaken) {      // each change of direction is one shake
-        V.shakes = Math.min(12, V.shakes + 1);
+      if (S.dir && d !== S.dir && !V.shaken) {      // each change of direction is one stroke
+        const need = station.type === 'whisk' ? SCIENCE.whisk.strokes : 12;
+        V.shakes = Math.min(need, V.shakes + 1);
         KoraSFX.rattle();
         refresh(station);
-        if (V.shakes >= 12 && !V.shaken) {
+        if (V.shakes >= need && !V.shaken) {
           V.shaken = true;
+          V.whiskTime = (Date.now() - S.t0) / 1000;
           refresh(station);          // re-paint so the Next button unlocks
           celebrate(); KoraSFX.success();
-          say('كده اتخلطت صح! 🎉', 4200, 'happy');
+          if (station.type === 'whisk') {
+            // usucha wants 20–40 s of fast W strokes from the wrist
+            const t = V.whiskTime;
+            say(t < SCIENCE.whisk.lo
+                  ? 'خفقت بسرعة — الرغوة مطلعتش كفاية، كمّل شوية'
+                  : 'رغوة ناعمة ومتساوية — كده الماتشا صح 🍵',
+                4600, 'happy');
+          } else say('كده اتخلطت صح! 🎉', 4200, 'happy');
         }
       }
       // shaking well past the point it is mixed
@@ -1434,9 +1563,12 @@
         t.className = 'target' + (good ? ' good' : '');
         t.textContent = good ? '✓ مظبوطة كده' : 'صوّب على ' + z.lo + '–' + z.hi + ' ' + s.unit;
       }
-    } else if (s.type === 'shake') {
-      const bar = $('bar'); if (bar) bar.style.width = (V.shakes / 12 * 100) + '%';
-      const ro = $('ro'); if (ro) ro.textContent = V.shaken ? 'اتخلطت!' : V.shakes + '/12';
+    } else if (s.type === 'shake' || s.type === 'whisk') {
+      const need = s.type === 'whisk' ? SCIENCE.whisk.strokes : 12;
+      const bar = $('bar'); if (bar) bar.style.width = (V.shakes / need * 100) + '%';
+      const ro = $('ro');
+      if (ro) ro.textContent = V.shaken ? (s.type === 'whisk' ? 'رغوة جاهزة!' : 'اتخلطت!')
+                                        : V.shakes + '/' + need;
     } else if (s.type === 'multi') {
       const ro = $('ro'); if (ro) ro.textContent = V.toppings.length ? V.toppings.join(' · ') : 'لسه مفيش';
     } else if (s.type === 'scoops') {
@@ -1456,7 +1588,7 @@
     if (OPTIONAL) return true;
     if (s.type === 'scoops' || s.id === 'cup') return true;
     if (s.type === 'range') return amt(s.recipeKey) >= (s.target || 0) * .45;
-    if (s.type === 'shake') return V.shaken;
+    if (s.type === 'shake' || s.type === 'whisk') return V.shaken;
     return true;
   }
 
@@ -1509,9 +1641,12 @@
           <button class="preset-btn" data-preset="high">كتير</button>
         </div>
         <button class="step-reset" data-reset="1">فضّي الخطوة دي</button>`;
-    } else if (s.type === 'shake') {
-      html += `<div class="readout" id="ro">${V.shaken ? 'اتخلطت!' : V.shakes + '/12'}</div>
-        <div class="target">امسك الكوباية ورجّها يمين وشمال</div>
+    } else if (s.type === 'shake' || s.type === 'whisk') {
+      const need = s.type === 'whisk' ? SCIENCE.whisk.strokes : 12;
+      html += `<div class="readout" id="ro">${V.shaken ? (s.type==='whisk'?'رغوة جاهزة!':'اتخلطت!') : V.shakes + '/' + need}</div>
+        <div class="target">${s.type === 'whisk'
+          ? 'حرّك المضرب يمين وشمال بسرعة — حرف W من الرسغ، مش من الدراع'
+          : 'امسك الكوباية ورجّها يمين وشمال'}</div>
         <div class="gauge shake-meter"><div class="bar" id="bar"></div></div>`;
     } else if (s.type === 'multi') {
       html += `<div class="readout" id="ro" style="font-size:1.05rem">لسه مفيش</div>
@@ -1532,13 +1667,20 @@
                      : (off > 0 ? ' (+' + off + '%)' : ' (' + off + '%)');
           return `<b>${L.n}</b> <span>${Math.round(amt(k))} ${L.u}${note}</span>`;
         }).join('<br>');
-      html += `<div class="recap">
+      const B = balance();
+      const vd = shotVerdict(V.shotTime, amt('espresso'));
+      html += `<div class="balance">
+          <div class="bl"><span>حلاوة</span><i><b style="width:${B.sweet}%;background:linear-gradient(90deg,#E0A020,#F0C36B)"></b></i><u>${B.sweet}</u></div>
+          <div class="bl"><span>مرارة</span><i><b style="width:${B.bitter}%;background:linear-gradient(90deg,#4E2E1E,#8A5525)"></b></i><u>${B.bitter}</u></div>
+          ${vd ? `<div class="shotline ${vd.k}">⏱ ${Math.round(V.shotTime)} ث — ${
+            vd.k==='perfect'?'استخلاص مظبوط':vd.k==='sour'?'سريع/حامض':vd.k==='bitter'?'بطيء/مُر':'مقبول'}</div>` : ''}
+        </div>
+        <div class="recap">
           <b>المشروب</b> <span>${(MENU_ITEM && MENU_ITEM.name) || 'اختراع جديد'}</span><br>
           <b>الكوباية</b> <span>${V.cup}</span><br>
           ${lines || '<span>الكوباية لسه فاضية</span>'}
         </div>
-        <input class="input" id="drinkName" placeholder="سمّي اختراعك"
-               value="${V.name ? V.name + '’s blend' : ''}">`;
+<input class="input" id="drinkName" placeholder="سمّي اختراعك" value="${egyptianName()}">`;
     }
 
     html += `<div class="acts">`;
@@ -1556,7 +1698,7 @@
 
     /* hand over the tool this station calls for */
     if (s.id === 'cup') makeChoices(s);
-    else if (s.type === 'shake') tool = makeShaker(s);
+    else if (s.type === 'shake' || s.type === 'whisk') tool = makeShaker(s);
     else if (s.id === 'seal') { V.sealed = false; paintCup(); tool = makeLid(s); }
     else if (s.type === 'range') {
       const solid = s.tool === 'iceScoop' || s.tool === 'pearlScoop';
@@ -1695,10 +1837,15 @@
       const v = Math.round(amt(k));
       if (v > 0) poured[k] = v;
     });
+    const B = balance();
+    const vd = shotVerdict(V.shotTime, amt('espresso'));
     const madeByHand = {
       drink: (MENU_ITEM && MENU_ITEM.name) || null,
       cup: V.cup, poured: poured, target: RECIPE,
-      shaken: V.shaken, sealed: V.sealed
+      shaken: V.shaken, sealed: V.sealed,
+      shotSeconds: V.shotTime ? Math.round(V.shotTime) : null,
+      extraction: vd ? vd.k : null,
+      sweet: B.sweet, bitter: B.bitter
     };
 
     // Play mode still counts: the measurements ride back with the drink so

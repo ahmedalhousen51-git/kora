@@ -227,8 +227,14 @@
 @keyframes shot-in { from { opacity: 0; } to { opacity: 1; } }
 
 @media (max-width: 860px) {
-  .shot-main { width: 78%; left: 2%; }
-  .shot-back { width: 132px; right: 0; top: 4%; }
+  /* The figures are absolutely positioned, so in a single-column stage the
+     wrapper collapses to zero and the photo lands on top of the text. It needs
+     a height of its own here. */
+  .story-shot { height: 330px; }
+  .shot-main { width: 60%; left: 5%; aspect-ratio: 4 / 5; }
+  .shot-back { width: 104px; right: 4%; top: 6%; }
+  .shot-main figcaption { padding: 30px 14px 12px; font-size: .74rem; }
+  .story-stage { align-content: start; padding-top: 8vh; }
 }
 
 /* --------------------------------------------------------- how it works - */

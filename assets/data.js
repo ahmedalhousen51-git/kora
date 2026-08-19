@@ -401,7 +401,7 @@ window.KORA_SEED = {
     extract: { title:'اسحب الشوت', hint:'الـCimbali. اقلب الحامل فوق الكوباية وسيبه يجري.', type:'range', unit:'مل', key:'espresso', tool:'kettle' },
     turkish: { title:'اغلي القهوة التركي', hint:'على السخّان، وخليك واقف — بتفور فجأة.', type:'range', unit:'مل', key:'water', tool:'kettle' },
     brew:    { title:'اسقي الشاي', hint:'من الحلة اللي على السخّان.', type:'range', unit:'مل', key:'@tea', tool:'kettle' },
-    whisk:   { title:'اخفق الماتشا', hint:'من علبة الماتشا اللي على الرف.', type:'range', unit:'جم', key:'matcha', tool:'pearlScoop' },
+    whisk:   { title:'اخفق الماتشا', hint:'حرّك المضرب بسرعة على شكل W من الرسغ — 20 لـ40 ثانية.', type:'whisk', unit:'خفقة', key:'matcha', tool:'pearlScoop' },
     steam:   { title:'بخّر اللبن', hint:'لحد ما يسخن ويلمع — متغليهوش.', type:'range', unit:'مل', key:'steamed_milk', tool:'jug' },
     milk:    { title:'صب اللبن', hint:'بارد، على مهلك عشان الشكل يطلع حلو.', type:'range', unit:'مل', key:'@milk', tool:'jug' },
     syrup:   { title:'مضخات 1883', hint:'كل ضغطة حوالي 5 مل.', type:'range', unit:'مل', key:'@syrup', tool:'pump' },

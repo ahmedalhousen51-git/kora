@@ -193,7 +193,17 @@
         if (k.ice) rows['Ice'] = Math.round(k.ice) + ' g';
         (k.toppings || []).forEach(t => { rows[t] = 'portion'; });
       }
-      return { rows, note: '✋ Made by the customer · ' + (k.cup || '') + (k.shaken ? ' · shaken' : '') };
+      // how it was pulled matters as much as what went in
+      const bits = ['✋ Made by the customer', k.cup || null];
+      if (k.shotSeconds) {
+        const verdict = k.extraction === 'perfect' ? 'in the window'
+                      : k.extraction === 'sour'   ? 'ran fast — sour'
+                      : k.extraction === 'bitter' ? 'ran long — bitter' : '';
+        bits.push('shot ' + k.shotSeconds + 's' + (verdict ? ' · ' + verdict : ''));
+      }
+      if (k.sweet != null) bits.push('sweet ' + k.sweet + ' / bitter ' + k.bitter);
+      if (k.shaken) bits.push('shaken');
+      return { rows, note: bits.filter(Boolean).join(' · ') };
     }
 
     const m = C.menu.find(x => x.id === item.menu_id);
