@@ -108,36 +108,54 @@
 
     const state = { layers: [], ice: 0, pearls: 0, sealed: false };
 
-    function rebuild() {
-      [liquids, pearls, ices].forEach(g => {
-        while (g.children.length) {
-          const c = g.children.pop();
-          c.geometry.dispose(); c.material.dispose(); g.remove(c);
-        }
-      });
+    /* Pouring calls set() on every frame. Tearing the meshes down and building
+       them again each time made the boba and ice jump to fresh random spots
+       sixty times a second — which is what "elements coming and going" was.
+       So the solids are only rebuilt when their COUNT changes; the liquid,
+       which really does change continuously, is just rescaled in place. */
+    let builtPearls = -1, builtIce = -1;
+    const stats = { solidRebuilds: 0 };   // for tests: should not climb while pouring
 
-      // stacked layers, each sitting on the one below
-      let base_ = 0;
+    function reflowLiquid() {
+      let base_ = 0, i = 0;
       state.layers.forEach(L => {
         const a = Math.max(0, Math.min(1, L.amount || 0));
-        if (a < 0.004) return;
-        const y0 = base_, y1 = Math.min(1, base_ + a);
-        const hh = (y1 - y0) * H;
-        if (hh <= 0) return;
-        const m = new THREE.Mesh(
-          new THREE.CylinderGeometry(radAt(y1) * 0.965, radAt(y0) * 0.965, hh, 40),
-          new THREE.MeshPhysicalMaterial({
-            color: new THREE.Color(L.color || '#B4763C'),
-            roughness: 0.22, transmission: 0.25, thickness: 0.6,
-            transparent: true, opacity: 0.96
-          }));
-        m.position.y = -H / 2 + y0 * H + hh / 2;
-        liquids.add(m);
-        base_ = y1;
+        const m = liquids.children[i];
+        if (a < 0.004) { if (m) m.visible = false; i++; return; }
+        const y0 = base_, y1 = Math.min(1, base_ + a), hh = (y1 - y0) * H;
+        if (m) {
+          m.visible = true;
+          m.scale.y = Math.max(0.001, hh);          // unit-height geometry
+          m.position.y = -H / 2 + y0 * H + hh / 2;
+          m.material.color.set(L.color || '#B4763C');
+        }
+        base_ = y1; i++;
       });
+      for (; i < liquids.children.length; i++) liquids.children[i].visible = false;
+      return base_;
+    }
 
-      // boba settling on the bottom
+    function rebuild() {
+      // one unit-height cylinder per layer slot, made once and then scaled
+      while (liquids.children.length < state.layers.length) {
+        const m = new THREE.Mesh(
+          new THREE.CylinderGeometry(RT * 0.94, RB * 0.94, 1, 40),
+          new THREE.MeshPhysicalMaterial({
+            color: 0xB4763C, roughness: 0.22, transmission: 0.25,
+            thickness: 0.6, transparent: true, opacity: 0.96
+          }));
+        liquids.add(m);
+      }
+      const base_ = reflowLiquid();
+
+      // boba settling on the bottom — only rebuilt when the count changes
       const pn = Math.max(0, Math.min(16, Math.round(state.pearls)));
+      if (pn !== builtPearls) {
+        builtPearls = pn; stats.solidRebuilds++;
+        while (pearls.children.length) {
+          const c = pearls.children.pop();
+          c.geometry.dispose(); c.material.dispose(); pearls.remove(c);
+        }
       const pMat = new THREE.MeshStandardMaterial({ color: 0x2c1a13, roughness: 0.35 });
       for (let i = 0; i < pn; i++) {
         const s = new THREE.Mesh(new THREE.SphereGeometry(0.15, 14, 12), pMat.clone());
@@ -146,10 +164,17 @@
         s.position.set(Math.cos(ang) * rr, -H / 2 + 0.17 + row * 0.27, Math.sin(ang) * rr);
         pearls.add(s);
       }
+      }
 
       // ice riding on the surface of whatever is in the cup
       const inN = Math.round(Math.max(0, Math.min(1, state.ice)) * 7);
       const top = Math.max(0.1, base_);
+      if (inN !== builtIce) {
+        builtIce = inN; stats.solidRebuilds++;
+        while (ices.children.length) {
+          const c = ices.children.pop();
+          c.geometry.dispose(); c.material.dispose(); ices.remove(c);
+        }
       const iMat = new THREE.MeshPhysicalMaterial({
         color: 0xeaf6ff, roughness: 0.05, transmission: 0.75,
         thickness: 0.4, transparent: true, opacity: 0.75
@@ -159,9 +184,14 @@
         const ang = i / inN * Math.PI * 2 + 0.6;
         const rr = radAt(top) * 0.42;
         c.position.set(Math.cos(ang) * rr, -H / 2 + top * H - 0.1 + (i % 2) * 0.2, Math.sin(ang) * rr);
-        c.rotation.set(Math.random(), Math.random(), Math.random());
+        c.rotation.set(i * 1.1, i * 0.7, i * 1.9);   // stable, not re-rolled
         ices.add(c);
       }
+      }
+      // the ice rides the surface, so it moves even when it is not rebuilt
+      ices.children.forEach((c, i) => {
+        c.position.y = -H / 2 + top * H - 0.1 + (i % 2) * 0.2;
+      });
 
       capG.visible = !!state.sealed;
     }
@@ -187,6 +217,7 @@
     rebuild();
     return {
       set(next) { Object.assign(state, next || {}); rebuild(); },
+      stats,
       nudge(v) { target = v || 0; },
       destroy() {
         cancelAnimationFrame(raf);

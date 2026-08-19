@@ -121,6 +121,8 @@
   .countdown { font-family: var(--ff-display); font-size: 3rem; font-weight: 700; letter-spacing: -.03em; }
 
   /* the live 3D cup on the tracking screen */
+  .track-cup-3d.gl-on { position: relative; height: 210px; }
+  .track-cup-3d.gl-on .cup3d { opacity: 0; transition: opacity .4s ease; }
   .track-cup-3d { display: flex; justify-content: center; margin: 26px auto 18px;
     perspective: 800px; }
   .track-cup-3d .cup3d { animation: track-turn 9s ease-in-out infinite; }
@@ -313,6 +315,7 @@
 <script src="assets/api.js"></script>
 <script src="assets/character.js"></script>
 <script src="assets/scene3d.js"></script>
+<script src="assets/cup3d-gl.js"></script>
 <script src="assets/ui.js"></script>
 <script>
 (function () {
@@ -772,9 +775,37 @@
   const STEPS = ['received', 'preparing', 'ready'];
   let lastStatus = null;
 
+  /* The tracking screen shows the same real 3D cup as the kitchen, filling as
+     the order moves along. If WebGL is missing, trackGL stays null and the
+     CSS cup keeps doing the job. */
+  let trackGL = null, lastTrackStatus = 'received';
+  const TRACK_FILL = { received: .2, preparing: .62, ready: .9 };
+  const trackCupState = s => ({
+    fill: TRACK_FILL[s] || .12,
+    pearls: s === 'received' ? 4 : 8,
+    sealed: s === 'ready'
+  });
+  function paintTrackCup(status) {
+    if (status) lastTrackStatus = status;
+    if (!trackGL || trackGL === 'pending') return;
+    const s = trackCupState(lastTrackStatus);
+    trackGL.set({
+      layers: [{ amount: s.fill * .45, color: '#7A3F14' },
+               { amount: s.fill * .55, color: '#C89A5E' }],
+      ice: 0, pearls: s.pearls, sealed: s.sealed
+    });
+  }
+
   function trackOrder(token, number) {
     $('tOrderNo').textContent = number;
     $('tCup').innerHTML = Kora3D.cup({ w: 118, h: 158, fill: .12, pearls: 4 });
+    if (!trackGL && typeof KoraGL !== 'undefined' && KoraGL.supported()) {
+      trackGL = 'pending';
+      KoraGL.mount($('tCup')).then(api => {
+        trackGL = api || null;
+        if (api) { $('tCup').classList.add('gl-on'); paintTrackCup(); }
+      });
+    }
     show('track');
     const poll = async () => {
       try {
@@ -799,13 +830,9 @@
     window._track.setAt = st.eta_set_at ? new Date(st.eta_set_at).getTime() : null;
 
     // the 3D cup fills up as the order moves along
-    const FILL = { received: .2, preparing: .62, ready: .9 };
     const c3 = $('tCup').querySelector('.cup3d');
-    Kora3D.setCup(c3, {
-      fill: FILL[st.status] || .12,
-      pearls: st.status === 'received' ? 4 : 8,
-      sealed: st.status === 'ready'
-    });
+    Kora3D.setCup(c3, trackCupState(st.status));
+    paintTrackCup(st.status);
     if (st.status === 'ready' && lastStatus !== 'ready') {
       c3.classList.remove('spin'); void c3.offsetWidth; c3.classList.add('spin');
     }
