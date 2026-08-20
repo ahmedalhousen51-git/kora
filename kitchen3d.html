@@ -11,6 +11,14 @@
   .k3-top { background: linear-gradient(120deg, var(--gray-950), var(--wine-900)); color: #fff; padding: 10px 0; }
   .k3-top .container { display: flex; align-items: center; justify-content: space-between; }
   .k3-tag { font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--wine-300); }
+  .k3-right { display: flex; align-items: center; gap: 12px; }
+  .k3-back {
+    display: inline-flex; padding: 7px 13px; border-radius: 999px; text-decoration: none;
+    background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.3);
+    color: #fff; font-size: .72rem; font-weight: 700; white-space: nowrap;
+    transition: background .15s ease;
+  }
+  .k3-back:hover { background: rgba(255,255,255,.26); }
 
   .k3-wrap { position: relative; height: calc(100svh - 58px); }
   #stage { position: absolute; inset: 0; }
@@ -77,7 +85,10 @@
 <div class="k3-top">
   <div class="container">
     <div id="brandSlot"></div>
-    <span class="k3-tag">امشي في المطبخ</span>
+    <div class="k3-right">
+      <a class="k3-back" href="kitchen-sim.html">رجوع للتحضير</a>
+      <span class="k3-tag">امشي في المطبخ</span>
+    </div>
   </div>
 </div>
 

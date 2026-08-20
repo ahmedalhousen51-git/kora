@@ -33,6 +33,22 @@
   .k-top { background: linear-gradient(120deg, var(--gray-950), var(--wine-900)); color: #fff; padding: 12px 0; }
   .k-top .container { display: flex; align-items: center; justify-content: space-between; }
   .k-mode { font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--wine-300); }
+  .k-top .container > .k-right { display: flex; align-items: center; gap: 12px; }
+  /* the way through to the walk-around room */
+  .k-3d {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 13px; border-radius: 999px; text-decoration: none;
+    background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.3);
+    color: #fff; font-size: .72rem; font-weight: 700; white-space: nowrap;
+    transition: background .15s ease, transform .15s ease;
+  }
+  .k-3d:hover { background: rgba(255,255,255,.26); transform: translateY(-1px); }
+  .k-3d b { font-size: .64rem; letter-spacing: .08em; opacity: .85; font-weight: 800; }
+  /* on a narrow bar the mode caption yields before the logo or the 3D door */
+  @media (max-width: 620px) {
+    .k-mode { display: none; }
+    .k-3d { padding: 6px 10px; font-size: .68rem; }
+  }
 
   .progress { display: flex; gap: 4px; max-width: 900px; margin: 12px auto 0; padding: 0 20px; }
   .progress i { flex: 1; height: 5px; border-radius: 3px; background: rgba(255,255,255,.22); transition: background .3s; }
@@ -679,7 +695,10 @@
 <div class="k-top">
   <div class="container">
     <div id="brandSlot"></div>
-    <span class="k-mode" id="modeTag"></span>
+    <div class="k-right">
+      <a class="k-3d" href="kitchen3d.html" title="امشي جوه المطبخ بنفسك">امشي في المطبخ <b>3D</b></a>
+      <span class="k-mode" id="modeTag"></span>
+    </div>
   </div>
 </div>
 
