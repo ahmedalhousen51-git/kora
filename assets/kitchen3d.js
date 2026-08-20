@@ -31,6 +31,35 @@
     return loading;
   }
 
+  /* Bloom, loaded separately and treated as a luxury.
+
+     Two traps here, both of which bite quietly:
+     · three's addons `import ... from 'three'` — a bare specifier the browser
+       cannot resolve on its own, so the page needs an import map naming the
+       exact same build URL. No map, no addons; we just render plainly.
+     · never patch `renderer.render` to call `composer.render()`. RenderPass
+       calls `renderer.render` itself, so the patch calls straight back into
+       the composer — the first frame dies on a stack overflow. The composer
+       is called from the animation loop instead, and nothing is monkeyed. */
+  const ADDONS = 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/';
+  let fx = null, fxLoading = null;
+  function loadFX() {
+    if (fxLoading) return fxLoading;
+    fxLoading = Promise.all([
+      import(ADDONS + 'postprocessing/EffectComposer.js'),
+      import(ADDONS + 'postprocessing/RenderPass.js'),
+      import(ADDONS + 'postprocessing/UnrealBloomPass.js')
+    ]).then(m => (fx = {
+      EffectComposer: m[0].EffectComposer,
+      RenderPass: m[1].RenderPass,
+      UnrealBloomPass: m[2].UnrealBloomPass
+    })).catch(e => {
+      console.warn('KoraKitchen3D: bloom unavailable, rendering plain —', e.message);
+      return null;
+    });
+    return fxLoading;
+  }
+
   /* Colours sampled off the photographs. */
   const C = {
     tile:   0xE6E2D8, grout: 0xC9C2B4, wallTop: 0xF3F1EC,
@@ -82,6 +111,21 @@
     fill.position.set(-7, 5, 9); scene.add(fill);
     const rim = new THREE.DirectionalLight(0xffc98a, .7);
     rim.position.set(-3, 6, -9); scene.add(rim);
+
+    /* Bloom kept subtle and high-threshold: only the genuinely bright things
+       — the steel, the grinder screen, the steam — pick up a glow. The room
+       itself must stay the bright beige it is in the photographs. */
+    let composer = null;
+    if (fx) {
+      try {
+        composer = new fx.EffectComposer(renderer);
+        composer.addPass(new fx.RenderPass(scene, cam));
+        composer.addPass(new fx.UnrealBloomPass(new THREE.Vector2(W, H), .26, .5, .85));
+      } catch (e) {
+        console.warn('KoraKitchen3D: composer failed, rendering plain —', e);
+        composer = null;
+      }
+    }
 
     const M = (c, r, m) => new THREE.MeshStandardMaterial({ color: c, roughness: r == null ? .8 : r, metalness: m || 0 });
     const box = (w, h, d, mat) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
@@ -512,7 +556,7 @@
       }
       cam.lookAt(camLook);
 
-      renderer.render(scene, cam);
+      if (composer) composer.render(); else renderer.render(scene, cam);
       raf = requestAnimationFrame(tick);
     }
     tick();
@@ -521,6 +565,7 @@
       const w = host.clientWidth || W, h = host.clientHeight || H;
       renderer.setSize(w, h, false);
       cam.aspect = w / h; cam.updateProjectionMatrix();
+      if (composer) composer.setSize(w, h);
     }
     const ro = ('ResizeObserver' in window) ? new ResizeObserver(resize) : null;
     if (ro) ro.observe(host);
@@ -539,6 +584,8 @@
         return true;
       },
       at() { return current ? current.id : null; },
+      /** false when the bloom addons could not load and we fell back to plain. */
+      bloom: !!composer,
       destroy() {
         cancelAnimationFrame(raf); if (ro) ro.disconnect();
         renderer.dispose(); renderer.domElement.remove();
@@ -549,13 +596,15 @@
   function mount(host, opts) {
     return load().then(m => {
       if (!m || !host) return null;
-      try {
-        return build(host, opts);
-      } catch (e) {
-        // a throw in here used to leave a blank canvas and no explanation
-        console.error('KoraKitchen3D: scene failed to build —', e);
-        return null;
-      }
+      return loadFX().then(() => {
+        try {
+          return build(host, opts);
+        } catch (e) {
+          // a throw in here used to leave a blank canvas and no explanation
+          console.error('KoraKitchen3D: scene failed to build —', e);
+          return null;
+        }
+      });
     });
   }
   global.KoraKitchen3D = { mount, supported: webglOK };

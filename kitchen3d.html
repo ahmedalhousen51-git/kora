@@ -6,6 +6,12 @@
 <title>المطبخ 3D — Kora</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/theme.css">
+<!-- three's postprocessing addons import a bare "three"; without this map the
+     browser cannot resolve it and the bloom pass silently never loads. The URL
+     must match the build kitchen3d.js imports, or you get two copies of three. -->
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js" } }
+</script>
 <style>
   body { overflow: hidden; }
   .k3-top { background: linear-gradient(120deg, var(--gray-950), var(--wine-900)); color: #fff; padding: 10px 0; }
