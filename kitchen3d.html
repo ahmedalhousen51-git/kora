@@ -29,19 +29,30 @@
   /* the stock you picked, riding along with you */
   .k3-hud {
     position: absolute; top: 16px; inset-inline-start: 16px; width: 190px;
-    background: rgba(253,251,249,.94); border-radius: var(--r-lg);
+    background: rgba(253,251,249,.94); backdrop-filter: blur(8px);
+    border-radius: var(--r-lg);
     box-shadow: 0 18px 40px rgba(60,40,25,.3); padding: 14px 14px 12px;
-    color: var(--text);
+    color: var(--text); max-height: 80vh; overflow-y: auto;
   }
-  .k3-hud h3 { font-size: .84rem; margin-bottom: 8px; }
+  .k3-hud h3 {
+    font-size: .84rem; margin-bottom: 10px;
+    border-bottom: 2px solid var(--wine-300); padding-bottom: 8px;
+  }
   .k3-hud button {
     display: flex; width: 100%; align-items: center; gap: 8px; margin-bottom: 6px;
     padding: 8px 10px; border-radius: 10px; border: 1.5px solid var(--border);
     background: #fff; font-family: inherit; font-size: .78rem; font-weight: 600;
     color: var(--text); cursor: pointer; text-align: start;
+    transition: border-color .15s ease, transform .15s ease, background .15s ease;
   }
   .k3-hud button:hover { border-color: var(--wine-300); transform: translateX(-2px); }
   .k3-hud button i { width: 11px; height: 11px; border-radius: 50%; background: var(--c); flex: none; }
+  /* the ingredient whose machine he is standing at */
+  .k3-hud button.at { background: var(--wine-100); border-color: var(--wine-700); font-weight: 700; }
+
+  .k3-hud::-webkit-scrollbar { width: 4px; }
+  .k3-hud::-webkit-scrollbar-track { background: transparent; }
+  .k3-hud::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 10px; }
 
   .k3-help {
     position: absolute; top: 16px; inset-inline-end: 16px;
@@ -51,7 +62,13 @@
   .k3-fallback { display: none; padding: 60px 20px; text-align: center; }
   @media (max-width: 760px) {
     .k3-hud { width: 148px; padding: 10px; }
+    .k3-hud button { font-size: .72rem; padding: 6px 8px; }
     .k3-help { display: none; }
+  }
+  @media (max-width: 480px) {
+    .k3-hud { width: 124px; top: 8px; inset-inline-start: 8px; padding: 8px; }
+    .k3-hud button { font-size: .68rem; padding: 5px 7px; gap: 6px; }
+    .k3-station { font-size: .84rem; padding: 9px 15px; bottom: 12px; }
   }
 </style>
 </head>
@@ -114,23 +131,39 @@
   ];
 
   let api = null;
-  $('hud').innerHTML = STOCK.map(s =>
-    `<button data-go="${s.at}"><i style="--c:${s.c}"></i>${s.n}</button>`).join('');
-  $('hud').querySelectorAll('[data-go]').forEach(b => {
-    b.onclick = () => { if (api) api.goTo(b.dataset.go); };
+  const btns = STOCK.map(s => {
+    const b = document.createElement('button');
+    b.dataset.go = s.at;
+    b.innerHTML = `<i style="--c:${s.c}"></i>${s.n}`;
+    b.onclick = () => { if (api) api.goTo(s.at); };
+    $('hud').appendChild(b);
+    return b;
   });
+  // the highlight follows where he actually is, not what you last clicked
+  const markAt = id => btns.forEach(b => b.classList.toggle('at', b.dataset.go === id));
 
   KoraKitchen3D.mount($('stage'), {
     onStation(st) {
       const tag = $('stationTag');
+      markAt(st ? st.id : null);
       if (!st) { tag.classList.remove('on'); return; }
       tag.innerHTML = st.label + '<small>دوس عشان تشتغل عليها</small>';
       tag.classList.add('on');
     }
   }).then(a => {
     api = a;
-    if (!a) { $('stage').style.display = 'none'; $('fallback').style.display = 'block'; }
+    if (!a) { $('stage').style.display = 'none'; $('fallback').style.display = 'block'; return; }
+    window.KoraKitchen = a;                 // so other pages/panels can drive him
+    // ?go=espresso walks him over; ?at=espresso starts him already there
+    const q = new URLSearchParams(location.search);
+    if (q.get('at')) a.place(q.get('at'));
+    else if (q.get('go')) a.goTo(q.get('go'));
   });
+
+  // the arrows drive the barista, so don't let them scroll the page too
+  addEventListener('keydown', e => {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(e.key) > -1) e.preventDefault();
+  }, { passive: false });
 })();
 </script>
 </body>

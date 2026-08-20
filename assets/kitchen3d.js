@@ -49,6 +49,9 @@
     renderer.setSize(W, H, false);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // film tone curve — highlights on the steel roll off instead of blowing out
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
     renderer.domElement.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block';
     host.appendChild(renderer.domElement);
 
@@ -72,9 +75,67 @@
     const bulb = new THREE.PointLight(0xffd9a0, 22, 14, 2);
     bulb.position.set(-4.5, 4.2, 2);
     scene.add(bulb);
+    // a cool fill from the room side and a warm rim from behind, so the
+    // machines and the barista read as solid instead of flat — the café stays
+    // bright either way; this is edge definition, not a mood change
+    const fill = new THREE.DirectionalLight(0xbcd4f0, .45);
+    fill.position.set(-7, 5, 9); scene.add(fill);
+    const rim = new THREE.DirectionalLight(0xffc98a, .7);
+    rim.position.set(-3, 6, -9); scene.add(rim);
 
     const M = (c, r, m) => new THREE.MeshStandardMaterial({ color: c, roughness: r == null ? .8 : r, metalness: m || 0 });
     const box = (w, h, d, mat) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+
+    /* Lettering is painted into a canvas and mapped onto real surfaces, not
+       hung on sprites — a badge belongs on the front of the machine, and it
+       has to be hidden when something stands in front of it. */
+    function textTex(text, opt) {
+      const cv = document.createElement('canvas');
+      cv.width = 512; cv.height = opt.tall ? 256 : 128;
+      const g = cv.getContext('2d');
+      if (opt.bg) { g.fillStyle = opt.bg; g.fillRect(0, 0, cv.width, cv.height); }
+      g.font = '700 ' + (opt.size || 64) + 'px Inter, Helvetica, Arial, sans-serif';
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillStyle = opt.fg || '#fff';
+      const reps = opt.repeat || 1;
+      for (let i = 0; i < reps; i++) {
+        g.fillText(text, (cv.width / reps) * (i + .5), cv.height / 2);
+      }
+      const t = new THREE.CanvasTexture(cv);
+      t.colorSpace = THREE.SRGBColorSpace;
+      // wrapped labels start at the cylinder's seam, which cuts the word in
+      // half from the front — turn it so a whole word faces the room
+      if (opt.turn) { t.wrapS = THREE.RepeatWrapping; t.offset.x = opt.turn; }
+      return t;
+    }
+    // a flat badge that sits on a surface and is occluded like any other mesh
+    function decal(text, w, h, opt) {
+      opt = opt || {};
+      return new THREE.Mesh(new THREE.PlaneGeometry(w, h),
+        new THREE.MeshBasicMaterial({ map: textTex(text, opt), transparent: !opt.bg }));
+    }
+
+    /* Steam that actually rises: each puff climbs, fades and restarts. */
+    const steams = [];
+    function steam(parent, x, y, z, spread, rise) {
+      const g = new THREE.Group();
+      for (let i = 0; i < 9; i++) {
+        const p = new THREE.Mesh(new THREE.SphereGeometry(.07, 7, 6),
+          new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }));
+        // stagger the phase and drift, or nine puffs climb as one bead string
+        p.userData = {
+          t: (i / 9) + Math.random() * .1,
+          dx: (Math.random() - .5) * spread, dz: (Math.random() - .5) * spread,
+          k: .8 + Math.random() * .45
+        };
+        g.add(p);
+      }
+      g.position.set(x, y, z);
+      g.userData.rise = rise || 1.1;
+      parent.add(g);
+      steams.push(g);
+      return g;
+    }
 
     /* ---------- the room shell ---------- */
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(26, 22), M(C.floor, .95));
@@ -86,8 +147,8 @@
       const cv = document.createElement('canvas');
       cv.width = 256; cv.height = 128;
       const g = cv.getContext('2d');
-      g.fillStyle = '#C9C2B4'; g.fillRect(0, 0, 256, 128);
-      g.fillStyle = '#E6E2D8';
+      g.fillStyle = '#D3CCC0'; g.fillRect(0, 0, 256, 128);
+      g.fillStyle = '#EDEAE3';
       for (let row = 0; row < 2; row++) {
         const off = row % 2 ? -64 : 0;
         for (let i = -1; i < 3; i++) g.fillRect(off + i * 128 + 3, row * 64 + 3, 122, 58);
@@ -134,11 +195,30 @@
     const shelf = box(13, .22, 1, M(C.shelf, .8));
     shelf.position.set(-2.5, 5.4, -5.4); shelf.castShadow = true;
     scene.add(shelf);
-    for (let i = 0; i < 9; i++) {                       // matcha tins
-      const tin = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .62, 20), M(C.green, .6));
+    // matcha tins — the label is wrapped round the tin, not stuck in front of it
+    const tinMat = new THREE.MeshStandardMaterial({
+      map: textTex('MATCHA', { bg: '#4E7A52', fg: '#EFE7D8', size: 44, repeat: 3, tall: true, turn: .17 }),
+      roughness: .6
+    });
+    for (let i = 0; i < 9; i++) {
+      const tin = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .62, 20),
+        [tinMat, M(0x3C5F40, .6), M(0x3C5F40, .6)]);
       tin.position.set(-7.6 + i * 1.15, 5.85, -5.4); tin.castShadow = true;
       scene.add(tin);
+      const lid = new THREE.Mesh(new THREE.CylinderGeometry(.24, .24, .08, 20), M(0xCFC4AE, .45, .2));
+      lid.position.set(-7.6 + i * 1.15, 6.19, -5.4); scene.add(lid);
     }
+    // spare syrup stock standing on the shelf beside the tins
+    ['1883', 'MONIN', '1883', 'MONIN'].forEach((brand, i) => {
+      const col = [0xC2334D, 0x8E5A2B, 0x3E5C8A, 0xD9A6B4][i];
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(.13, .13, .58, 14), M(col, .35));
+      b.position.set(3.9 + i * .62, 5.81, -5.4);      // sits on the shelf top (5.51)
+      b.castShadow = true; scene.add(b);
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, .16, 10), M(C.black, .5));
+      cap.position.set(3.9 + i * .62, 6.16, -5.4); scene.add(cap);
+      const lab = decal(brand, .24, .1, { fg: '#2A211A', size: 74 });
+      lab.position.set(3.9 + i * .62, 5.83, -5.26); scene.add(lab);
+    });
 
     /* ---------- the machines, where they actually stand ---------- */
     const stations = {};
@@ -153,8 +233,12 @@
     const cim = new THREE.Group();
     const body = box(4.4, 1.5, 1.5, M(C.steel, .35, .6));
     body.position.y = .75; cim.add(body);
-    const badge = box(1.5, .2, .02, M(0xB4232B, .5));
-    badge.position.set(0, 1.05, .77); cim.add(badge);
+    const badge = box(2.1, .3, .02, M(0xB4232B, .5));
+    badge.position.set(0, 1.05, .76); cim.add(badge);
+    const badgeText = decal('LA CIMBALI', 1.9, .24, { fg: '#FFFFFF', size: 76 });
+    badgeText.position.set(0, 1.05, .78); cim.add(badgeText);
+    const modelText = decal('M32', .5, .16, { fg: '#D8DDE2', size: 84 });
+    modelText.position.set(1.6, 1.05, .76); cim.add(modelText);
     for (let i = -1; i <= 1; i++) {
       const head = box(.62, .34, .62, M(C.steelDark, .4, .7));
       head.position.set(i * 1.3, .2, .62); cim.add(head);
@@ -163,7 +247,25 @@
       const handle = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, .5, 10), M(C.black, .6));
       handle.rotation.x = Math.PI / 2; handle.position.set(i * 1.3, .02, 1.0); cim.add(handle);
     }
+    // the steam wand on the right, breathing
+    const wand = new THREE.Mesh(new THREE.CylinderGeometry(.05, .035, .8, 10), M(C.steelDark, .35, .7));
+    wand.position.set(2.1, .25, .55); wand.rotation.x = .35; cim.add(wand);
+    steam(cim, 2.2, .6, .75, .28, 1.0);
     station('espresso', 'ماكينة الإسبريسو', cim, 5.4, 2.85, -3.9, [5.4, -1.2]);
+
+    // tamper and a small pile of ground coffee, out on the worktop where they show
+    const tamper = new THREE.Mesh(new THREE.CylinderGeometry(.13, .15, .1, 16), M(0xC9A227, .3, .8));
+    tamper.position.set(6.7, 2.93, -2.75); tamper.castShadow = true; scene.add(tamper);
+    const tampGrip = new THREE.Mesh(new THREE.CylinderGeometry(.07, .09, .22, 12), M(0x3A2A1C, .7));
+    tampGrip.position.set(6.7, 3.08, -2.75); scene.add(tampGrip);
+    const grounds = new THREE.Mesh(new THREE.CylinderGeometry(.001, .3, .12, 18), M(0x4A3120, .95));
+    grounds.position.set(7.5, 2.92, -2.75); scene.add(grounds);
+    for (let i = 0; i < 14; i++) {                      // a few beans that spilled
+      const bean = new THREE.Mesh(new THREE.SphereGeometry(.045, 7, 6), M(0x3B2318, .85));
+      bean.scale.set(1, .7, 1.35);
+      bean.position.set(7.5 + (Math.random() - .5) * 1.1, 2.9, -2.75 + (Math.random() - .5) * .5);
+      bean.rotation.y = i * 1.1; bean.castShadow = true; scene.add(bean);
+    }
 
     // the grinder
     const grp = new THREE.Group();
@@ -171,7 +273,12 @@
     const hop = new THREE.Mesh(new THREE.CylinderGeometry(.42, .3, .9, 20),
       new THREE.MeshPhysicalMaterial({ color: 0x6b4a2c, transmission: .5, roughness: .2, transparent: true, opacity: .75 }));
     hop.position.y = 1.9; grp.add(hop);
-    const scr = box(.42, .22, .03, M(0x2E6F9E, .3)); scr.position.set(0, .95, .42); grp.add(scr);
+    const scr = new THREE.Mesh(new THREE.BoxGeometry(.42, .22, .03),
+      new THREE.MeshStandardMaterial({ color: 0x123A55, emissive: 0x1E5C86, emissiveIntensity: .8, roughness: .3 }));
+    scr.position.set(0, .95, .42); grp.add(scr);
+    // the dose the espresso sim actually asks for
+    const dose = decal('18.0 g', .36, .12, { fg: '#BFE6FF', size: 62 });
+    dose.position.set(0, .95, .445); grp.add(dose);
     station('grinder', 'المطحنة', grp, 8.4, 2.85, -3.9, [8.4, -1.2]);
 
     // the 1883 / Monin pump rack
@@ -184,6 +291,9 @@
       b.position.set(-1 + i * .4, .55, 0); rack.add(b);
       const pump = box(.08, .5, .08, M(C.black, .5));
       pump.position.set(-1 + i * .4, 1.3, 0); rack.add(pump);
+      const lab = decal(['1883', 'MONIN', '1883', 'MONIN', '1883', 'MONIN'][i], .24, .1,
+        { fg: '#241C16', size: 74 });
+      lab.position.set(-1 + i * .4, .6, .14); rack.add(lab);
     }
     station('syrup', 'مضخات السيرب', rack, 10.4, 2.85, -3.9, [10.2, -1.2]);
 
@@ -193,6 +303,17 @@
     const dome = new THREE.Mesh(new THREE.SphereGeometry(.55, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2),
       new THREE.MeshPhysicalMaterial({ color: 0x9aa0a6, transmission: .6, roughness: .15, transparent: true, opacity: .5 }));
     dome.position.y = .5; bl.add(dome);
+    const juice = new THREE.Mesh(new THREE.CylinderGeometry(.36, .34, .34, 18), M(0xE07A3A, .35));
+    juice.position.y = .66; bl.add(juice);            // fruit still in the jug
+    const bubbles = [];                                // rising inside the jug
+    for (let i = 0; i < 12; i++) {
+      const b = new THREE.Mesh(new THREE.SphereGeometry(.026 + (i % 3) * .012, 8, 8),
+        new THREE.MeshPhysicalMaterial({ color: 0xFFD9B8, roughness: .05,
+          transmission: .8, transparent: true, opacity: .55 }));
+      const a = i * 2.1, r = .1 + (i % 4) * .06;
+      b.userData = { x: Math.cos(a) * r, z: Math.sin(a) * r, t: i / 12, k: .6 + (i % 5) * .16 };
+      bl.add(b); bubbles.push(b);
+    }
     station('blender', 'الخلاط', bl, -6.4, 2.85, -5, [-6.4, -2.4]);
 
     const iceG = new THREE.Group();
@@ -200,6 +321,19 @@
     const iceLid = box(1.55, .12, 1.35, M(0xB9BCC0, .5)); iceLid.position.y = 1.84; iceG.add(iceLid);
     const iceScr = box(.5, .18, .03, M(0x1b1d20, .4)); iceScr.position.set(0, 1.2, .66); iceG.add(iceScr);
     const iceSlot = box(.7, .28, .06, M(0x2b2e31, .7)); iceSlot.position.set(0, .45, .66); iceG.add(iceSlot);
+    // an open tub of cubes in front of it — cubes sealed inside the machine
+    // would be hidden by its own walls, so they live where you can see them
+    const tub = new THREE.Mesh(new THREE.CylinderGeometry(.42, .36, .34, 18), M(0xB9BCC0, .45, .3));
+    tub.position.set(0, .17, 1.35); iceG.add(tub);
+    const iceCubes = [];
+    for (let i = 0; i < 11; i++) {
+      const cube = box(.13, .13, .13, new THREE.MeshPhysicalMaterial({
+        color: 0xEAF6FF, transmission: .75, roughness: .12, transparent: true, opacity: .85 }));
+      const a = i * 1.7;
+      cube.position.set(Math.cos(a) * .2, .3 + (i % 3) * .05, 1.35 + Math.sin(a) * .2);
+      cube.rotation.set(i * 1.1, i * .7, i * 1.9);
+      iceG.add(cube); iceCubes.push(cube);
+    }
     station('ice', 'ماكينة التلج', iceG, -8.0, 2.85, -5, [-8.0, -2.4]);
 
     // the hotplate with its pot — where the tea and the tapioca happen
@@ -209,6 +343,7 @@
     pot.position.y = .36; hp.add(pot);
     const potLid = new THREE.Mesh(new THREE.SphereGeometry(.45, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), M(0xC8CBCE, .3, .8));
     potLid.position.y = .62; hp.add(potLid);
+    steam(hp, 0, .8, 0, .3, 1.2);
     station('brew', 'السخّان والحلة', hp, -0.6, 2.9, -5, [-0.6, -2.4]);
 
     /* ---------- the barista ---------- */
@@ -243,11 +378,13 @@
     hair.position.y = 2.68; chef.add(hair);
     const fringe = new THREE.Mesh(new THREE.SphereGeometry(.372, 24, 8, -0.9, 1.8, 0.55, .42), M(0x1A1A1A, .9));
     fringe.position.y = 2.68; chef.add(fringe);
-    const eyeM = M(0x1F1B18, .4);
+    const eyeM = M(0x1F1B18, .4), eyeWhiteM = M(0xFFFFFF, .25);
     [-1, 1].forEach(s => {
-      const eye = new THREE.Mesh(new THREE.SphereGeometry(.055, 12, 10), eyeM);
-      eye.position.set(s * .13, 2.68, .3); chef.add(eye);
-      const brow = box(.13, .03, .02, eyeM); brow.position.set(s * .13, 2.79, .31); chef.add(brow);
+      const white = new THREE.Mesh(new THREE.SphereGeometry(.072, 14, 12), eyeWhiteM);
+      white.position.set(s * .13, 2.68, .29); chef.add(white);
+      const pupil = new THREE.Mesh(new THREE.SphereGeometry(.042, 12, 10), eyeM);
+      pupil.position.set(s * .13, 2.68, .35); chef.add(pupil);
+      const brow = box(.13, .03, .02, eyeM); brow.position.set(s * .13, 2.81, .31); chef.add(brow);
     });
     const smile = new THREE.Mesh(new THREE.TorusGeometry(.09, .022, 8, 16, Math.PI), eyeM);
     smile.rotation.set(0, 0, Math.PI); smile.position.set(0, 2.53, .3); chef.add(smile);
@@ -313,8 +450,14 @@
       chef.position.x = Math.max(-9.5, Math.min(10.8, chef.position.x));
       chef.position.z = Math.max(-3.2, Math.min(4.2, chef.position.z));
       if (ix || iz || chef.position.distanceTo(goal) > .08) {
-        chef.rotation.y = Math.atan2(
+        // turn towards the goal the short way round — a plain lerp on the
+        // angle spins him the long way whenever it crosses ±π
+        const want = Math.atan2(
           (goal.x - chef.position.x) || ix, (goal.z - chef.position.z) || iz);
+        let d = want - chef.rotation.y;
+        while (d > Math.PI) d -= Math.PI * 2;
+        while (d < -Math.PI) d += Math.PI * 2;
+        chef.rotation.y += d * Math.min(1, dt * 12);
         chef.position.y = Math.abs(Math.sin(now * .012)) * .07;   // a little bob
         const sw = Math.sin(now * .012) * .5;                     // arms and legs swing
         arms[0].rotation.x = sw; arms[1].rotation.x = -sw;
@@ -326,6 +469,32 @@
       }
 
       // arriving at a machine pulls the camera in on it
+      // steam climbs, spreads and fades, then starts again from the spout
+      for (let i = 0; i < steams.length; i++) {
+        const g = steams[i], rise = g.userData.rise;
+        for (let j = 0; j < g.children.length; j++) {
+          const p = g.children[j], u = p.userData;
+          u.t += dt * .38 * u.k;
+          if (u.t > 1) u.t -= 1;
+          p.position.set(u.dx * u.t, u.t * rise * u.k, u.dz * u.t);
+          p.material.opacity = Math.sin(u.t * Math.PI) * .3;
+          const s = .5 + u.t * 1.6;
+          p.scale.set(s, s, s);
+        }
+      }
+
+      // bubbles climb through the juice; the cubes turn slowly in their tub
+      for (let i = 0; i < bubbles.length; i++) {
+        const b = bubbles[i], u = b.userData;
+        u.t += dt * .3 * u.k;
+        if (u.t > 1) u.t -= 1;
+        b.position.set(u.x, .5 + u.t * .32, u.z);
+        b.material.opacity = Math.sin(u.t * Math.PI) * .55;
+      }
+      for (let i = 0; i < iceCubes.length; i++) {
+        iceCubes[i].rotation.y += dt * .25;
+      }
+
       const near = nearestStation();
       if (near !== current) {
         current = near;
@@ -359,8 +528,16 @@
 
     return {
       stations: Object.keys(stations),
-      /** Send the barista to a station by id. */
+      /** Send the barista to a station by id — he walks there. */
       goTo(id) { const s = stations[id]; if (s) goal.copy(s.at); },
+      /** Put him at a station straight away, no walk. */
+      place(id) {
+        const s = stations[id];
+        if (!s) return false;
+        chef.position.set(s.at.x, 0, s.at.z);
+        goal.copy(chef.position);
+        return true;
+      },
       at() { return current ? current.id : null; },
       destroy() {
         cancelAnimationFrame(raf); if (ro) ro.disconnect();
@@ -370,7 +547,16 @@
   }
 
   function mount(host, opts) {
-    return load().then(m => (m && host) ? build(host, opts) : null);
+    return load().then(m => {
+      if (!m || !host) return null;
+      try {
+        return build(host, opts);
+      } catch (e) {
+        // a throw in here used to leave a blank canvas and no explanation
+        console.error('KoraKitchen3D: scene failed to build —', e);
+        return null;
+      }
+    });
   }
   global.KoraKitchen3D = { mount, supported: webglOK };
 })(window);
