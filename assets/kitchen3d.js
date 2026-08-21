@@ -266,10 +266,13 @@
 
     /* ---------- the machines, where they actually stand ---------- */
     const stations = {};
+    const stationRoots = [];
     function station(id, label, mesh, x, y, z, stand) {
       mesh.position.set(x, y, z);
       mesh.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+      mesh.userData.stationId = id;              // so a click can find its way back up
       scene.add(mesh);
+      stationRoots.push(mesh);
       stations[id] = { id, label, at: new THREE.Vector3(stand[0], 0, stand[1]), obj: mesh };
     }
 
@@ -457,6 +460,15 @@
       ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
       ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
       ray.setFromCamera(ndc, cam);
+      // A machine has to be tested before the floor. The floor is one big
+      // plane lying behind everything, so a ray through a machine hits it too
+      // — check the floor first and you can never click a machine at all.
+      const onMachine = ray.intersectObjects(stationRoots, true);
+      if (onMachine.length) {
+        let n = onMachine[0].object;
+        while (n && !n.userData.stationId) n = n.parent;
+        if (n) { goal.copy(stations[n.userData.stationId].at); return; }
+      }
       const hit = ray.intersectObject(floor);
       if (hit.length) { goal.copy(hit[0].point); goal.y = 0; }
     });
@@ -584,6 +596,11 @@
         return true;
       },
       at() { return current ? current.id : null; },
+      /** Where he is walking to right now, as {x, z} — null once he arrives. */
+      goalAt() {
+        return chef.position.distanceTo(goal) > .08
+          ? { x: +goal.x.toFixed(2), z: +goal.z.toFixed(2) } : null;
+      },
       /** false when the bloom addons could not load and we fell back to plain. */
       bloom: !!composer,
       destroy() {
