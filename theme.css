@@ -1,0 +1,452 @@
+/* ==========================================================================
+   Kora — Design System
+   Palette: graphite grays + burgundy (wine) accents
+   ========================================================================== */
+
+:root {
+  /* Burgundy / wine */
+  --wine-950: #3B0D1F;
+  --wine-900: #4E1129;
+  --wine-800: #631733;
+  --wine-700: #7B1E3E;   /* primary */
+  --wine-600: #94264C;
+  --wine-500: #AE3160;
+  --wine-300: #D98BA9;
+  --wine-100: #F6E7EE;
+  --wine-50:  #FCF4F7;
+
+  /* Silver — a cool metallic neutral scale. The burgundy stays as the brand
+     accent on top of it. */
+  --gray-950: #14171A;
+  --gray-900: #1E2227;
+  --gray-800: #2A2F35;
+  --gray-700: #3D444C;
+  --gray-600: #58606A;
+  --gray-500: #7A838E;
+  --gray-400: #A2ABB5;
+  --gray-300: #C0C8D1;
+  --gray-200: #D7DDE4;
+  --gray-100: #E4E9EE;
+  --gray-50:  #EEF2F5;
+
+  /* Nothing on the page is white: it sits on brushed silver, with panels a
+     shade lighter on top. */
+  --bg: #C7CED6;
+  --surface: #DFE5EB;
+  --surface-2: #D3DAE1;
+  --text: #1E2227;
+  --text-soft: #58606A;
+  --text-faint: #A2ABB5;
+  --border: #C6CED7;
+
+  /* The page background is graphite, so anything sitting straight on it needs
+     light ink. --text* stays dark and is re-asserted by every light surface
+     (cards, panels, inputs, bars) so their contents stay readable. */
+  --on-bg: #F4F6F8;
+  --on-bg-soft: #D3D8DE;
+  --on-bg-faint: #A8AFB7;
+  --on-bg-accent: #F0B9CD;
+
+  --success: #1F7A4D;
+  --warn: #B4761B;
+  --danger: #B3282F;
+
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+
+  --sh-1: 0 1px 2px rgba(30,34,39,.07), 0 1px 3px rgba(30,34,39,.05);
+  --sh-2: 0 4px 12px rgba(30,34,39,.09), 0 2px 4px rgba(30,34,39,.05);
+  --sh-3: 0 12px 32px rgba(30,34,39,.13), 0 4px 10px rgba(30,34,39,.07);
+  --sh-wine: 0 10px 26px rgba(123,30,62,.28);
+
+  --ff-display: 'Outfit', system-ui, sans-serif;
+  --ff-body: 'Inter', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--ff-body);
+  /* graphite sheen: light pooling in the middle, darker at top and bottom */
+  background:
+    radial-gradient(130% 78% at 50% 46%, rgba(255,255,255,.20), transparent 64%),
+    linear-gradient(180deg, #3C3F42 0%, #5C6064 20%, #8A8E92 47%, #7C8084 70%, #52565A 100%);
+  background-attachment: fixed;
+  color: var(--on-bg);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+}
+
+/* Every light surface hands the dark ink back to whatever is inside it. */
+.card, .panel, .modal, .topbar:not(.topbar-dark), .cartbar, .sheet,
+.type-card, .segment, .table, table,
+input, select, textarea, .input {
+  color: var(--text);
+}
+/* ...and the muted utilities flip with whichever ground they land on. */
+.muted { color: var(--on-bg-soft); }
+.faint { color: var(--on-bg-faint); }
+.card .muted, .panel .muted, .modal .muted, .cartbar .muted,
+.type-card .muted, .table .muted, table .muted { color: var(--text-soft); }
+.card .faint, .panel .faint, .modal .faint, .cartbar .faint,
+.type-card .faint, .table .faint, table .faint { color: var(--text-faint); }
+h1, h2, h3, h4 { font-family: var(--ff-display); margin: 0; line-height: 1.2; letter-spacing: -0.02em; }
+a { color: inherit; }
+
+/* ---------- Layout ---------- */
+.container { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+.container-sm { max-width: 620px; margin: 0 auto; padding: 0 20px; }
+.stack > * + * { margin-top: 14px; }
+.row { display: flex; align-items: center; gap: 12px; }
+.spread { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+/* ---------- Brand ---------- */
+.brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+.brand-logo { width: 30px; height: 36px; flex-shrink: 0; }
+.brand-name {
+  font-family: var(--ff-display);
+  font-weight: 800;
+  font-size: 1.4rem;
+  letter-spacing: -0.03em;
+  color: var(--wine-700);
+}
+.brand-name.on-dark { color: #fff; }
+.brand-sub { font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--text-faint); font-weight: 600; }
+
+/* ---------- Top bar ---------- */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-inner { display: flex; align-items: center; justify-content: space-between; height: 62px; }
+.topbar-dark {
+  background: linear-gradient(120deg, var(--gray-950), var(--wine-900) 120%);
+  border-bottom: none;
+}
+.topbar-dark .topbar-inner { color: #fff; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  font-family: var(--ff-body);
+  font-weight: 600;
+  font-size: .93rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  padding: 12px 20px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--wine-700); color: #fff; box-shadow: var(--sh-wine); }
+.btn-primary:hover { background: var(--wine-600); box-shadow: 0 14px 30px rgba(123,30,62,.34); }
+.btn-primary:disabled { background: var(--gray-300); color: var(--gray-500); box-shadow: none; cursor: not-allowed; }
+.btn-dark { background: var(--gray-900); color: #fff; }
+.btn-dark:hover { background: var(--gray-800); }
+.btn-ghost { background: var(--surface); color: var(--text); border-color: var(--border); box-shadow: var(--sh-1); }
+.btn-ghost:hover { border-color: var(--gray-300); background: var(--gray-50); }
+.btn-quiet { background: transparent; color: var(--text-soft); }
+.btn-quiet:hover { background: var(--gray-100); color: var(--text); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-sm { padding: 8px 14px; font-size: .85rem; border-radius: var(--r-sm); }
+.btn-lg { padding: 15px 28px; font-size: 1rem; border-radius: var(--r-lg); }
+.btn-block { width: 100%; }
+
+/* ---------- Card ---------- */
+.card {
+  background: linear-gradient(180deg, #E7ECF1, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-1);
+}
+.card-pad { padding: 22px; }
+.card-hover { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.card-hover:hover { transform: translateY(-3px); box-shadow: var(--sh-3); border-color: var(--gray-300); }
+
+/* ---------- Drink photography ----------
+   Photos and the drawn cup are interchangeable: both sit in the same slot, so
+   a menu can be half photographed and half drawn without the grid jumping. */
+.item-photo {
+  display: block; width: 100%; height: auto;
+  aspect-ratio: 4 / 3; object-fit: cover;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.item-art-fallback { display: flex; justify-content: center; }
+/* on the dark shelf the photo takes the cup's footprint instead of the card's */
+.shelf-photo { width: 120px; aspect-ratio: 3 / 4; border-radius: var(--r-lg); }
+
+/* ---------- Pills / badges ---------- */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 999px;
+  font-size: .76rem; font-weight: 600; letter-spacing: .01em;
+}
+.pill-wine { background: var(--wine-100); color: var(--wine-700); }
+.pill-gray { background: var(--gray-100); color: var(--gray-600); }
+.pill-green { background: #E4F2EA; color: var(--success); }
+.pill-amber { background: #FBF0DC; color: var(--warn); }
+.pill-red { background: #FBE7E8; color: var(--danger); }
+.pill-outline { border: 1px solid var(--border); background: var(--surface); color: var(--text-soft); }
+
+/* ---------- Form ---------- */
+.label { display: block; font-size: .82rem; font-weight: 600; color: var(--on-bg-soft); margin-bottom: 6px; }
+.card .label, .panel .label, .modal .label, .cartbar .label { color: var(--text-soft); }
+.input, .select, textarea.input {
+  width: 100%;
+  font-family: var(--ff-body);
+  font-size: .94rem;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  transition: border-color .16s ease, box-shadow .16s ease;
+}
+.input:focus, .select:focus, textarea.input:focus {
+  outline: none;
+  border-color: var(--wine-500);
+  box-shadow: 0 0 0 3px rgba(174,49,96,.14);
+}
+.input::placeholder { color: var(--gray-400); }
+.hint { font-size: .78rem; color: var(--text-faint); }
+.field-error { font-size: .78rem; color: var(--danger); margin-top: 5px; }
+
+/* ---------- Segmented control ---------- */
+.segment { display: inline-flex; background: var(--gray-100); border-radius: var(--r-md); padding: 4px; gap: 4px; flex-wrap: wrap; }
+.segment button {
+  border: none; background: transparent; cursor: pointer;
+  font-family: var(--ff-body); font-size: .85rem; font-weight: 600; color: var(--text-soft);
+  padding: 8px 16px; border-radius: 10px; transition: all .15s ease;
+}
+.segment button:hover { color: var(--text); }
+.segment button.on { background: var(--surface); color: var(--wine-700); box-shadow: var(--sh-1); }
+
+/* ---------- Option chips ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  border: 1px solid var(--gray-300); background: var(--surface);
+  border-radius: var(--r-md); padding: 9px 14px; cursor: pointer;
+  font-family: var(--ff-body); font-size: .85rem; font-weight: 500; color: var(--text);
+  transition: all .15s ease;
+}
+.chip:hover { border-color: var(--wine-300); }
+.chip.on { background: var(--wine-700); border-color: var(--wine-700); color: #fff; font-weight: 600; }
+.chip .chip-price { font-size: .78rem; opacity: .7; margin-left: 5px; }
+
+/* ---------- Section headers ---------- */
+.section-head { margin-bottom: 18px; }
+.section-head h2 { font-size: 1.4rem; }
+.section-head p { margin: 4px 0 0; color: var(--on-bg-soft); font-size: .9rem; }
+.card .section-head p, .panel .section-head p { color: var(--text-soft); }
+.eyebrow {
+  font-size: .72rem; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--on-bg-accent); margin-bottom: 8px;
+}
+
+/* ---------- Divider ---------- */
+.divider { height: 1px; background: rgba(255,255,255,.16); border: none; margin: 20px 0; }
+.card .divider, .panel .divider, .modal .divider { background: var(--border); }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed; top: 18px; left: 50%; transform: translateX(-50%) translateY(-12px);
+  background: var(--gray-900); color: #fff;
+  padding: 12px 20px; border-radius: var(--r-md);
+  font-size: .88rem; font-weight: 500;
+  box-shadow: var(--sh-3); z-index: 9999;
+  opacity: 0; pointer-events: none; transition: all .22s ease;
+  max-width: 90vw;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.err { background: var(--danger); }
+.toast.ok { background: var(--success); }
+
+/* ---------- Modal ---------- */
+.overlay {
+  position: fixed; inset: 0; background: rgba(18,18,20,.5);
+  backdrop-filter: blur(3px);
+  display: none; align-items: flex-end; justify-content: center; z-index: 500;
+}
+.overlay.show { display: flex; }
+.modal {
+  background: var(--surface);
+  width: 100%; max-width: 540px; max-height: 92vh;
+  overflow-y: auto;
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  animation: sheet-up .26s cubic-bezier(.2,.8,.3,1);
+}
+@keyframes sheet-up { from { transform: translateY(40px); opacity: .6; } to { transform: translateY(0); opacity: 1; } }
+@media (min-width: 680px) {
+  .overlay { align-items: center; }
+  .modal { border-radius: var(--r-xl); max-height: 86vh; }
+}
+.modal-head {
+  position: sticky; top: 0; background: var(--surface);
+  padding: 20px 22px 14px; border-bottom: 1px solid var(--border); z-index: 2;
+}
+.modal-body { padding: 18px 22px 22px; }
+.modal-foot {
+  position: sticky; bottom: 0; background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 14px 22px;
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+}
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  width: 32px; height: 32px; border-radius: 50%;
+  border: none; background: var(--gray-100); color: var(--text-soft);
+  cursor: pointer; font-size: 1rem; line-height: 1;
+}
+.modal-close:hover { background: var(--gray-200); }
+
+/* ---------- Empty state ---------- */
+.empty { text-align: center; padding: 48px 20px; color: var(--text-faint); }
+.empty-icon { font-size: 2rem; margin-bottom: 10px; opacity: .5; }
+
+/* ---------- Utility ---------- */
+.mono-num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--text-soft); }
+.faint { color: var(--text-faint); }
+.center { text-align: center; }
+.hidden { display: none !important; }
+.demo-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--wine-100); color: var(--wine-700);
+  padding: 4px 11px; border-radius: 999px;
+  font-size: .72rem; font-weight: 700; letter-spacing: .02em;
+}
+
+/* ==========================================================================
+   Motion
+   ========================================================================== */
+
+/* Scroll reveal — element gets .seen when it enters the viewport */
+.reveal { opacity: 0; transform: translateY(22px); }
+.reveal.seen {
+  opacity: 1; transform: none;
+  transition: opacity .55s ease, transform .55s cubic-bezier(.2,.8,.3,1);
+  transition-delay: var(--d, 0ms);
+}
+
+/* Staggered rise, used on grids */
+.rise { animation: rise-in .5s cubic-bezier(.2,.8,.3,1) both; animation-delay: var(--d, 0ms); }
+@keyframes rise-in { from { opacity: 0; transform: translateY(16px) scale(.98); } to { opacity: 1; transform: none; } }
+
+/* Step transitions in the order flow */
+.step.on { animation: step-in .4s cubic-bezier(.2,.8,.3,1) both; }
+@keyframes step-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* Cup flying into the cart */
+.fly-ghost {
+  position: fixed; z-index: 9998; pointer-events: none;
+  transition: transform .62s cubic-bezier(.4,0,.5,1), opacity .62s ease;
+}
+
+/* Button press ripple-ish lift */
+.btn-primary:not(:disabled):active { transform: translateY(1px) scale(.985); }
+
+/* Pulsing dot */
+@keyframes soft-pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+/* Floating boba pearls (decorative background) */
+.pearl-field { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.pearl-field i {
+  position: absolute; border-radius: 50%;
+  background: rgba(255,255,255,.14);
+  animation: pearl-rise linear infinite;
+  bottom: -40px;
+}
+@keyframes pearl-rise {
+  0%   { transform: translateY(0) scale(.7); opacity: 0; }
+  12%  { opacity: .75; }
+  85%  { opacity: .5; }
+  100% { transform: translateY(-118vh) scale(1.1); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal.seen { opacity: 1; transform: none; transition: none; }
+  .rise, .step.on { animation: none; }
+  .pearl-field { display: none; }
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+
+/* ==========================================================================
+   Extra motion
+   ========================================================================== */
+
+/* --- page entrance: children rise in one after another --- */
+.enter > * { opacity: 0; animation: enter-up .6s cubic-bezier(.2,.85,.3,1) forwards; }
+.enter > *:nth-child(1) { animation-delay: .05s; }
+.enter > *:nth-child(2) { animation-delay: .14s; }
+.enter > *:nth-child(3) { animation-delay: .23s; }
+.enter > *:nth-child(4) { animation-delay: .32s; }
+.enter > *:nth-child(5) { animation-delay: .41s; }
+.enter > *:nth-child(6) { animation-delay: .5s; }
+@keyframes enter-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+/* --- buttons get a ripple on press --- */
+.btn { position: relative; overflow: hidden; }
+.btn .ripple {
+  position: absolute; border-radius: 50%; transform: scale(0);
+  background: rgba(255,255,255,.45); pointer-events: none;
+  animation: ripple .55s ease-out forwards;
+}
+@keyframes ripple { to { transform: scale(2.6); opacity: 0; } }
+
+/* --- anything that should pop when it changes --- */
+.pop { animation: pop .38s cubic-bezier(.2,.9,.3,1.6); }
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.14); } 100% { transform: scale(1); } }
+
+/* --- the cart bar hops when something lands in it --- */
+.cartbar.bump { animation: bump .45s cubic-bezier(.2,.9,.3,1.5); }
+@keyframes bump {
+  0%,100% { transform: translateY(0); }
+  35%     { transform: translateY(-9px); }
+  70%     { transform: translateY(2px); }
+}
+
+/* --- shimmer sweeping across a progress bar --- */
+.gauge .bar::after, .progress i.now::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+.gauge .bar, .progress i.now { position: relative; overflow: hidden; }
+@keyframes shimmer { to { transform: translateX(100%); } }
+
+/* --- confetti when an order goes through --- */
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 9990; overflow: hidden; }
+.confetti i {
+  position: absolute; top: -14px; width: 9px; height: 14px; border-radius: 2px;
+  animation: fall-confetti linear forwards;
+}
+@keyframes fall-confetti {
+  0%   { transform: translateY(0) rotate(0) scale(1); opacity: 1; }
+  100% { transform: translateY(105vh) rotate(760deg) scale(.7); opacity: 0; }
+}
+
+/* --- a soft breathing glow for anything waiting on someone else --- */
+.breathe { animation: breathe 2.6s ease-in-out infinite; }
+@keyframes breathe { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+
+/* --- rows lift a touch as you run down a list --- */
+.row-hover { transition: transform .16s ease, box-shadow .16s ease; }
+.row-hover:hover { transform: translateX(3px); box-shadow: var(--sh-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .enter > *, .pop, .cartbar.bump, .breathe { animation: none !important; opacity: 1 !important; }
+  .gauge .bar::after, .progress i.now::after, .confetti { display: none; }
+}
