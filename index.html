@@ -221,7 +221,7 @@
         <li><b>Every gram counts</b> — the bar gets your numbers, not a guess.</li>
         <li><b>Name it</b> — if people love it, we put it on the menu under your name.</li>
       </ul>
-      <button class="btn btn-primary btn-lg magnetic" onclick="goKitchen()">Step into the kitchen</button>
+      <a href="guest.html?mode=general" class="btn btn-primary btn-lg magnetic">Start an order and build one</a>
     </div>
   </div>
 </section>
@@ -510,22 +510,11 @@
   // The kitchen refuses to open without a drink to work on, so coming straight
   // from the landing page we hand it a sensible starting build. Whatever they
   // make in there lands in the cart and the order flow picks up from step 1.
-  window.goKitchen = function () {
-    const BC = (KoraAPI.catalog && KoraAPI.catalog.buildCatalog) || {};
-    const pick = (g, key) => (BC[g] || []).find(o => o.key === key) || (BC[g] || [])[0] || null;
-    const base = pick('base', 'black_tea');
-    const creamer = pick('creamer', 'oat');
-    if (!base || !creamer) { location.href = 'guest.html?mode=general'; return; }
-
-    localStorage.setItem('kora_kitchen_spec', JSON.stringify({
-      mode: 'build',
-      selections: { base: base.key, creamer: creamer.key, flavor: [] },
-      build_price: (base.price || 0) + (creamer.price || 0),
-      labels: { base: base.name, creamer: creamer.name, flavor: [] },
-      customer: ''
-    }));
-    location.href = 'kitchen-sim.html';
-  };
+  /* The kitchen used to be entered straight from here on a seeded spec — black
+     tea and oat, picked for you, with no fulfilment and no customer. That
+     skipped the whole order: pickup or delivery, the address, the menu. The
+     button now starts the real flow in guest.html, and the kitchen is reached
+     from "Build your own" inside it, carrying the drink the customer chose. */
 
   KoraUI.initReveal();
   Kora3D.tiltCards(document, '.step-card, .entry-card');
