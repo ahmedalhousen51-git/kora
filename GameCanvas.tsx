@@ -4,32 +4,34 @@ import { Engine } from "@babylonjs/core/Engines/engine";
 import { Scene } from "@babylonjs/core/scene";
 import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
-import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
+import { ShaderMaterial } from "@babylonjs/core/Materials/shaderMaterial";
+import { Effect } from "@babylonjs/core/Materials/effect";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { SpotLight } from "@babylonjs/core/Lights/spotLight";
 import { PointLight } from "@babylonjs/core/Lights/pointLight";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
-import { ShadowGenerator } from "@babylonjs/core/Lights/Shadows/shadowGenerator";
-import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import type { Material } from "@babylonjs/core/Materials/material";
 
-function mat(scene: Scene, name: string, color: Color3, roughness = 0.65, metallic = 0.05) {
-  const m = new StandardMaterial(name, scene);
-  m.diffuseColor = color;
-  m.specularColor = new Color3(0.28, 0.24, 0.18);
-  m.specularPower = 48;
+Effect.ShadersStore["koraVertexShader"] = `precision highp float; attribute vec3 position; uniform mat4 worldViewProjection; void main(void) { gl_Position = worldViewProjection * vec4(position, 1.0); }`;
+Effect.ShadersStore["koraFragmentShader"] = `precision highp float; uniform vec3 color; void main(void) { gl_FragColor = vec4(color, 1.0); }`;
+
+function mat(scene: Scene, name: string, color: Color3, _roughness = 0.65, _metallic = 0.05): Material {
+  const m = new ShaderMaterial(name, scene, { vertex: "kora", fragment: "kora" }, { attributes: ["position"], uniforms: ["worldViewProjection", "color"] });
+  m.setColor3("color", color);
   return m;
 }
 
-export default function GameCanvas() {
+type GameCanvasProps = { onStationReached?: (station: string) => void };
+
+export default function GameCanvas({ onStationReached }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
+    const engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: true });
     const scene = new Scene(engine);
     scene.clearColor = new Color4(0.025, 0.065, 0.09, 1);
     scene.fogMode = Scene.FOGMODE_EXP2;
@@ -57,7 +59,8 @@ export default function GameCanvas() {
     const walnut = mat(scene, "walnut", new Color3(0.19, 0.09, 0.045), 0.5);
     const copper = mat(scene, "copper", new Color3(0.72, 0.29, 0.12), 0.25, 0.7);
     const ivory = mat(scene, "ivory", new Color3(0.86, 0.78, 0.63), 0.72);
-    const tile = mat(scene, "tile", new Color3(0.04, 0.35, 0.34), 0.42);
+    const marble = mat(scene, "marble", new Color3(0.72, 0.68, 0.58), 0.78);
+    const tile = mat(scene, "tile", new Color3(0.68, 0.58, 0.45), 0.42);
     const emerald = mat(scene, "emerald", new Color3(0.03, 0.48, 0.38), 0.5);
     const charcoal = mat(scene, "charcoal", new Color3(0.025, 0.03, 0.035), 0.9);
 
@@ -80,7 +83,7 @@ export default function GameCanvas() {
     for (let x = -7.6; x <= 7.6; x += 1.7) {
       for (let y = 1.1; y <= 6.2; y += 1.55) box(`tile-${x}-${y}`, new Vector3(1.4, 1.25, 0.07), new Vector3(x, y, -4.24), tile);
     }
-    box("counter-top", new Vector3(12, 0.35, 2.3), new Vector3(0.3, 1.2, 0.2), walnut);
+    box("counter-top", new Vector3(12, 0.35, 2.3), new Vector3(0.3, 1.2, 0.2), marble);
     box("counter-front", new Vector3(12, 1.3, 0.22), new Vector3(0.3, 0.55, 1.25), copper);
     box("shelf-top", new Vector3(12, 0.22, 0.65), new Vector3(0.3, 5.1, -3.75), walnut);
     box("shelf-mid", new Vector3(12, 0.22, 0.65), new Vector3(0.3, 3.6, -3.75), walnut);
@@ -94,10 +97,33 @@ export default function GameCanvas() {
     cyl("boiler", 0.72, 1.25, new Vector3(3.8, 2.95, -1.2), ivory);
     cyl("portafilter", 0.55, 0.08, new Vector3(3.8, 1.45, -0.5), charcoal).rotation.x = Math.PI / 2;
     for (const x of [2.75, 3.45, 4.15]) cyl(`cup-${x}`, 0.45, 0.34, new Vector3(x, 1.58, 0.25), ivory);
+    // Espresso station equipment: grinder, tamper, and bean hopper.
+    box("grinder", new Vector3(0.75, 1.25, 0.72), new Vector3(1.7, 2.05, -1.2), charcoal);
+    cyl("grinder-hopper", 0.55, 0.62, new Vector3(1.7, 3.0, -1.2), ivory);
+    cyl("tamper", 0.18, 0.62, new Vector3(2.65, 2.05, -0.9), copper);
+    cyl("bean-hopper", 0.42, 0.34, new Vector3(2.65, 2.52, -0.9), walnut);
+    // Cold station: JTC-style blender, ice maker and microwave.
+    box("jtc-blender-base", new Vector3(0.9, 0.9, 0.9), new Vector3(-4.2, 1.75, -1.15), charcoal);
+    box("jtc-blender-jar", new Vector3(0.7, 1.25, 0.7), new Vector3(-4.2, 2.8, -1.15), ivory);
+    box("ice-maker", new Vector3(1.0, 1.1, 0.9), new Vector3(-5.7, 1.85, -1.15), marble);
+    box("microwave", new Vector3(1.2, 0.85, 0.9), new Vector3(-2.4, 1.82, -1.15), charcoal);
+    // Syrup and matcha stations on the upper shelf.
+    for (const x of [-0.6, 0.05, 0.7]) { cyl(`syrup-bottle-${x}`, 0.28, 0.9, new Vector3(x, 4.1, -3.38), copper); cyl(`syrup-pump-${x}`, 0.08, 0.32, new Vector3(x, 4.72, -3.38), ivory); }
+    for (const x of [-3.2, -2.55]) cyl(`matcha-tin-${x}`, 0.48, 0.65, new Vector3(x, 4.15, -3.38), emerald);
+    cyl("chasen-handle", 0.1, 0.85, new Vector3(-1.85, 4.15, -3.38), walnut);
 
     // New procedural character: Noura, built from readable silhouette layers.
     const character = new TransformNode("noura", scene);
     character.position = new Vector3(-2.1, 0, 0.55);
+    const stationTargets: Record<string, Vector3> = {
+      espresso: new Vector3(3.3, 0, -0.2),
+      cold: new Vector3(-3.7, 0, 0.1),
+      syrup: new Vector3(0.2, 0, -2.9),
+      matcha: new Vector3(-2.8, 0, -2.9),
+    };
+    let destination = character.position.clone();
+    let destinationStation = "bar";
+    let announcedStation = "";
     const torso = MeshBuilder.CreateCylinder("noura-torso", { diameterTop: 1.15, diameterBottom: 1.55, height: 2.15, tessellation: 24 }, scene);
     torso.position.y = 2.25; torso.material = emerald; torso.parent = character;
     const apron = MeshBuilder.CreateBox("noura-apron", { width: 1.12, height: 1.45, depth: 0.12 }, scene);
@@ -113,24 +139,63 @@ export default function GameCanvas() {
     const tray = MeshBuilder.CreateCylinder("noura-tray", { diameter: 0.72, height: 0.08, tessellation: 32 }, scene);
     tray.position = new Vector3(-0.95, 2.05, 0.1); tray.rotation.z = -0.15; tray.material = copper; tray.parent = character;
 
-    const shadow = new ShadowGenerator(1024, key);
-    shadow.useBlurExponentialShadowMap = true;
-    shadow.blurKernel = 32;
-    scene.meshes.forEach((mesh) => { if (mesh.name !== "floor") { mesh.receiveShadows = true; shadow.addShadowCaster(mesh); } });
-    const glow = new GlowLayer("warm-glow", scene); glow.intensity = 0.55;
-    machine.renderOutline = true; machine.outlineColor = new Color3(0.8, 0.36, 0.12); machine.outlineWidth = 0.018;
 
+    const moveTo = (point: Vector3, station = "bar") => { destination = new Vector3(point.x, 0, point.z); destinationStation = station; };
+    const nearestStation = (position: Vector3) => Object.entries(stationTargets).sort((a, b) => Vector3.Distance(position, a[1]) - Vector3.Distance(position, b[1]))[0];
+    const onKeyDown = (event: KeyboardEvent) => {
+      const step = event.shiftKey ? 1.2 : 0.55;
+      const next = destination.clone();
+      if (["ArrowLeft", "a", "A"].includes(event.key)) next.x -= step;
+      if (["ArrowRight", "d", "D"].includes(event.key)) next.x += step;
+      if (["ArrowUp", "w", "W"].includes(event.key)) next.z -= step;
+      if (["ArrowDown", "s", "S"].includes(event.key)) next.z += step;
+      if (next.equals(destination)) return;
+      event.preventDefault();
+      moveTo(next, nearestStation(next)[0]);
+    };
+    let dragging = false;
+    const moveFromPointer = (event: PointerEvent) => {
+      const pick = scene.pick(event.clientX, event.clientY);
+      if (!pick?.pickedPoint) return;
+      const target = nearestStation(pick.pickedPoint);
+      moveTo(target[1], target[0]);
+    };
+    const onPointerDown = (event: PointerEvent) => { dragging = true; canvas.setPointerCapture?.(event.pointerId); moveFromPointer(event); };
+    const onPointerMove = (event: PointerEvent) => { if (dragging) moveFromPointer(event); };
+    const onPointerUp = (event: PointerEvent) => { dragging = false; canvas.releasePointerCapture?.(event.pointerId); };
+    const onHudStation = (event: Event) => {
+      const station = (event as CustomEvent<string>).detail;
+      if (station && stationTargets[station]) moveTo(stationTargets[station], station);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("kora-move-to", onHudStation);
+    canvas.addEventListener("pointerdown", onPointerDown);
+    canvas.addEventListener("pointermove", onPointerMove);
+    canvas.addEventListener("pointerup", onPointerUp);
+    canvas.addEventListener("pointercancel", onPointerUp);
     let t = 0;
     engine.runRenderLoop(() => {
       t += engine.getDeltaTime() * 0.001;
+      const delta = destination.subtract(character.position);
+      if (delta.length() > 0.08) {
+        const direction = delta.normalize();
+        character.position.addInPlace(direction.scale(Math.min(engine.getDeltaTime() * 0.0023, delta.length())));
+        character.rotation.y = Math.atan2(direction.x, direction.z);
+      } else if (announcedStation !== destinationStation) {
+        announcedStation = destinationStation;
+        onStationReached?.(destinationStation);
+      }
       character.position.y = Math.sin(t * 1.8) * 0.025;
-      character.rotation.y = Math.sin(t * 0.55) * 0.07;
       torso.scaling.y = 1 + Math.sin(t * 1.8) * 0.012;
+      const targetRadius = destinationStation === "bar" ? 13.5 : 9.8;
+      camera.radius += (targetRadius - camera.radius) * 0.035;
+      if (destinationStation !== "bar") camera.setTarget(new Vector3(destination.x, 2.2, destination.z - 1.2));
+      else camera.setTarget(new Vector3(0, 2.2, 0));
       scene.render();
     });
     const resize = () => engine.resize();
     window.addEventListener("resize", resize);
-    return () => { window.removeEventListener("resize", resize); engine.dispose(); };
+    return () => { window.removeEventListener("resize", resize); canvas.removeEventListener("pointerdown", onPointerDown); canvas.removeEventListener("pointermove", onPointerMove); canvas.removeEventListener("pointerup", onPointerUp); canvas.removeEventListener("pointercancel", onPointerUp); window.removeEventListener("keydown", onKeyDown); window.removeEventListener("kora-move-to", onHudStation); engine.dispose(); };
   }, []);
 
   return <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" aria-label="مشهد المطبخ ثلاثي الأبعاد" />;

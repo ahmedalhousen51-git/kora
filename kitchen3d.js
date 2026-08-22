@@ -332,15 +332,6 @@
     station('espresso', 'ماكينة الإسبريسو', cim, 5.4, 2.85, -3.9, [5.4, -1.2],
             { lamp: cimLamp, plume: cimPlume });
 
-    // a row of cups warming beside the machine, the way they sit on the real bar
-    [0, 1, 2].forEach(i => {
-      const cup = new THREE.Mesh(new THREE.CylinderGeometry(.19, .15, .3, 18), M(0xF2EEE6, .5));
-      // front strip of the bar, clear of the Cimbali's footprint (z -4.65..-3.15)
-      cup.position.set(3.1 + i * .58, 3.0, -2.6); cup.castShadow = true; scene.add(cup);
-      const saucer = new THREE.Mesh(new THREE.CylinderGeometry(.27, .27, .035, 18), M(0xEAE4DA, .55));
-      saucer.position.set(3.1 + i * .58, 2.86, -2.6); scene.add(saucer);
-    });
-
     // tamper and a small pile of ground coffee, out on the worktop where they show
     const tamper = new THREE.Mesh(new THREE.CylinderGeometry(.13, .15, .1, 16), M(0xC9A227, .3, .8));
     tamper.position.set(6.7, 2.93, -2.75); tamper.castShadow = true; scene.add(tamper);
@@ -507,33 +498,7 @@
     addEventListener('keyup',   e => { keys[e.key] = false; });
 
     const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
-    /* Look around. Orbit and zoom are kept as offsets rather than a camera of
-       their own, so the automatic framing — the wide shot, the push in on a
-       station — still runs underneath and the two compose instead of fighting.
-       A drag turns the room; a press that never moves is still a click. */
-    let orbit = 0, pitch = 0, zoom = 1;
-    let downX = 0, downY = 0, dragging = false, holding = false;
-
     renderer.domElement.addEventListener('pointerdown', e => {
-      holding = true; dragging = false;
-      downX = e.clientX; downY = e.clientY;
-    });
-    addEventListener('pointermove', e => {
-      if (!holding) return;
-      if (!dragging && Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY) > 5) dragging = true;
-      if (!dragging) return;
-      orbit -= (e.clientX - downX) * .006;
-      pitch = Math.max(-1.6, Math.min(4.5, pitch + (e.clientY - downY) * .02));
-      downX = e.clientX; downY = e.clientY;
-    });
-    addEventListener('pointerup', () => { holding = false; });
-    renderer.domElement.addEventListener('wheel', e => {
-      e.preventDefault();
-      zoom = Math.max(.5, Math.min(1.7, zoom + (e.deltaY > 0 ? .1 : -.1)));
-    }, { passive: false });
-
-    renderer.domElement.addEventListener('pointerup', e => {
-      if (dragging) return;                 // that was a look-around, not a click
       const r = renderer.domElement.getBoundingClientRect();
       ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
       ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
@@ -600,20 +565,10 @@
         chef.position.y = Math.abs(Math.sin(now * .012)) * .07;   // a little bob
         const sw = Math.sin(now * .012) * .5;                     // arms and legs swing
         arms[0].rotation.x = sw; arms[1].rotation.x = -sw;
-        arms[0].rotation.z = arms[1].rotation.z = 0;
         legsM[0].rotation.x = -sw * .7; legsM[1].rotation.x = sw * .7;
-        torso.scale.y = 1; torso.position.y = 1.86; head.position.y = 2.66;
       } else {
-        // standing still is not the same as being switched off — he breathes,
-        // shifts his weight, and settles his arms instead of freezing mid-pose
-        const b = now * .0018;
-        chef.position.y = Math.sin(b) * .012;
-        torso.scale.y = 1 + Math.sin(b) * .014;
-        torso.position.y = 1.86 + Math.sin(b) * .01;
-        head.position.y = 2.66 + Math.sin(b) * .016;
-        const sway = Math.sin(now * .00055) * .05;
-        arms[0].rotation.x = arms[1].rotation.x = Math.sin(b) * .05;
-        arms[0].rotation.z = sway; arms[1].rotation.z = -sway;
+        chef.position.y = 0;
+        arms[0].rotation.x = arms[1].rotation.x = 0;
         legsM[0].rotation.x = legsM[1].rotation.x = 0;
       }
 
@@ -659,26 +614,16 @@
         current = near;
         if (o.onStation) o.onStation(near ? { id: near.id, label: near.label } : null);
       }
-      let ease;
       if (current) {
         camLook.lerp(current.obj.position, .05);
         tmp.copy(current.obj.position).add(new THREE.Vector3(0, 2.6, 7));
-        ease = .045;
+        cam.position.lerp(tmp, .045);
       } else {
         // the wide shot: the whole bar, drifting a little with him
         camLook.lerp(new THREE.Vector3(chef.position.x * .45, 2.9, -3), .04);
         tmp.set(chef.position.x * .3, 6.4, 14.5);
-        ease = .035;
+        cam.position.lerp(tmp, .035);
       }
-      // swing and scale that framing around the point being looked at
-      if (orbit || pitch || zoom !== 1) {
-        const ox = tmp.x - camLook.x, oz = tmp.z - camLook.z;
-        const c = Math.cos(orbit), s = Math.sin(orbit);
-        tmp.set(camLook.x + (ox * c - oz * s) * zoom,
-                (tmp.y + pitch - camLook.y) * zoom + camLook.y,
-                camLook.z + (ox * s + oz * c) * zoom);
-      }
-      cam.position.lerp(tmp, ease);
       cam.lookAt(camLook);
 
       if (composer) composer.render(); else renderer.render(scene, cam);
