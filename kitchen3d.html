@@ -171,6 +171,16 @@
     { k: 'tea',      n: 'شاي وبوبا', c: '#B4763C', at: 'brew' }
   ];
 
+  // what each machine says while it runs
+  const RUNNING = {
+    espresso: 'بيسحب الشوت…',
+    grinder:  'بيطحن — ١٨ جم…',
+    syrup:    'بيضخ السيرب…',
+    blender:  'بيخلط…',
+    ice:      'بينزّل تلج…',
+    brew:     'بيسخّن الشاي…'
+  };
+
   let api = null;
   const btns = STOCK.map(s => {
     const b = document.createElement('button');
@@ -188,7 +198,12 @@
       const tag = $('stationTag');
       markAt(st ? st.id : null);
       if (!st) { tag.classList.remove('on'); return; }
-      tag.innerHTML = st.label + '<small>دوس عشان تشتغل عليها</small>';
+      tag.innerHTML = st.label + '<small>دوس عليها عشان تشغّلها</small>';
+      tag.classList.add('on');
+    },
+    onOperate(st) {
+      const tag = $('stationTag');
+      tag.innerHTML = st.label + '<small>' + (RUNNING[st.id] || 'شغّالة…') + '</small>';
       tag.classList.add('on');
     }
   }).then(a => {

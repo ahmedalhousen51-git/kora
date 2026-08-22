@@ -159,6 +159,20 @@
         new THREE.MeshBasicMaterial({ map: textTex(text, opt), transparent: !opt.bg }));
     }
 
+    /* Running a machine should look like something happened: its lamp swells
+       and settles, and anything steaming puts out a harder plume for a moment. */
+    const pulses = [];
+    function flash(mat, peak, secs) {
+      pulses.push({ mat: mat, t: 0, dur: secs || .9,
+                    base: mat.emissiveIntensity || 0, peak: peak });
+    }
+    // an indicator lamp that can be flashed; returns the mesh
+    function indicator(colour, w, h, d) {
+      return new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
+        new THREE.MeshStandardMaterial({ color: colour, emissive: colour,
+          emissiveIntensity: .35, roughness: .3 }));
+    }
+
     /* Steam that actually rises: each puff climbs, fades and restarts. */
     const steams = [];
     function steam(parent, x, y, z, spread, rise) {
@@ -176,6 +190,7 @@
       }
       g.position.set(x, y, z);
       g.userData.rise = rise || 1.1;
+      g.userData.boost = 0;                   // raised briefly when the machine runs
       parent.add(g);
       steams.push(g);
       return g;
@@ -267,13 +282,27 @@
     /* ---------- the machines, where they actually stand ---------- */
     const stations = {};
     const stationRoots = [];
-    function station(id, label, mesh, x, y, z, stand) {
+    function station(id, label, mesh, x, y, z, stand, kit) {
       mesh.position.set(x, y, z);
       mesh.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
       mesh.userData.stationId = id;              // so a click can find its way back up
       scene.add(mesh);
       stationRoots.push(mesh);
-      stations[id] = { id, label, at: new THREE.Vector3(stand[0], 0, stand[1]), obj: mesh };
+      stations[id] = {
+        id: id, label: label, obj: mesh,
+        at: new THREE.Vector3(stand[0], 0, stand[1]),
+        lamp: (kit && kit.lamp) || null,
+        plume: (kit && kit.plume) || null
+      };
+    }
+
+    /* Run the machine he is standing at. */
+    function operate(st) {
+      if (!st) return false;
+      if (st.lamp) flash(st.lamp.material, 2.4, 1.0);
+      if (st.plume) st.plume.userData.boost = 1;
+      if (o.onOperate) o.onOperate({ id: st.id, label: st.label });
+      return true;
     }
 
     // La Cimbali: wide body, three group heads, portafilters
@@ -297,8 +326,11 @@
     // the steam wand on the right, breathing
     const wand = new THREE.Mesh(new THREE.CylinderGeometry(.05, .035, .8, 10), M(C.steelDark, .35, .7));
     wand.position.set(2.1, .25, .55); wand.rotation.x = .35; cim.add(wand);
-    steam(cim, 2.2, .6, .75, .28, 1.0);
-    station('espresso', 'ماكينة الإسبريسو', cim, 5.4, 2.85, -3.9, [5.4, -1.2]);
+    const cimPlume = steam(cim, 2.2, .6, .75, .28, 1.0);
+    const cimLamp = indicator(0xE23B2E, .14, .06, .04);
+    cimLamp.position.set(1.05, .32, .78); cim.add(cimLamp);
+    station('espresso', 'ماكينة الإسبريسو', cim, 5.4, 2.85, -3.9, [5.4, -1.2],
+            { lamp: cimLamp, plume: cimPlume });
 
     // tamper and a small pile of ground coffee, out on the worktop where they show
     const tamper = new THREE.Mesh(new THREE.CylinderGeometry(.13, .15, .1, 16), M(0xC9A227, .3, .8));
@@ -326,7 +358,9 @@
     // the dose the espresso sim actually asks for
     const dose = decal('18.0 g', .36, .12, { fg: '#BFE6FF', size: 62 });
     dose.position.set(0, .95, .445); grp.add(dose);
-    station('grinder', 'المطحنة', grp, 8.4, 2.85, -3.9, [8.4, -1.2]);
+    const grindLamp = indicator(0x3FBF57, .16, .07, .04);
+    grindLamp.position.set(0, .62, .43); grp.add(grindLamp);
+    station('grinder', 'المطحنة', grp, 8.4, 2.85, -3.9, [8.4, -1.2], { lamp: grindLamp });
 
     // the 1883 / Monin pump rack
     const rack = new THREE.Group();
@@ -342,7 +376,9 @@
         { fg: '#241C16', size: 74 });
       lab.position.set(-1 + i * .4, .6, .14); rack.add(lab);
     }
-    station('syrup', 'مضخات السيرب', rack, 10.4, 2.85, -3.9, [10.2, -1.2]);
+    const syrupLamp = indicator(0xE8B33A, .18, .05, .04);
+    syrupLamp.position.set(1.15, .1, .28); rack.add(syrupLamp);
+    station('syrup', 'مضخات السيرب', rack, 10.4, 2.85, -3.9, [10.2, -1.2], { lamp: syrupLamp });
 
     // the JTC blender and the ice machine on the left run
     const bl = new THREE.Group();
@@ -361,7 +397,9 @@
       b.userData = { x: Math.cos(a) * r, z: Math.sin(a) * r, t: i / 12, k: .6 + (i % 5) * .16 };
       bl.add(b); bubbles.push(b);
     }
-    station('blender', 'الخلاط', bl, -6.4, 2.85, -5, [-6.4, -2.4]);
+    const blendLamp = indicator(0xF08A2E, .16, .06, .04);
+    blendLamp.position.set(0, .16, .47); bl.add(blendLamp);
+    station('blender', 'الخلاط', bl, -6.4, 2.85, -5, [-6.4, -2.4], { lamp: blendLamp });
 
     const iceG = new THREE.Group();
     const ice = box(1.5, 1.8, 1.3, M(0xE6E8EA, .6)); ice.position.y = .9; iceG.add(ice);
@@ -381,7 +419,9 @@
       cube.rotation.set(i * 1.1, i * .7, i * 1.9);
       iceG.add(cube); iceCubes.push(cube);
     }
-    station('ice', 'ماكينة التلج', iceG, -8.0, 2.85, -5, [-8.0, -2.4]);
+    const iceLamp = indicator(0x49AEEF, .14, .06, .04);
+    iceLamp.position.set(.45, .95, .68); iceG.add(iceLamp);
+    station('ice', 'ماكينة التلج', iceG, -8.0, 2.85, -5, [-8.0, -2.4], { lamp: iceLamp });
 
     // the hotplate with its pot — where the tea and the tapioca happen
     const hp = new THREE.Group();
@@ -390,8 +430,11 @@
     pot.position.y = .36; hp.add(pot);
     const potLid = new THREE.Mesh(new THREE.SphereGeometry(.45, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), M(0xC8CBCE, .3, .8));
     potLid.position.y = .62; hp.add(potLid);
-    steam(hp, 0, .8, 0, .3, 1.2);
-    station('brew', 'السخّان والحلة', hp, -0.6, 2.9, -5, [-0.6, -2.4]);
+    const brewPlume = steam(hp, 0, .8, 0, .3, 1.2);
+    const brewLamp = indicator(0xF2603C, .13, .05, .04);
+    brewLamp.position.set(.55, .04, .52); hp.add(brewLamp);
+    station('brew', 'السخّان والحلة', hp, -0.6, 2.9, -5, [-0.6, -2.4],
+            { lamp: brewLamp, plume: brewPlume });
 
     /* ---------- the barista ---------- */
     const chef = new THREE.Group();
@@ -467,7 +510,12 @@
       if (onMachine.length) {
         let n = onMachine[0].object;
         while (n && !n.userData.stationId) n = n.parent;
-        if (n) { goal.copy(stations[n.userData.stationId].at); return; }
+        if (n) {
+          const st = stations[n.userData.stationId];
+          // standing at it already? run it. otherwise walk over first.
+          if (current === st) operate(st); else goal.copy(st.at);
+          return;
+        }
       }
       const hit = ray.intersectObject(floor);
       if (hit.length) { goal.copy(hit[0].point); goal.y = 0; }
@@ -528,15 +576,25 @@
       // steam climbs, spreads and fades, then starts again from the spout
       for (let i = 0; i < steams.length; i++) {
         const g = steams[i], rise = g.userData.rise;
+        if (g.userData.boost > 0) g.userData.boost = Math.max(0, g.userData.boost - dt / 1.6);
+        const push = 1 + g.userData.boost * 1.6;
         for (let j = 0; j < g.children.length; j++) {
           const p = g.children[j], u = p.userData;
-          u.t += dt * .38 * u.k;
+          u.t += dt * .38 * u.k * push;
           if (u.t > 1) u.t -= 1;
           p.position.set(u.dx * u.t, u.t * rise * u.k, u.dz * u.t);
-          p.material.opacity = Math.sin(u.t * Math.PI) * .3;
+          p.material.opacity = Math.sin(u.t * Math.PI) * (.3 + g.userData.boost * .45);
           const s = .5 + u.t * 1.6;
           p.scale.set(s, s, s);
         }
+      }
+      // lamps swell and settle back
+      for (let i = pulses.length - 1; i >= 0; i--) {
+        const p = pulses[i];
+        p.t += dt;
+        const k = Math.min(1, p.t / p.dur);
+        p.mat.emissiveIntensity = p.base + (p.peak - p.base) * Math.sin(k * Math.PI);
+        if (k >= 1) { p.mat.emissiveIntensity = p.base; pulses.splice(i, 1); }
       }
 
       // bubbles climb through the juice; the cubes turn slowly in their tub
@@ -596,6 +654,8 @@
         return true;
       },
       at() { return current ? current.id : null; },
+      /** Run a machine. Defaults to the one he is standing at. */
+      use(id) { return operate(id ? stations[id] : current); },
       /** Where he is walking to right now, as {x, z} — null once he arrives. */
       goalAt() {
         return chef.position.distanceTo(goal) > .08
